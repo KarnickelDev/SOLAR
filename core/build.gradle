@@ -1,0 +1,16 @@
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-core'
+
+dependencies {
+  api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+  api "com.badlogicgames.gdx:gdx:$gdxVersion"
+  api "org.apache.groovy:groovy-all:$groovyVersion"
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:4.13.2'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:4.13.2'
+  testImplementation 'org.apiguardian:apiguardian-api:1.1.2' // Explicitly include this
+
+  if(enableGraalNative == 'true') {
+    implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
+  }
+}
