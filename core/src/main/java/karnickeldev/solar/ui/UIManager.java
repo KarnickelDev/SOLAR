@@ -29,7 +29,7 @@ public class UIManager {
     }
 
     public void resize(int width, int height) {
-        Fonts.resizeFonts(height);
+        //Fonts.resizeFonts(height);
         optionsMenu.dispose();
         optionsMenu = new OptionsMenu(stage, width, height);
     }

@@ -42,7 +42,7 @@ public class OptionsMenu implements UIElement {
         TextureAtlas atlas = new TextureAtlas("uiskin.atlas");
 
         table.setSize(0.6f * width, 0.7f * height);
-        table.setPosition(0.5f * (width - table.getWidth()), 0.5f * (height - table.getHeight()));
+        table.setPosition(1.05f*MainMenuScreen.getMainMenuWidth(), 0.5f * (height - table.getHeight()));
         table.setClip(true);
         table.background(new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")), 4, 4, 4, 4)));
 

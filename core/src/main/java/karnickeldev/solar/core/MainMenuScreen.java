@@ -15,9 +15,6 @@ import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.ui.*;
 import karnickeldev.solar.util.TileLoader;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Project: SOLAR
  *
@@ -26,6 +23,8 @@ import java.util.List;
  */
 public class MainMenuScreen implements Screen, UIElement {
 
+    private static float MAIN_MENU_WIDTH;
+
     private final SolarMain game;
 
     private final Texture background_atlas;
@@ -33,16 +32,13 @@ public class MainMenuScreen implements Screen, UIElement {
 
     UIManager ui_manager;
 
-    private GlyphLayout glyph_layout;
+    private final Stage stage;
+    private final OrthographicCamera camera;
+    private final Viewport viewport;
 
-    private Stage stage;
-    private OrthographicCamera camera;
-    private Viewport viewport;
+    private final Skin skin;
 
-    private Skin skin;
-
-    private Table mainMenuUITable;
-    private List<MenuButton> mainMenuUIButtons = new ArrayList<>();
+    private final Table mainMenuUITable;
 
     public MainMenuScreen(SolarMain solarMain) {
         this.game = solarMain;
@@ -79,10 +75,12 @@ public class MainMenuScreen implements Screen, UIElement {
         game.getInputManager().addInput(InputManager.MAIN_MENU_INPUT, stage);
     }
 
+    public static float getMainMenuWidth() {return MAIN_MENU_WIDTH;}
+
     public void resizeUI(int appWidth, int appHeight) {
         BitmapFont font = Fonts.MEDIUM_BOLD;
 
-        glyph_layout = new GlyphLayout();
+        GlyphLayout glyph_layout = new GlyphLayout();
         glyph_layout.setText(font,"Singleplayer");
 
         for(Actor actor : mainMenuUITable.getChildren()) {
@@ -97,7 +95,7 @@ public class MainMenuScreen implements Screen, UIElement {
         int groupHeight = appHeight / 3;
         float groupSpacing = 0.5f * groupHeight;
         float elementHeight = 0.5f * groupHeight;
-        int groupWidth = Math.min(appWidth, (int)(1.5f*glyph_layout.width));
+        int groupWidth = Math.min(appWidth, (int)(1.5f* glyph_layout.width));
 
         mainMenuUITable.setSize(groupWidth, groupHeight);
         mainMenuUITable.setPosition(appWidth * 0.03f, (appHeight * 0.72f) - groupHeight);
@@ -114,6 +112,8 @@ public class MainMenuScreen implements Screen, UIElement {
 
         mainMenuUITable.invalidate();
         mainMenuUITable.layout();
+
+        MAIN_MENU_WIDTH = mainMenuUITable.getWidth() + mainMenuUITable.getX();
     }
 
     @Override
@@ -141,8 +141,10 @@ public class MainMenuScreen implements Screen, UIElement {
         camera.setToOrtho(false, width, height);
         camera.update();
 
-        ui_manager.resize(width, height);
+        Fonts.resizeFonts(height);
+
         resizeUI(width, height);
+        ui_manager.resize(width, height);
     }
 
     @Override

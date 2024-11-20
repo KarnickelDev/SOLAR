@@ -17,7 +17,6 @@ public class MenuButton extends TextButton {
 
     boolean clicked = false;
 
-
     public MenuButton(String text, Skin skin) {
         this(text, skin, null);
     }
