@@ -8,6 +8,11 @@ package karnickeldev.solar.ui;
  */
 public interface UIElement {
 
+    float getWidth();
+    float getHeight();
+    float getX();
+    float getY();
+
     void resizeUI(int width, int height);
 
     void show();

@@ -2,14 +2,18 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.settings.SettingsManager;
 import karnickeldev.solar.ui.Fonts;
+import karnickeldev.solar.ui.UIManager;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class SolarMain extends Game {
@@ -22,14 +26,18 @@ public class SolarMain extends Game {
 
     private final SettingsManager settingsManager;
     private final InputManager inputManager;
+    private UIManager uiManager;
 
+    public Stage pausedStage;
 
     public SolarMain(Settings settings) {
         instance = this;
 
         this.settingsManager = new SettingsManager(settings);
 
-        inputManager = new InputManager();
+        this.inputManager = new InputManager();
+
+        this.uiManager = new UIManager();
     }
 
     public static SolarMain getInstance() {return instance;}
@@ -42,6 +50,8 @@ public class SolarMain extends Game {
 
     public InputManager getInputManager() {return inputManager;}
 
+    public UIManager getUIManager() {return uiManager;}
+
     @Override
     public void create() {
         getSettingsManager().applySettings();
@@ -51,6 +61,10 @@ public class SolarMain extends Game {
         Fonts.generateFonts(Gdx.graphics.getHeight());
 
         glyph_layout = new GlyphLayout();
+
+        pausedStage = new Stage(new ScreenViewport(new OrthographicCamera(getSettings().getScreenWidth(), getSettings().getScreenHeight())));
+
+        getUIManager().create();
 
         Gdx.input.setInputProcessor(getInputManager().getInputMultiplexer());
 
@@ -62,6 +76,8 @@ public class SolarMain extends Game {
     @Override
     public void render() {
         super.render();
+
+        pausedStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
 
         BitmapFont font = Fonts.SMALL;
 

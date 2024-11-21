@@ -42,7 +42,10 @@ public class OptionsMenu implements UIElement {
         TextureAtlas atlas = new TextureAtlas("uiskin.atlas");
 
         table.setSize(0.6f * width, 0.7f * height);
-        table.setPosition(1.05f*MainMenuScreen.getMainMenuWidth(), 0.5f * (height - table.getHeight()));
+
+        float mainMenuWidth = SolarMain.getInstance().getUIManager().getMainMenu().getWidth() + SolarMain.getInstance().getUIManager().getMainMenu().getX();
+        table.setPosition(1.05f*mainMenuWidth, 0.5f * (height - table.getHeight()));
+
         table.setClip(true);
         table.background(new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")), 4, 4, 4, 4)));
 
@@ -82,6 +85,26 @@ public class OptionsMenu implements UIElement {
         table.setVisible(true);
     }
 
+
+    @Override
+    public float getWidth() {
+        return table.getWidth();
+    }
+
+    @Override
+    public float getHeight() {
+        return table.getHeight();
+    }
+
+    @Override
+    public float getX() {
+        return table.getX();
+    }
+
+    @Override
+    public float getY() {
+        return table.getY();
+    }
 
     @Override
     public void resizeUI(int width, int height) {
