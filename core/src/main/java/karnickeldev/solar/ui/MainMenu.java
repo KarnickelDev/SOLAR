@@ -6,22 +6,33 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import karnickeldev.solar.core.SimTestScreen;
 import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.settings.Resolution;
 
 public class MainMenu implements UIElement {
 
     private Table mainMenu;
 
-    public MainMenu(Skin skin) {
+    protected MainMenu(Skin skin) {
 
 
         mainMenu = new Table();
+        mainMenu.pad(0f);
+        mainMenu.setClip(true);
+        mainMenu.top();
 
-        mainMenu.add(new MenuButton("Singleplayer", skin)).row();
-        mainMenu.add(new MenuButton("Multiplayer", skin)).row();
-        mainMenu.add(new MenuButton("Options", skin, () -> SolarMain.getInstance().getUIManager().getOptionsMenu().show())).row();
-        mainMenu.add(new MenuButton("Credits", skin)).row();
-        mainMenu.add(new MenuButton("Exit", skin, () -> SolarMain.getInstance().exit())).row();
+        mainMenu.add(new MenuButton("Singleplayer", skin, () -> {
+            hide();
+            SolarMain.getInstance().setScreen(new SimTestScreen());
+        })).expandX().fillX().row();
+        mainMenu.add(new MenuButton("Multiplayer", skin)).expandX().fillX().row();
+        mainMenu.add(new MenuButton("Options", skin, () -> {
+            hide();
+            SolarMain.getInstance().getUIManager().getOptionsMenu().show();
+        })).expandX().fillX().row();
+        mainMenu.add(new MenuButton("Credits", skin)).expandX().fillX().row();
+        mainMenu.add(new MenuButton("Exit", skin, () -> SolarMain.getInstance().exit())).expandX().fillX().row();
 
         resizeUI(
             SolarMain.getInstance().getSettingsManager().getSettings().getScreenWidth(),
@@ -55,8 +66,6 @@ public class MainMenu implements UIElement {
 
     @Override
     public void resizeUI(int width, int height) {
-        hide();
-
         BitmapFont font = Fonts.MEDIUM_BOLD;
 
         GlyphLayout glyph_layout = new GlyphLayout();
@@ -71,13 +80,13 @@ public class MainMenu implements UIElement {
             }
         }
 
-        int groupHeight = height / 3;
-        float groupSpacing = 0.5f * groupHeight;
-        float elementHeight = 0.5f * groupHeight;
-        int groupWidth = Math.min(width, (int)(1.5f* glyph_layout.width));
+        float groupWidth = 0.22f * Resolution.getAdjustedWidth(height);
+        float groupHeight = 1.5f * groupWidth;
+        float groupSpacing = 0.49f * groupHeight;
+        float elementHeight = 0.49f * groupHeight;
 
         mainMenu.setSize(groupWidth, groupHeight);
-        mainMenu.setPosition(width * 0.03f, (height * 0.72f) - groupHeight);
+        mainMenu.setPosition(width * 0.03f, 0.5f * (height - getHeight()));
 
         for(Actor actor: mainMenu.getChildren()) {
             if(actor instanceof MenuButton) {
@@ -91,8 +100,6 @@ public class MainMenu implements UIElement {
 
         mainMenu.invalidate();
         mainMenu.layout();
-
-        show();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui;
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -25,6 +26,7 @@ public class MenuButton extends TextButton {
         super(text, style);
         getLabel().setAlignment(Align.left);
         getLabel().setText("  " + text);
+        pad(0f);
 
         this.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
@@ -45,6 +47,7 @@ public class MenuButton extends TextButton {
         super(text, skin);
         getLabel().setAlignment(Align.left);
         getLabel().setText("  " + text);
+        pad(0f);
 
         this.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
@@ -59,6 +62,13 @@ public class MenuButton extends TextButton {
                 clicked = false;
             }
         });
+    }
+
+
+    public void setFont(BitmapFont font) {
+        TextButtonStyle style = getStyle();
+        style.font = font;
+        setStyle(style);
     }
 
 }

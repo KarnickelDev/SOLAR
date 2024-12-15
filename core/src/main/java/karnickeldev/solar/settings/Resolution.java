@@ -89,4 +89,8 @@ public enum Resolution {
         return bestMatch;
     }
 
+    public static float getAdjustedWidth(int height) {
+        return (4f/3f) * height;
+    }
+
 }

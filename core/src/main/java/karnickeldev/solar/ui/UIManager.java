@@ -1,10 +1,8 @@
 package karnickeldev.solar.ui;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.ui.pausemenu.OptionsMenu;
 
 /**
  * Project: SOLAR
@@ -32,10 +30,7 @@ public class UIManager {
         // UI Elements
         mainMenu = new MainMenu(uiSkin);
 
-        optionsMenu = new OptionsMenu(SolarMain.getInstance().pausedStage,
-            SolarMain.getInstance().getSettingsManager().getSettings().getScreenWidth(),
-            SolarMain.getInstance().getSettingsManager().getSettings().getScreenHeight()
-        );
+        optionsMenu = new OptionsMenu(uiSkin);
     }
 
     public Skin getUISkin() {return uiSkin;}
@@ -47,8 +42,7 @@ public class UIManager {
         Fonts.resizeFonts(height);
 
         mainMenu.resizeUI(width, height);
-        optionsMenu.dispose();
-        optionsMenu = new OptionsMenu(SolarMain.getInstance().pausedStage, width, height);
+        optionsMenu.resizeUI(width, height);
     }
 
 }

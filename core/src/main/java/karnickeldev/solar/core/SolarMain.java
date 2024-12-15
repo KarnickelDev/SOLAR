@@ -101,13 +101,18 @@ public class SolarMain extends Game {
 
     @Override
     public void dispose() {
+        Logger.log(Logger.SHUTDOWN, "Cleaning up for shutdown...");
+
         Fonts.disposeFonts();
         batch.dispose();
         AssetWrapper.getInstance().dispose();
+
+        Logger.log(Logger.SHUTDOWN, "Shutdown complete, bye!");
     }
 
+
     public void exit() {
-        System.exit(0);
+        Gdx.app.exit();
     }
 
 }

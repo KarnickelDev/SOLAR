@@ -3,11 +3,7 @@ package karnickeldev.solar.core;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.assetmanager.Asset;
@@ -70,9 +66,6 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-
-
-
         game.getUIManager().resize(width, height);
     }
 
