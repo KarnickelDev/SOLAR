@@ -107,6 +107,8 @@ public class SolarMain extends Game {
         batch.dispose();
         AssetWrapper.getInstance().dispose();
 
+        SimTestScreen.server.stop();
+
         Logger.log(Logger.SHUTDOWN, "Shutdown complete, bye!");
     }
 

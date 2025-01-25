@@ -11,7 +11,6 @@ import com.badlogic.gdx.utils.Scaling;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.settings.Resolution;
 import karnickeldev.solar.settings.Settings;
-import karnickeldev.solar.settings.SettingsManager;
 import karnickeldev.solar.ui.Fonts;
 import karnickeldev.solar.ui.MenuButton;
 import karnickeldev.solar.ui.UIElement;

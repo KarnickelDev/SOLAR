@@ -1,34 +1,28 @@
 package karnickeldev.solar.physics;
 
-public class Star implements PhysicsObject {
+public class Star extends OrbitalObject {
 
-    private final String name;
-    private final float mass;
-    private final Vector2D position;
+    private final boolean canMove;
 
-    public Star(String name, float mass, Vector2D position) {
-        this.name = name;
-        this.mass = mass;
-        this.position = position;
+    public Star(String name, float mass, int radius, boolean canMove, OrbitData orbitData) {
+        super(name, mass, radius, orbitData);
+        this.canMove = canMove;
     }
 
     @Override
     public void update(double time) {
-
+        if(canMove) {
+            super.update(time);
+        }
     }
 
     @Override
     public Vector2D getPosition() {
-        return position;
+        if(canMove) {
+            return super.getPosition();
+        } else {
+            return getOrbitData().getCentralBody().getPosition();
+        }
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public float getMass() {
-        return mass;
-    }
 }

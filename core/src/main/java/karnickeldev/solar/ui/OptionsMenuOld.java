@@ -14,7 +14,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import karnickeldev.solar.core.Logger;
-import karnickeldev.solar.core.MainMenuScreen;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.settings.Resolution;
 import karnickeldev.solar.settings.Settings;
@@ -25,7 +24,7 @@ import karnickeldev.solar.settings.Settings;
  * @author KarnickelDev
  * @since 27.10.2024
  */
-public class OptionsMenu implements UIElement {
+public class OptionsMenuOld implements UIElement {
 
     private Stage stage;
     private Table table;
@@ -33,7 +32,7 @@ public class OptionsMenu implements UIElement {
 
     Label.LabelStyle labelStyle;
 
-    public OptionsMenu(Stage stage, int width, int height) {
+    public OptionsMenuOld(Stage stage, int width, int height) {
         this.stage = stage;
         this.table = new Table();
 

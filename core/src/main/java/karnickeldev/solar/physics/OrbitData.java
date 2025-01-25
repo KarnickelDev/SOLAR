@@ -1,6 +1,6 @@
 package karnickeldev.solar.physics;
 
-public class OrbitData {
+public class OrbitData{
 
     private double a; // Semi-major axis
     private double e; // Eccentricity

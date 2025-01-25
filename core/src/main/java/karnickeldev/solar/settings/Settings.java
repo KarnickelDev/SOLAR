@@ -11,6 +11,9 @@ import java.util.Properties;
  */
 public class Settings {
 
+    private static final int FPS_MAX = 1200;
+    private static final int FPS_MIN = 10;
+
     private static final String SCREEN_WIDTH_KEY = "Screen-Width";
     private static final String SCREEN_HEIGHT_KEY = "Screen-Height";
     private static final String FULLSCREEN_KEY = "Fullscreen";
@@ -64,7 +67,7 @@ public class Settings {
         borderless = Boolean.parseBoolean(properties.getProperty(BORDERLESS_KEY));
 
         vsync = Boolean.parseBoolean(properties.getProperty(VSYNC_KEY));
-        fps_limit = Integer.parseInt(properties.getProperty(FPS_LIMIT_KEY));
+        fps_limit = clampFpsLimit(Integer.parseInt(properties.getProperty(FPS_LIMIT_KEY)));
     }
 
     public void save() throws IllegalArgumentException, IOException {
@@ -136,4 +139,9 @@ public class Settings {
         return fps_limit;
     }
 
+
+    private static int clampFpsLimit(int input) {
+        if(input > FPS_MAX || input < 0) return FPS_MAX;
+        return Math.max(input, FPS_MIN);
+    }
 }

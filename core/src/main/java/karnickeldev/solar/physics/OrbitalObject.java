@@ -2,25 +2,17 @@ package karnickeldev.solar.physics;
 
 public class OrbitalObject implements PhysicsObject {
 
+    public static final double SMALLEST_ACCELERATION = 1e-8 * 1e-3;  // multiply by 1e-3 to convert to km/s^2
+
     private final OrbitData orbitData;
 
     private String name;
     private final float mass;
     private final int radius;
 
+    private final float sphereOfInfluence;    // in km
+
     private final Vector2D position;
-
-    public OrbitalObject(String name, float mass, int radius, PhysicsObject parent,
-                         double semiMajorAxis, double eccentricity, double periapsisArgument, double timeOfPeriapsis) {
-
-        orbitData = new OrbitData(parent, semiMajorAxis, eccentricity, periapsisArgument, timeOfPeriapsis);
-
-        this.name = name;
-        this.mass = mass;
-        this.radius = radius;
-
-        position = calculatePosition(timeOfPeriapsis);
-    }
 
     public OrbitalObject(String name, float mass, int radius, OrbitData orbitData) {
         this.name = name;
@@ -29,7 +21,24 @@ public class OrbitalObject implements PhysicsObject {
 
         this.orbitData = orbitData;
 
-        position = calculatePosition(orbitData.t0());
+        position = new Vector2D(0, 0);
+        position.set(calculatePosition(orbitData.t0()));
+
+        // distance where acceleration from gravity equals SMALLEST_ACCELERATION
+        double distanceMinForce = Math.sqrt((Units.G_KM_TON * mass) / SMALLEST_ACCELERATION);
+
+        // distance where central objects gravity dominates
+        double distanceSOI = orbitData.semiMajorAxis() * Math.pow(mass / orbitData.M(), 2f/5f);
+
+        if(this instanceof Star) {
+            this.sphereOfInfluence = (float) (Units.toSU(8e4, Units.Length.AU)
+                * Math.pow(mass / Units.toSU(1, Units.Mass.SOLAR_MASS), 2f/5f));
+        } else {
+            this.sphereOfInfluence = (float) Math.min(
+                distanceMinForce <= 0 ? distanceSOI : distanceMinForce,
+                distanceSOI <= 0 ? distanceMinForce : distanceSOI
+            );
+        }
     }
 
     public String getName() {
@@ -52,10 +61,6 @@ public class OrbitalObject implements PhysicsObject {
         return orbitData;
     }
 
-    public PhysicsObject getCentralBody() {
-        return orbitData.getCentralBody();
-    }
-
     public double getSemiMajorAxis() {
         return orbitData.semiMajorAxis();
     }
@@ -68,12 +73,17 @@ public class OrbitalObject implements PhysicsObject {
         return position;
     }
 
-
-    public void update(double time) {
-        position.set(calculatePosition(time).add(getCentralBody().getPosition()));
+    public float getSphereOfInfluence() {
+        return sphereOfInfluence;
     }
 
-    public Vector2D calculatePosition(double t) {
+    public void update(double time) {
+        if(orbitData == null) return;
+
+        position.set(calculatePosition(time).add(getOrbitData().getCentralBody().getPosition()));
+    }
+
+    private Vector2D calculatePosition(double t) {
         // Step 1: Compute mean anomaly
         double trueAnomaly = getTrueAnomaly(t);
 
@@ -93,6 +103,8 @@ public class OrbitalObject implements PhysicsObject {
     }
 
     private double getTrueAnomaly(double t) {
+        if(orbitData == null) return 0;
+
         double n = Math.sqrt(Units.G_KM_TON*orbitData.M() / Math.pow(getSemiMajorAxis(), 3)); // Mean motion
         double M = n * (t - orbitData.t0());
 
