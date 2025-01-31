@@ -84,7 +84,7 @@ public class SolarMain extends Game {
         batch.begin();
         String text = Metadata.APP_NAME + " v" + Metadata.VERSION;
         glyph_layout.setText(font, text);
-        font.draw(batch, text,0, glyph_layout.height, glyph_layout.width, Align.left, false);
+        font.draw(batch, text,4, 4 + glyph_layout.height, 1.1f*glyph_layout.width, Align.left, false);
 
         glyph_layout.setText(font, "FPS: 999999");
         font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(),
@@ -107,7 +107,7 @@ public class SolarMain extends Game {
         batch.dispose();
         AssetWrapper.getInstance().dispose();
 
-        SimTestScreen.server.stop();
+        if(SimTestScreen.server != null) SimTestScreen.server.stop();
 
         Logger.log(Logger.SHUTDOWN, "Shutdown complete, bye!");
     }

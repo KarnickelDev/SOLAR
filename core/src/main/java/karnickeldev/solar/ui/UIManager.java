@@ -1,7 +1,5 @@
 package karnickeldev.solar.ui;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import karnickeldev.solar.ui.pausemenu.OptionsMenu;
 
 /**
@@ -14,8 +12,6 @@ public class UIManager {
 
     private OptionsMenu optionsMenu;
 
-    private Skin uiSkin;
-
     private MainMenu mainMenu;
 
     public UIManager() {
@@ -24,22 +20,21 @@ public class UIManager {
 
     public void create() {
 
-        // setup UI Skin
-        uiSkin = new Skin(Gdx.files.internal("uiskin.json"));
+        // update Skin
+        SkinManager.update();
 
         // UI Elements
-        mainMenu = new MainMenu(uiSkin);
+        mainMenu = new MainMenu(SkinManager.getUISkin());
 
-        optionsMenu = new OptionsMenu(uiSkin);
+        optionsMenu = new OptionsMenu(SkinManager.getUISkin());
     }
-
-    public Skin getUISkin() {return uiSkin;}
 
     public MainMenu getMainMenu() {return mainMenu;}
     public OptionsMenu getOptionsMenu() {return optionsMenu;}
 
     public void resize(int width, int height) {
         Fonts.resizeFonts(height);
+        SkinManager.update();
 
         mainMenu.resizeUI(width, height);
         optionsMenu.resizeUI(width, height);

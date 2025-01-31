@@ -1,12 +1,13 @@
 package karnickeldev.solar.ui.pausemenu;
 
-import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.core.SolarMain;
@@ -18,7 +19,8 @@ import karnickeldev.solar.ui.UIElement;
 public class OptionsMenu implements UIElement {
     Label.LabelStyle titleStyle;
     private final Label title;
-    private final Table optionsMenuTable;
+
+    Table optionsMenu, menus, optionWindow;
 
     private final TextureAtlas atlas;
 
@@ -29,9 +31,40 @@ public class OptionsMenu implements UIElement {
 
     public OptionsMenu(Skin skin) {
 
+        atlas = new TextureAtlas("uiskin.atlas");
+        NinePatchDrawable background = new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")),
+            4, 4, 4, 4));
+
+
+        titleStyle = new Label.LabelStyle();
+        titleStyle.font = Fonts.BIG;
+        titleStyle.background = background;
+        titleStyle.fontColor = Color.WHITE;
+
+        title = new Label("Options", titleStyle);
+        title.setAlignment(Align.center);
+
+        optionsMenu = new Table();
+        optionsMenu.setClip(true);
+        optionsMenu.setBackground(background);
+        optionsMenu.pad(0);
+        optionsMenu.top().left();
+
+        menus = new Table();
+        menus.setClip(true);
+        menus.setBackground(background);
+        menus.pad(0);
+        menus.top().left();
+
+        optionWindow = new Table();
+        optionWindow.setClip(true);
+        optionWindow.setBackground(background);
+        optionWindow.pad(0);
+        optionWindow.top().left();
+
         subMenus = new UIElement[] {
             new GameplayOptionsMenu(),
-            new VideoOptionsMenu(skin),
+            new VideoOptionsMenu(optionWindow, skin),
             new GameplayOptionsMenu()
         };
 
@@ -53,31 +86,12 @@ public class OptionsMenu implements UIElement {
 
         assert(subMenus.length == buttons.length-1);
 
-        atlas = new TextureAtlas("uiskin.atlas");
-        NinePatchDrawable background = new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")),
-            4, 4, 4, 4));
-
-
-        titleStyle = new Label.LabelStyle();
-        titleStyle.font = Fonts.BIG;
-        titleStyle.background = background;
-        titleStyle.fontColor = Color.WHITE;
-
-        title = new Label("Options", titleStyle);
-        title.setAlignment(Align.center);
-
-        optionsMenuTable = new Table();
-        optionsMenuTable.setClip(true);
-        optionsMenuTable.setBackground(background);
-        optionsMenuTable.pad(0);
-        optionsMenuTable.top().left();
-
         resizeUI(
             SolarMain.getInstance().getSettingsManager().getSettings().getScreenWidth(),
             SolarMain.getInstance().getSettingsManager().getSettings().getScreenHeight()
         );
 
-        SolarMain.getInstance().pausedStage.addActor(optionsMenuTable);
+        SolarMain.getInstance().pausedStage.addActor(optionsMenu);
 
         hide();
     }
@@ -93,46 +107,53 @@ public class OptionsMenu implements UIElement {
     public int getSelectedSubMenu() {return selectedSubMenu;}
 
     @Override
-    public float getWidth() {return optionsMenuTable.getWidth();}
+    public float getWidth() {return optionsMenu.getWidth();}
 
     @Override
-    public float getHeight() {return optionsMenuTable.getHeight();}
+    public float getHeight() {return optionsMenu.getHeight();}
 
     @Override
-    public float getX() {return optionsMenuTable.getX();}
+    public float getX() {return optionsMenu.getX();}
 
     @Override
-    public float getY() {return optionsMenuTable.getY();}
+    public float getY() {return optionsMenu.getY();}
 
     @Override
     public void resizeUI(int width, int height) {
-        float menuWidth = 0.22f * Resolution.getAdjustedWidth(height);
-        float menuHeight = 1.5f * menuWidth;
+        float menuWidth = 0.7f * Resolution.getAdjustedWidth(height);
+        float menuHeight = 0.7f * menuWidth;
 
-        optionsMenuTable.clear();
+        optionsMenu.clear();
+        optionsMenu.setSize(menuWidth, menuHeight);
+        optionsMenu.setPosition(
+            0.5f * (Gdx.graphics.getWidth() - getWidth()),
+            0.5f * (Gdx.graphics.getHeight() - getHeight())
+            );
 
         titleStyle.font = Fonts.BIG;
         title.setStyle(titleStyle);
 
-        optionsMenuTable.setSize(menuWidth, menuHeight);
-        optionsMenuTable.setPosition(0.03f * width, 0.5f * (height - getHeight()));
+        float elementHeight = (0.98f * menuHeight) / ((2f * (buttons.length + 1)));
 
-        float titleHeight = 0.15f * menuHeight;
-        float spacing = (0.48f * (menuHeight - titleHeight)) / (buttons.length-1);
-        float elementHeight = (0.48f * (menuHeight - titleHeight)) / buttons.length;
-
-        optionsMenuTable.add(title).width(menuWidth).height(0.7f * titleHeight).fillX().expandX().row();
-        optionsMenuTable.add().height(0.3f * titleHeight).expandX().row();
-
+        menus.clear();
+        menus.setSize(0.26f * menuWidth, menuHeight);
+        menus.add(title).width(menus.getWidth()).height(elementHeight).pad(0).row();
+        menus.add().height(elementHeight).pad(0).row();
 
         for(int i = 0; i < buttons.length; i++) {
             setButtonFont(buttons[i], Fonts.MEDIUM);
-            optionsMenuTable.add(buttons[i]).width(0.93f * menuWidth).height(elementHeight).row();
-            if(i < buttons.length - 1) optionsMenuTable.add().height(spacing).expandX().row();
+            menus.add(buttons[i]).width(0.9f * menus.getWidth()).height(elementHeight).pad(0).row();
+            menus.add().height(elementHeight).pad(0).row();
         }
 
+        optionWindow.clear();
+        optionWindow.setSize(
+            menuWidth - menus.getWidth(),
+            menuHeight - menus.getHeight()
+        );
 
-        optionsMenuTable.layout();
+        optionsMenu.add(menus).expandY().fill();
+        optionsMenu.add(optionWindow).expand().fill();
 
         for (UIElement uiElement : subMenus) {
             uiElement.resizeUI(width, height);
@@ -141,14 +162,14 @@ public class OptionsMenu implements UIElement {
 
     @Override
     public void show() {
-        optionsMenuTable.setVisible(true);
+        optionsMenu.setVisible(true);
         selectSubMenu(0);
     }
 
     @Override
     public void hide() {
         for (UIElement subMenu : subMenus) subMenu.hide();
-        optionsMenuTable.setVisible(false);
+        optionsMenu.setVisible(false);
     }
 
     @Override

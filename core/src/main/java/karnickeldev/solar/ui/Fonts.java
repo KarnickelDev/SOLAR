@@ -34,7 +34,7 @@ public class Fonts {
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
 
         // Set the font size dynamically based on screen height
-        parameter.size = Math.max(1, (int) (baseFontSize * (height / 1080f))); // Scale with height
+        parameter.size = Math.max(6, (int) (baseFontSize * (height / 1080f))); // Scale with height
 
         BitmapFont font = generator.generateFont(parameter); // Generates the font
         generator.dispose();
@@ -47,7 +47,7 @@ public class Fonts {
         BIG = generateFontForResolution(appHeight, 46, BOLD);
         MEDIUM_BOLD = generateFontForResolution(appHeight, 32, BOLD);
         MEDIUM = generateFontForResolution(appHeight, 32, REGULAR);
-        SMALL = generateFontForResolution(appHeight, 20, REGULAR);
+        SMALL = generateFontForResolution(appHeight, 22, REGULAR);
     }
 
     public static void resizeFonts(int appHeight) {

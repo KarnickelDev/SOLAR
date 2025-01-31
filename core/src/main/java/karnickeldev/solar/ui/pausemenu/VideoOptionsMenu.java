@@ -28,16 +28,25 @@ public class VideoOptionsMenu implements UIElement {
     private SelectBox<String> resolution;
 
     private Label vsyncLabel;
-    private CheckBox vsync;
+    private CheckBox vsyncBox;
+
+    private Label borderlessLabel;
+    private CheckBox borderlessBox;
+
+    private Label fullscreenLabel;
+    private CheckBox fullscreenBox;
+
+    private Label fpsLimitLabel;
+    private TextField fpsLimitField;
 
     private MenuButton apply;
 
-    protected VideoOptionsMenu(Skin skin) {
+    protected VideoOptionsMenu(Table rootTable, Skin skin) {
         atlas = new TextureAtlas("uiskin.atlas");
         background = new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")),
             4, 4, 4, 4));
 
-        videoOptionsTable = new Table();
+        videoOptionsTable = rootTable;
         videoOptionsTable.setClip(true);
         videoOptionsTable.setBackground(background);
         videoOptionsTable.top().left();
@@ -50,7 +59,16 @@ public class VideoOptionsMenu implements UIElement {
         resolution = new SelectBox<>(skin);
 
         vsyncLabel = new Label("V-Sync:", labelStyle);
-        vsync = new CheckBox("VSync", skin);
+        vsyncBox = new CheckBox("", skin);
+
+        borderlessLabel = new Label("Borderless:", labelStyle);
+        borderlessBox = new CheckBox("", skin);
+
+        fullscreenLabel = new Label("Fullscreen:", labelStyle);
+        fullscreenBox = new CheckBox("", skin);
+
+        fpsLimitLabel = new Label("FPS-Limit:", labelStyle);
+        fpsLimitField = new TextField("60", skin);
 
         apply = new MenuButton("Apply", skin, () -> {
             Settings newSettings = new Settings(SolarMain.getInstance().getSettings());
@@ -59,13 +77,26 @@ public class VideoOptionsMenu implements UIElement {
             newSettings.setScreenWidth(res.getWidth());
             newSettings.setScreenHeight(res.getHeight());
 
+            newSettings.setVsync(vsyncBox.isChecked());
+            newSettings.setBorderless(borderlessBox.isChecked());
+            newSettings.setFullscreen(fullscreenBox.isChecked());
+
+            String fpsLimit = fpsLimitField.getText();
+            int newFPSLimit = SolarMain.getInstance().getSettings().getFpsLimit();
+            try {
+                newFPSLimit = Integer.parseInt(fpsLimit);
+            } catch (NumberFormatException ignored) {}
+            newSettings.setFpsLimit(newFPSLimit);
+
             if(!newSettings.equals(SolarMain.getInstance().getSettings())) {
                 SolarMain.getInstance().getSettingsManager().updateSettings(newSettings);
                 SolarMain.getInstance().getSettingsManager().saveToFile();
             }
 
+            int subMenu = SolarMain.getInstance().getUIManager().getOptionsMenu().getSelectedSubMenu();
             SolarMain.getInstance().getUIManager().getOptionsMenu().hide();
-            SolarMain.getInstance().getUIManager().getMainMenu().show();
+            SolarMain.getInstance().getUIManager().getOptionsMenu().show();
+            SolarMain.getInstance().getUIManager().getOptionsMenu().selectSubMenu(subMenu);
         });
 
         resizeUI(
@@ -92,34 +123,29 @@ public class VideoOptionsMenu implements UIElement {
 
     @Override
     public void resizeUI(int width, int height) {
-        float leftHandMenuWidth = SolarMain.getInstance().getUIManager().getMainMenu().getWidth()
-            + SolarMain.getInstance().getUIManager().getMainMenu().getX();
-
-        float optionsWidth = 0.5f * Resolution.getAdjustedWidth(height);
-        float optionsHeight = 1.18f * optionsWidth;
+        float optionsWidth = videoOptionsTable.getWidth();
+        float optionsHeight = videoOptionsTable.getHeight();
 
         float paddingWidth = 0.02f * optionsWidth;
-        float paddingMiddle = 0.2f * optionsWidth;
-        float elementWidth = (1f - paddingMiddle - 4f*paddingWidth) / 4f;
+        float paddingMiddle = 0.12f * optionsWidth;
+        float checkboxSize = 0.05f * optionsWidth;
+        float elementWidth = (1f - paddingMiddle - 4f*paddingWidth - checkboxSize) / 3f;
 
         videoOptionsTable.clear();
         videoOptionsTable.top().left();
 
-        videoOptionsTable.add().width(paddingWidth).height(50f);
-        videoOptionsTable.add().width(elementWidth);
-        videoOptionsTable.add().width(paddingWidth);
-        videoOptionsTable.add().width(elementWidth);
+        videoOptionsTable.add().width(paddingWidth).height(checkboxSize);
+        videoOptionsTable.add().width(elementWidth).height(checkboxSize);
+        videoOptionsTable.add().width(paddingWidth).height(checkboxSize);
+        videoOptionsTable.add().width(elementWidth).height(checkboxSize);
 
-        videoOptionsTable.add().width(paddingMiddle);
+        videoOptionsTable.add().width(paddingMiddle).height(checkboxSize);
 
-        videoOptionsTable.add().width(elementWidth);
-        videoOptionsTable.add().width(paddingWidth);
-        videoOptionsTable.add().width(elementWidth);
-        videoOptionsTable.add().width(paddingWidth);
+        videoOptionsTable.add().width(elementWidth).height(checkboxSize);
+        videoOptionsTable.add().width(paddingWidth).height(checkboxSize);
+        videoOptionsTable.add().width(checkboxSize).height(checkboxSize);
+        videoOptionsTable.add().width(paddingWidth).height(checkboxSize);
         videoOptionsTable.row();
-
-        videoOptionsTable.setPosition(1.05f * leftHandMenuWidth,0.5f * (height - optionsHeight));
-        videoOptionsTable.setSize(optionsWidth, optionsHeight);
 
 
         labelStyle.font = Fonts.MEDIUM;
@@ -128,41 +154,93 @@ public class VideoOptionsMenu implements UIElement {
 
         resolutionLabel.setStyle(labelStyle);
         resolution.setItems(Resolution.SUPPORTED_RESOLUTIONS);
-        resolution.setSelected(Resolution.resolutionToString(
-            SolarMain.getInstance().getSettingsManager().getSettings().getScreenWidth(),
-            SolarMain.getInstance().getSettingsManager().getSettings().getScreenHeight()
-        ));
 
-        resolution.getList().getStyle().font = Fonts.SMALL;
-        resolution.getStyle().font = Fonts.SMALL;
-
+        List.ListStyle listStyle = resolution.getList().getStyle();
+        listStyle.font = Fonts.SMALL;
+        resolution.getList().setStyle(listStyle);
+        SelectBox.SelectBoxStyle selectBoxStyle = resolution.getStyle();
+        selectBoxStyle.font = Fonts.SMALL;
+        resolution.setStyle(selectBoxStyle);
 
         vsyncLabel.setStyle(labelStyle);
-        vsync.getImage().setScaling(Scaling.fill);
-        vsync.getImageCell().size(50f, 50f);
+        vsyncBox.getImage().setScaling(Scaling.fill);
+        vsyncBox.getImageCell().fill();
 
-        videoOptionsTable.add();
+        borderlessLabel.setStyle(labelStyle);
+        borderlessBox.getImage().setScaling(Scaling.fill);
+        borderlessBox.getImageCell().fill();
+
+        fullscreenLabel.setStyle(labelStyle);
+        fullscreenBox.getImage().setScaling(Scaling.fill);
+        fullscreenBox.getImageCell().fill();
+
+        fpsLimitLabel.setStyle(labelStyle);
+        TextField.TextFieldStyle textFieldStyle = fpsLimitField.getStyle();
+        textFieldStyle.font = Fonts.SMALL;
+        fpsLimitField.setStyle(textFieldStyle);
+        fpsLimitField.clearSelection();
+
+        videoOptionsTable.add().height(checkboxSize);
         videoOptionsTable.add(resolutionLabel);
         videoOptionsTable.add();
         videoOptionsTable.add(resolution);
         videoOptionsTable.add();
         videoOptionsTable.add(vsyncLabel);
         videoOptionsTable.add();
-        videoOptionsTable.add(vsync);
+        videoOptionsTable.add(vsyncBox);
         videoOptionsTable.add();
         videoOptionsTable.row();
+        videoOptionsTable.add().height(checkboxSize).row();
+
+        videoOptionsTable.add().height(checkboxSize);
+        videoOptionsTable.add(fpsLimitLabel);
+        videoOptionsTable.add();
+        videoOptionsTable.add(fpsLimitField);
+        videoOptionsTable.add();
+        videoOptionsTable.add(fullscreenLabel);
+        videoOptionsTable.add();
+        videoOptionsTable.add(fullscreenBox);
+        videoOptionsTable.add();
+        videoOptionsTable.row();
+        videoOptionsTable.add().height(checkboxSize).row();
+
+        videoOptionsTable.add().height(checkboxSize);
+        videoOptionsTable.add();
+        videoOptionsTable.add();
+        videoOptionsTable.add();
+        videoOptionsTable.add();
+        videoOptionsTable.add(borderlessLabel);
+        videoOptionsTable.add();
+        videoOptionsTable.add(borderlessBox);
+        videoOptionsTable.add();
+        videoOptionsTable.row();
+        videoOptionsTable.add().height(checkboxSize).row();
 
         apply.setFont(Fonts.MEDIUM);
-        apply.getLabel().setAlignment(Align.center);
+        apply.getLabel().setAlignment(Align.left);
 
-        videoOptionsTable.add();
-        videoOptionsTable.add(apply).row();
+        videoOptionsTable.add().height(checkboxSize);
+        videoOptionsTable.add(apply).fill().row();
 
         videoOptionsTable.layout();
     }
 
+    public void update() {
+        resolution.setSelected(Resolution.resolutionToString(
+            SolarMain.getInstance().getSettings().getScreenWidth(),
+            SolarMain.getInstance().getSettings().getScreenHeight()
+        ));
+
+        vsyncBox.setChecked(SolarMain.getInstance().getSettings().isVsync());
+        fullscreenBox.setChecked(SolarMain.getInstance().getSettings().isFullscreen());
+        borderlessBox.setChecked(SolarMain.getInstance().getSettings().isBorderless());
+
+        fpsLimitField.setText("" + SolarMain.getInstance().getSettings().getFpsLimit());
+    }
+
     @Override
     public void show() {
+        update();
         videoOptionsTable.setVisible(true);
     }
 
