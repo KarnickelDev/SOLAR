@@ -14,7 +14,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import karnickeldev.solar.core.Logger;
-import karnickeldev.solar.core.MainMenuScreen;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.settings.Resolution;
 import karnickeldev.solar.settings.Settings;
@@ -25,7 +24,7 @@ import karnickeldev.solar.settings.Settings;
  * @author KarnickelDev
  * @since 27.10.2024
  */
-public class OptionsMenu implements UIElement {
+public class OptionsMenuOld implements UIElement {
 
     private Stage stage;
     private Table table;
@@ -33,7 +32,7 @@ public class OptionsMenu implements UIElement {
 
     Label.LabelStyle labelStyle;
 
-    public OptionsMenu(Stage stage, int width, int height) {
+    public OptionsMenuOld(Stage stage, int width, int height) {
         this.stage = stage;
         this.table = new Table();
 
@@ -42,7 +41,10 @@ public class OptionsMenu implements UIElement {
         TextureAtlas atlas = new TextureAtlas("uiskin.atlas");
 
         table.setSize(0.6f * width, 0.7f * height);
-        table.setPosition(0.5f * (width - table.getWidth()), 0.5f * (height - table.getHeight()));
+
+        float mainMenuWidth = SolarMain.getInstance().getUIManager().getMainMenu().getWidth() + SolarMain.getInstance().getUIManager().getMainMenu().getX();
+        table.setPosition(1.05f*mainMenuWidth, 0.5f * (height - table.getHeight()));
+
         table.setClip(true);
         table.background(new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")), 4, 4, 4, 4)));
 
@@ -84,8 +86,33 @@ public class OptionsMenu implements UIElement {
 
 
     @Override
+    public float getWidth() {
+        return table.getWidth();
+    }
+
+    @Override
+    public float getHeight() {
+        return table.getHeight();
+    }
+
+    @Override
+    public float getX() {
+        return table.getX();
+    }
+
+    @Override
+    public float getY() {
+        return table.getY();
+    }
+
+    @Override
     public void resizeUI(int width, int height) {
 
+    }
+
+    @Override
+    public boolean isVisible() {
+        return false;
     }
 
     private void initOptionsMenu() {
@@ -240,6 +267,8 @@ public class OptionsMenu implements UIElement {
 
         //table.debug();
     }
+
+
 
     @Override
     public void dispose() {

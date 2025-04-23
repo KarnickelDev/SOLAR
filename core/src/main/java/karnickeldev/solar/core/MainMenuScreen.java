@@ -3,20 +3,13 @@ package karnickeldev.solar.core;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
-import karnickeldev.solar.ui.*;
-import karnickeldev.solar.util.TileLoader;
+import karnickeldev.solar.util.MathUtil;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Random;
 
 /**
  * Project: SOLAR
@@ -24,125 +17,119 @@ import java.util.List;
  * @author KarnickelDev
  * @since 14.10.2024
  */
-public class MainMenuScreen implements Screen, UIElement {
+public class MainMenuScreen implements Screen {
 
     private final SolarMain game;
 
-    private final Texture background_atlas;
-    private final TextureRegion[] background_tiles;
-
-    UIManager ui_manager;
-
-    private GlyphLayout glyph_layout;
-
-    private Stage stage;
-    private OrthographicCamera camera;
     private Viewport viewport;
+    private OrthographicCamera camera;
 
-    private Skin skin;
 
-    private Table mainMenuUITable;
-    private List<MenuButton> mainMenuUIButtons = new ArrayList<>();
+    private final Texture dark_blue;
 
     public MainMenuScreen(SolarMain solarMain) {
         this.game = solarMain;
 
-        camera = new OrthographicCamera(
-            game.getSettingsManager().getSettings().getScreenWidth(),
-            game.getSettingsManager().getSettings().getScreenHeight()
-        );
-        camera.update();
+        camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         viewport = new ScreenViewport(camera);
 
-        background_atlas = AssetWrapper.getInstance().getAsset(Asset.STARRY_SKY_BACKGROUND_TILES);
-        background_tiles = TileLoader.getTiles(background_atlas, 4, 256);
+        int STAR_COUNT = 1024;
+        float[] ra = new float[STAR_COUNT];
+        float[] dec = new float[STAR_COUNT];
+        float[] brightness = new float[STAR_COUNT];
+        char[] size = new char[STAR_COUNT];
+        char[] color = new char[STAR_COUNT];
 
-        stage = new Stage(viewport);
-        skin = new Skin(Gdx.files.internal("uiskin.json"));
+        Random rnd = new Random();
+        for (int i = 0; i < STAR_COUNT; i++) {
+            ra[i] = MathUtil.random(0, 360);
+            dec[i] = (float) Math.toDegrees(Math.asin(MathUtil.random(-1, 1)));
+            int s = rnd.nextInt(100);
+            if(s < 86) {
+                size[i] = 0;
+                brightness[i] = MathUtil.random(0.3f, 1);
+            } else if(s < 97) {
+                size[i] = 1;
+                brightness[i] = MathUtil.random(0.5f, 1);
+            } else {
+                size[i] = 2;
+                brightness[i] = MathUtil.random(0.8f, 1);
+            }
 
-        ui_manager = new UIManager(stage);
-
-        mainMenuUITable = new Table();
-
-        mainMenuUITable.add(new MenuButton("Singleplayer", skin)).row();
-        mainMenuUITable.add(new MenuButton("Multiplayer", skin)).row();
-        mainMenuUITable.add(new MenuButton("Options", skin, () -> ui_manager.getOptionsMenu().show())).row();
-        mainMenuUITable.add(new MenuButton("Credits", skin)).row();
-        mainMenuUITable.add(new MenuButton("Exit", skin, game::exit)).row();
-
-        stage.addActor(mainMenuUITable);
-
-        resizeUI(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        mainMenuUITable.setVisible(true);
-
-        game.getInputManager().addInput(InputManager.MAIN_MENU_INPUT, stage);
-    }
-
-    public void resizeUI(int appWidth, int appHeight) {
-        BitmapFont font = Fonts.MEDIUM_BOLD;
-
-        glyph_layout = new GlyphLayout();
-        glyph_layout.setText(font,"Singleplayer");
-
-        for(Actor actor : mainMenuUITable.getChildren()) {
-            if(actor instanceof MenuButton) {
-                MenuButton button = (MenuButton) actor;
-                TextButton.TextButtonStyle style = button.getStyle();
-                style.font = font;
-                button.setStyle(style);
+            int c = rnd.nextInt(100);
+            if(c < 70) {
+                color[i] = 'w';
+            } else if(c < 80) {
+                color[i] = 'y';
+            } else if(c < 90) {
+                color[i] = 'r';
+            } else {
+                color[i] = 'b';
             }
         }
 
-        int groupHeight = appHeight / 3;
-        float groupSpacing = 0.5f * groupHeight;
-        float elementHeight = 0.5f * groupHeight;
-        int groupWidth = Math.min(appWidth, (int)(1.5f*glyph_layout.width));
+        BackgroundStarRenderer.setStarParameters(STAR_COUNT, size, color, brightness, ra, dec);
 
-        mainMenuUITable.setSize(groupWidth, groupHeight);
-        mainMenuUITable.setPosition(appWidth * 0.03f, (appHeight * 0.72f) - groupHeight);
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        int c = 255;    // alpha 255
+        c |= (15 << 8); // blue
+        c |= (9 << 16); // green
+        c |= (9 << 24); // red
+        pixmap.setColor(c);
+        pixmap.drawPixel(0, 0);
+        dark_blue = new Texture(pixmap);
+        pixmap.dispose();
 
-        for(Actor actor: mainMenuUITable.getChildren()) {
-            if(actor instanceof MenuButton) {
-                MenuButton button = (MenuButton) actor;
-                mainMenuUITable.getCell(button).width(groupWidth).height(elementHeight / 5f)
-                    .padBottom(groupSpacing / 4f)
-                    .fill()
-                    .expandX();
-            }
-        }
+        game.getUIManager().getMainMenu().show();
 
-        mainMenuUITable.invalidate();
-        mainMenuUITable.layout();
+        game.getInputManager().addInput(InputManager.MAIN_MENU_INPUT, game.pausedStage);
     }
 
     @Override
     public void show() {
+        BackgroundStarRenderer.loadAssets();
+        BackgroundStarRenderer.setPosition(Gdx.graphics.getWidth() * 0.5f, Gdx.graphics.getHeight() * 0.5f, 50f, 11f);
     }
 
+    float X = 0;
 
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+        viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.update();
 
         game.batch.setProjectionMatrix(camera.combined);
 
-        // Draw the background
-        TileLoader.renderBackground(game.batch, background_tiles, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        X += delta;
 
-        stage.act(delta);
-        stage.draw();
+        game.batch.begin();
+        game.batch.setColor(1f, 1f, 1f, 1f);
+
+        game.batch.draw(dark_blue,0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        if(!BackgroundStarRenderer.drawStarScape(game.batch, delta, true)) {
+            Logger.error("Erroneous input for background starscape");
+        }
+
+        // Draw the background
+        Texture background = AssetWrapper.getInstance().getAsset(Asset.MAIN_MENU_BACKGROUND_SCENERY);
+        game.batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        game.batch.end();
+
+        SolarMain.getInstance().pausedStage.act(delta);
+        SolarMain.getInstance().pausedStage.draw();
     }
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-        camera.setToOrtho(false, width, height);
-        camera.update();
-
-        ui_manager.resize(width, height);
-        resizeUI(width, height);
+        game.getUIManager().resize(width, height);
     }
 
     @Override
@@ -162,7 +149,6 @@ public class MainMenuScreen implements Screen, UIElement {
 
     @Override
     public void dispose() {
-        stage.dispose();
-        skin.dispose();
+        dark_blue.dispose();
     }
 }

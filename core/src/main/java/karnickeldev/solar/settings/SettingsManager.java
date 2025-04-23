@@ -1,7 +1,9 @@
 package karnickeldev.solar.settings;
 
 import com.badlogic.gdx.Gdx;
+import karnickeldev.solar.core.Logger;
 
+import java.awt.*;
 import java.io.IOException;
 
 /**
@@ -32,6 +34,9 @@ public class SettingsManager {
     }
 
     public void applySettings(Settings newSettings) {
+        DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
+        assert(newSettings.getScreenWidth() <= displayMode.getWidth());
+        assert(newSettings.getScreenHeight() <= displayMode.getHeight());
 
         Gdx.graphics.setUndecorated(newSettings.isFullscreen() || newSettings.isBorderless());
 
@@ -44,12 +49,13 @@ public class SettingsManager {
     }
 
     public void saveToFile() {
-        System.out.println("Saving settings to disk...");
         try {
             settings.save();
         } catch (IOException e) {
+            Logger.error(Logger.GENERAL, "Error saving settings to disk", e);
             throw new RuntimeException(e);
         }
+        Logger.log(Logger.GENERAL, "Settings saved!");
     }
 
 }

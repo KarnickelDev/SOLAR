@@ -1,11 +1,14 @@
 package karnickeldev.solar.assetmanager;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
 public enum Asset {
 
 
     STARRY_SKY_BACKGROUND_TILES(AssetWrapper.TEXTURES + "starry_sky_tiles.png", Texture.class, true),
+    MAIN_MENU_BACKGROUND_SCENERY(AssetWrapper.TEXTURES + "main_menu_background.png", Texture.class, true),
+    STARS_ATLAS(AssetWrapper.TEXTURES + "stars.atlas", TextureAtlas.class, true);
     ;
 
 

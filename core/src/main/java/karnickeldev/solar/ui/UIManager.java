@@ -1,7 +1,6 @@
 package karnickeldev.solar.ui;
 
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.ui.pausemenu.OptionsMenu;
 
 /**
  * Project: SOLAR
@@ -11,27 +10,34 @@ import karnickeldev.solar.core.SolarMain;
  */
 public class UIManager {
 
-    private Stage stage;
-
     private OptionsMenu optionsMenu;
 
+    private MainMenu mainMenu;
 
-    public UIManager(Stage stage) {
-        this.stage = stage;
-        optionsMenu = new OptionsMenu(stage,
-            SolarMain.getInstance().getSettingsManager().getSettings().getScreenWidth(),
-            SolarMain.getInstance().getSettingsManager().getSettings().getScreenHeight()
-        );
+    public UIManager() {
+
     }
 
-    public OptionsMenu getOptionsMenu() {
-        return optionsMenu;
+    public void create() {
+
+        // update Skin
+        SkinManager.update();
+
+        // UI Elements
+        mainMenu = new MainMenu(SkinManager.getUISkin());
+
+        optionsMenu = new OptionsMenu(SkinManager.getUISkin());
     }
+
+    public MainMenu getMainMenu() {return mainMenu;}
+    public OptionsMenu getOptionsMenu() {return optionsMenu;}
 
     public void resize(int width, int height) {
         Fonts.resizeFonts(height);
-        optionsMenu.dispose();
-        optionsMenu = new OptionsMenu(stage, width, height);
+        SkinManager.update();
+
+        mainMenu.resizeUI(width, height);
+        optionsMenu.resizeUI(width, height);
     }
 
 }

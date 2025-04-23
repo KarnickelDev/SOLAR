@@ -113,6 +113,19 @@ public class Lwjgl3Launcher {
 
         configuration.setWindowIcon("solar256.png","solar128.png", "solar64.png", "solar48.png", "solar32.png", "solar16.png");
 
+        DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment()
+            .getDefaultScreenDevice().getDisplayMode();
+        if(settings.isFullscreen()
+            || (settings.getScreenWidth() == displayMode.getWidth()
+            && settings.getScreenHeight() == displayMode.getHeight())) {
+            configuration.setWindowPosition(0,0);
+        } else {
+            configuration.setWindowPosition(
+                (displayMode.getWidth() - settings.getScreenWidth()) / 2,
+                (displayMode.getHeight() - settings.getScreenHeight()) / 2
+            );
+        }
+
         configuration.setInitialVisible(true);
         configuration.setResizable(true);
 

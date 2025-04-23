@@ -14,8 +14,10 @@ public class Logger {
     public static final String GENERAL = "[GENERAL] ";
     public static final String DEBUG = "[DEBUG] ";
     public static final String STARTUP = "[STARTUP] ";
+    public static final String SHUTDOWN = "[SHUTDOWN] ";
     public static final String ASSETS = "[ASSETS] ";
     public static final String ENTITY = "[ENTITY] ";
+    public static final String SERVER = "[SERVER] ";
     public static final String NETWORK = "[NETWORK] ";
     public static final String UI = "[UI] ";
 
