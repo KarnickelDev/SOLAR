@@ -2,18 +2,20 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import karnickeldev.solar.assetmanager.AssetWrapper;
+import karnickeldev.solar.server.servers.DefaultServer;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.settings.SettingsManager;
 import karnickeldev.solar.ui.Fonts;
 import karnickeldev.solar.ui.UIManager;
+import karnickeldev.solar.util.MathUtil;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class SolarMain extends Game {
@@ -29,6 +31,9 @@ public class SolarMain extends Game {
     private UIManager uiManager;
 
     public Stage pausedStage;
+    public Stage hudStage;
+
+    private Label fpsLabel, tpsLabel, tpsExtraLabel, versionLabel;
 
     public SolarMain(Settings settings) {
         instance = this;
@@ -63,8 +68,26 @@ public class SolarMain extends Game {
         glyph_layout = new GlyphLayout();
 
         pausedStage = new Stage(new ScreenViewport(new OrthographicCamera(getSettings().getScreenWidth(), getSettings().getScreenHeight())));
+        hudStage = new Stage(new ScreenViewport(new OrthographicCamera(getSettings().getScreenWidth(), getSettings().getScreenHeight())));
 
         getUIManager().create();
+
+        fpsLabel = new Label("", new Label.LabelStyle(Fonts.SMALL, Color.WHITE));
+        fpsLabel.setVisible(true);
+
+        tpsLabel = new Label("", new Label.LabelStyle(Fonts.SMALL, Color.WHITE));
+        tpsLabel.setVisible(true);
+
+        tpsExtraLabel = new Label("", new Label.LabelStyle(Fonts.SMALL, Color.WHITE));
+        tpsExtraLabel.setVisible(true);
+
+        versionLabel = new Label("", new Label.LabelStyle(Fonts.SMALL, Color.WHITE));
+        versionLabel.setVisible(true);
+
+        hudStage.addActor(fpsLabel);
+        hudStage.addActor(tpsLabel);
+        hudStage.addActor(tpsExtraLabel);
+        hudStage.addActor(versionLabel);
 
         Gdx.input.setInputProcessor(getInputManager().getInputMultiplexer());
 
@@ -78,20 +101,12 @@ public class SolarMain extends Game {
         super.render();
 
         pausedStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+        hudStage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
 
-        BitmapFont font = Fonts.SMALL;
+        configureLabels();
 
-        batch.begin();
-        String text = Metadata.APP_NAME + " v" + Metadata.VERSION;
-        glyph_layout.setText(font, text);
-        font.draw(batch, text,4, 4 + glyph_layout.height, 1.1f*glyph_layout.width, Align.left, false);
-
-        glyph_layout.setText(font, "FPS: 999999");
-        font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(),
-            Gdx.graphics.getWidth() - glyph_layout.width,
-            Gdx.graphics.getHeight() - 1.01f*glyph_layout.height);
-
-        batch.end();
+        hudStage.act(Gdx.graphics.getDeltaTime());
+        hudStage.draw();
     }
 
     @Override
@@ -115,6 +130,52 @@ public class SolarMain extends Game {
 
     public void exit() {
         Gdx.app.exit();
+    }
+
+    private final static Color normal = new Color(0.09f,0.69f,0.07f,1f);
+    private final static Color mid = new Color(0.94f,0.52f,0.1f,1f);
+    private final static Color bad = new Color(0.86f,0.07f,0.07f,1f);
+
+    private void configureLabels() {
+        Label.LabelStyle s = fpsLabel.getStyle();
+        s.font = Fonts.SMALL;
+
+        Color fpsColor = normal;
+        Color tpsColor = normal;
+        Color tpsExtraColor = normal;
+
+        versionLabel.setStyle(s);
+        versionLabel.setText(Metadata.APP_NAME + " v" + Metadata.VERSION);
+        versionLabel.setPosition(0.005f*Gdx.graphics.getWidth(), 0.015f*Gdx.graphics.getHeight());
+
+        float fps = Gdx.graphics.getFramesPerSecond();
+        if(fps < 90) fpsColor = mid;
+        if(fps < 50) fpsColor = bad;
+        fpsLabel.setStyle(s);
+        fpsLabel.setText("FPS: " + fps);
+        fpsLabel.setPosition(0.92f * Gdx.graphics.getWidth(), 0.95f * Gdx.graphics.getHeight());
+        fpsLabel.setColor(fpsColor);
+
+        float tps = DefaultServer.tpsCount.getTPS();
+        if(tps < 0.95f * DefaultServer.TICK_RATE) tpsColor = mid;
+        if(tps < 0.85f * DefaultServer.TICK_RATE) tpsColor = bad;
+        tpsLabel.setStyle(s);
+        tpsLabel.setText("TPS: " + String.format("%.2f", tps));
+        tpsLabel.setPosition(fpsLabel.getX(), fpsLabel.getY() - 0.02f*Gdx.graphics.getHeight());
+        tpsLabel.setColor(tpsColor);
+
+
+        float delay = DefaultServer.tpsCount.getDelayedness();
+        if(delay >= 0.05) tpsExtraColor = mid;
+        if(delay >= 0.15) tpsExtraColor = bad;
+        tpsExtraLabel.setStyle(s);
+        tpsExtraLabel.setText(
+            "d: " + String.format("%.2f", delay)
+                + "\nmax: " + String.format("%.2f", DefaultServer.tpsCount.getMaxTickDuration())
+                + "\nmin: " + String.format("%.2f", DefaultServer.tpsCount.getMinTickDuration())
+        );
+        tpsExtraLabel.setPosition(fpsLabel.getX(), tpsLabel.getY() - 2*0.02f*Gdx.graphics.getHeight());
+        tpsExtraLabel.setColor(tpsExtraColor);
     }
 
 }

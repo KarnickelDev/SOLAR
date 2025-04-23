@@ -1,41 +1,33 @@
 package karnickeldev.solar.server.simulation;
 
-import karnickeldev.solar.gamestate.GameState;
-import karnickeldev.solar.physics.OrbitalObject;
-import karnickeldev.solar.gamestate.StarSystemTree;
+import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.render.PlanetoidRenderSystem;
+import karnickeldev.solar.server.physics.KeplerianOrbitSystem;
 
 class Simulation implements Runnable {
 
-    private static final int SPEED = 3600*24*30;
+    private static final double SPEED = 3600 * 24 * 30;
+    private static final double timeFactor = SPEED / (24 * 60 * 60);
 
-    private final GameState gameState;
+    private final double timeSeconds;
+    private final EntityManager em;
 
-    private final int timeStep;
+    private final KeplerianOrbitSystem os;
 
     private double time = 0d;
 
-    protected Simulation(GameState gameState, int timeStep) {
-        this.gameState = gameState;
-        this.timeStep = timeStep;
+
+    protected Simulation(EntityManager entityManager, int tickRate) {
+        this.timeSeconds = 1d / tickRate;
+
+        this.em = entityManager;
+        os = new KeplerianOrbitSystem(em);
     }
 
     @Override
     public void run() {
-        updateStaticObjects();
-    }
-
-
-    private void updateStaticObjects() {
-        time += SPEED / 60d;
-        StarSystemTree.Iterator iterator = new StarSystemTree.Iterator(gameState.getStarSystem());
-        while(iterator.hasNext()) {
-            OrbitalObject object = iterator.next();
-
-            object.update(time);
-        }
-    }
-
-    public GameState getGameState() {
-        return gameState;
+        time += timeSeconds * timeFactor;
+        os.updateHCS(time);
+        PlanetoidRenderSystem.lastFixedUpdateTime = System.currentTimeMillis();
     }
 }

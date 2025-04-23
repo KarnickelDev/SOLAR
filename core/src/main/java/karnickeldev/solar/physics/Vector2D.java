@@ -4,6 +4,10 @@ public final class Vector2D {
 
     private double x, y;
 
+    public Vector2D() {
+        this(0,0);
+    }
+
     public Vector2D(double x, double y) {
         this.x = x;
         this.y = y;
@@ -33,7 +37,13 @@ public final class Vector2D {
         return this;
     }
 
-    public Vector2D add(float x, float y) {
+    public Vector2D set(double x, double y) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    public Vector2D add(double x, double y) {
         this.x += x;
         this.y += y;
         return this;
@@ -45,7 +55,7 @@ public final class Vector2D {
         return this;
     }
 
-    public Vector2D subtract(float x, float y) {
+    public Vector2D subtract(double x, double y) {
         this.x -= x;
         this.y -= y;
         return this;
@@ -57,11 +67,38 @@ public final class Vector2D {
         return this;
     }
 
-    public Vector2D scale(float a) {
+    public Vector2D scale(double a) {
         x *= a;
         y *= a;
         return this;
     }
 
+    public double len() {
+        return Math.sqrt((x*x) + (y*y));
+    }
+
+    public double len2() {
+        return (x*x) + (y*y);
+    }
+
+    public Vector2D nor() {
+        if(x != 0 || y != 0) return this;
+
+        double len = len();
+        x /= len;
+        y /= len;
+
+        return this;
+    }
+
+    public Vector2D lerp(Vector2D target, float alpha) {
+        x += (target.x - x) * alpha;
+        y += (target.y - y) * alpha;
+        return this;
+    }
+
+    public boolean isZero() {
+        return x == 0 && y == 0;
+    }
 
 }

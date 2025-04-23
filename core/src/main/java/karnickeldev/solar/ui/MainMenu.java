@@ -28,7 +28,7 @@ public class MainMenu implements UIElement {
         })).expandX().fillX().row();
         mainMenu.add(new MenuButton("Multiplayer", skin)).expandX().fillX().row();
         mainMenu.add(new MenuButton("Options", skin, () -> {
-            hide();
+            //hide();
             SolarMain.getInstance().getUIManager().getOptionsMenu().show();
         })).expandX().fillX().row();
         mainMenu.add(new MenuButton("Credits", skin)).expandX().fillX().row();
@@ -110,6 +110,11 @@ public class MainMenu implements UIElement {
     @Override
     public void hide() {
         mainMenu.setVisible(false);
+    }
+
+    @Override
+    public boolean isVisible() {
+        return mainMenu.isVisible();
     }
 
     @Override

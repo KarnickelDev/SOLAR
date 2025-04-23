@@ -1,4 +1,4 @@
-package karnickeldev.solar.gamestate;
+package karnickeldev.solar.level;
 
 import karnickeldev.solar.core.Logger;
 import karnickeldev.solar.physics.OrbitalObject;
@@ -39,8 +39,8 @@ public class StarSystemTree {
         this(null);
     }
 
-    public StarSystemTree(OrbitalObject star) {
-        root = new Node(star);
+    public StarSystemTree(OrbitalObject root) {
+        this.root = new Node(root);
     }
 
     public boolean insert(OrbitalObject object) {

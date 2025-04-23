@@ -21,4 +21,10 @@ public interface UIElement extends Disposable {
 
     void hide();
 
+    default void setVisible(boolean visible) {
+        if(visible) show();
+        else hide();
+    }
+
+    boolean isVisible();
 }

@@ -36,6 +36,8 @@ public class LoadingScreen implements Screen {
     private float orbit0Radius, orbit1Radius;
     private float centerX, centerY;
 
+    private boolean firstLoad = true;
+
     public LoadingScreen(SolarMain solarMain, Runnable loadRunnable) {
         this.game = solarMain;
 
@@ -45,6 +47,14 @@ public class LoadingScreen implements Screen {
         if(!AssetWrapper.getInstance().isLoaded(Asset.STARRY_SKY_BACKGROUND_TILES)) {
             AssetWrapper.getInstance().loadGlobal(Asset.STARRY_SKY_BACKGROUND_TILES);
             AssetWrapper.getInstance().finishLoading();
+        }
+
+        if(!AssetWrapper.getInstance().isLoaded(Asset.MAIN_MENU_BACKGROUND_SCENERY)) {
+            AssetWrapper.getInstance().loadGlobal(Asset.MAIN_MENU_BACKGROUND_SCENERY);
+        }
+
+        if(!AssetWrapper.getInstance().isLoaded(Asset.STARS_ATLAS)) {
+            AssetWrapper.getInstance().loadGlobal(Asset.STARS_ATLAS);
         }
 
         camera = new OrthographicCamera(
@@ -80,14 +90,21 @@ public class LoadingScreen implements Screen {
 
 
     @Override
-    public void show() {}
+    public void show() {
+        if(firstLoad) firstLoad = false;
+
+        if(game.getSettings().isBorderless()) {
+            Gdx.graphics.setUndecorated(true);
+            Gdx.graphics.setWindowedMode(game.getSettings().getScreenWidth(), game.getSettings().getScreenHeight());
+        }
+    }
 
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0,0,0,1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        TileLoader.renderBackground(game.batch, background_tiles, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        //TileLoader.renderBackground(game.batch, background_tiles, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         angle0 = (angle0 + (230*delta)) % 360;
         angle1 = (angle1 + (160*delta)) % 360;

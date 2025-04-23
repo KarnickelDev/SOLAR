@@ -110,6 +110,11 @@ public class OptionsMenuOld implements UIElement {
 
     }
 
+    @Override
+    public boolean isVisible() {
+        return false;
+    }
+
     private void initOptionsMenu() {
 
         labelStyle = new Label.LabelStyle();
@@ -262,6 +267,8 @@ public class OptionsMenuOld implements UIElement {
 
         //table.debug();
     }
+
+
 
     @Override
     public void dispose() {

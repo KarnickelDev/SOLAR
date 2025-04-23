@@ -10,9 +10,9 @@ public class Units {
     public static double G_KM_TON = G_SI * 1e-6;
 
     public enum Length implements Convertible {
-        AU(1.495979e8f),
-        KILOMETER(1f),
-        METER(0.001f),
+        AU(1),
+        KILOMETER(1f / 1.495979e8f),
+        METER(0.001f * (1f / 1.495979e8f)),
         ;
 
         private final float baseFactor;
@@ -25,9 +25,11 @@ public class Units {
 
     public enum Time implements Convertible {
 
-        HOUR(1f),
-        MINUTE(1f/60f),
-        SECOND(1f/3600f),
+        YEAR(365.25f),
+        DAY(1f),
+        HOUR((1f / 24)),
+        MINUTE(1f / (24 * 60)),
+        SECOND(1f/ (24 * 3600)),
         ;
 
         private final float baseFactor;
@@ -65,6 +67,9 @@ public class Units {
         return value*unit.getBaseFactor();
     }
 
+    public static double convert(float value, Convertible from, Convertible to) {
+        return (value * from.getBaseFactor()) / to.getBaseFactor();
+    }
 
     public static boolean assertEqualWithinError(float a, float b, float e) {
         return Math.abs(a - b) < e;

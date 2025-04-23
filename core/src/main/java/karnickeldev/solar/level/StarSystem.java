@@ -1,12 +1,10 @@
-package karnickeldev.solar.gamestate;
+package karnickeldev.solar.level;
 
-import java.io.*;
-
-public class GameState {
+public class StarSystem {
 
     public StarSystemTree starSystem;
 
-    public GameState(StarSystemTree starSystem) {
+    public StarSystem(StarSystemTree starSystem) {
         this.starSystem = starSystem;
     }
 

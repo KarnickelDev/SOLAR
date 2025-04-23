@@ -37,6 +37,10 @@ public class GameplayOptionsMenu implements UIElement {
     public void hide() {
 
     }
+    @Override
+    public boolean isVisible() {
+        return false;
+    }
 
     @Override
     public void dispose() {

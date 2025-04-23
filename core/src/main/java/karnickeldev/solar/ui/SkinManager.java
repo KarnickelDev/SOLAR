@@ -16,7 +16,7 @@ public class SkinManager {
     private static TextButton.TextButtonStyle button_small, button_medium, button_medium_bold, button_big;
 
     public static void update() {
-        uiSkin = new Skin(Gdx.files.internal("uiskin.json"));
+        if(uiSkin == null) uiSkin = new Skin(Gdx.files.internal("uiskin.json"));
 
         TextButton test = new TextButton("test", uiSkin);
 

@@ -2,7 +2,8 @@ package karnickeldev.solar.server.simulation;
 
 
 import karnickeldev.solar.core.Logger;
-import karnickeldev.solar.gamestate.GameState;
+import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.level.StarSystem;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -10,49 +11,34 @@ import java.util.concurrent.TimeUnit;
 
 public class SimulationExecutor {
 
-    private static final short TICK_RATE = 60;
-    private static final int TICK_INTERVAL = 1000 / TICK_RATE;  // in milliseconds
+    public final int tickRate;
 
-    private final ScheduledExecutorService executor;
+    private final Thread physicsThreadExecutor;
+    private final PhysicsThread physicsThread;
     private final Simulation simulation;
 
-    public SimulationExecutor(GameState initialGameState) {
-        executor = Executors.newSingleThreadScheduledExecutor();
-        simulation = new Simulation(initialGameState, TICK_INTERVAL);
+    public SimulationExecutor(EntityManager entityManager, int tickRate) {
+        this.tickRate = tickRate;
+
+        simulation = new Simulation(entityManager, this.tickRate);
+        physicsThread = new PhysicsThread(tickRate, simulation);
+        physicsThreadExecutor = new Thread(physicsThread);
     }
 
     public void start() {
-        executor.scheduleAtFixedRate(simulation, 0, TICK_INTERVAL, TimeUnit.MILLISECONDS);
+        physicsThreadExecutor.start();
     }
 
 
-    public void stop(long timeout_millis) {
-        executor.shutdown();
-
+    public void stop() {
+        Logger.log(Logger.SERVER, "Shutting down PhysicsThread...");
+        physicsThread.stop();
         try {
-            if (!executor.awaitTermination(timeout_millis, TimeUnit.MILLISECONDS)) {
-                Logger.log(Logger.SERVER, "Server did not terminate in the specified time.");
-
-                executor.shutdownNow();
-                Logger.log(Logger.SERVER, "Server was forcefully shut down.");
-
-                // Wait again to ensure termination
-                if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                    Logger.error(Logger.SERVER, "Server did not terminate cleanly.");
-                }
-            } else {
-                Logger.log(Logger.SERVER, "Server shutdown completed gracefully.");
-            }
+            physicsThreadExecutor.join();
         } catch (InterruptedException e) {
-            Logger.error(Logger.SERVER, "Shutdown was interrupted");
-            executor.shutdownNow();
-            Thread.currentThread().interrupt(); // Preserve interrupt status
+            physicsThreadExecutor.interrupt();
+            Logger.error(Logger.SERVER, "Shutdown of PhysicsThread was interrupted!", e);
         }
-
-    }
-
-    public GameState getCurrentGameState() {
-        return simulation.getGameState();
     }
 
 }

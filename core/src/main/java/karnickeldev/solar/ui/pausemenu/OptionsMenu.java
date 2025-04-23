@@ -7,18 +7,19 @@ import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.settings.Resolution;
 import karnickeldev.solar.ui.Fonts;
 import karnickeldev.solar.ui.MenuButton;
+import karnickeldev.solar.ui.SkinManager;
 import karnickeldev.solar.ui.UIElement;
 
 public class OptionsMenu implements UIElement {
     Label.LabelStyle titleStyle;
     private final Label title;
+    private Skin uiSkin;
 
     Table optionsMenu, menus, optionWindow;
 
@@ -27,12 +28,23 @@ public class OptionsMenu implements UIElement {
     private final UIElement[] subMenus;
     private int selectedSubMenu = 0;
 
+    NinePatchDrawable background;
+
     private final MenuButton[] buttons;
 
+    private boolean isVisible;
+
     public OptionsMenu(Skin skin) {
+        this(skin, 0, false);
+    }
+
+    public OptionsMenu(Skin skin, int initSubMenu, boolean initVisible) {
+        uiSkin = skin;
+        selectedSubMenu = initSubMenu;
+        isVisible = initVisible;
 
         atlas = new TextureAtlas("uiskin.atlas");
-        NinePatchDrawable background = new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")),
+        background = new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")),
             4, 4, 4, 4));
 
 
@@ -44,29 +56,7 @@ public class OptionsMenu implements UIElement {
         title = new Label("Options", titleStyle);
         title.setAlignment(Align.center);
 
-        optionsMenu = new Table();
-        optionsMenu.setClip(true);
-        optionsMenu.setBackground(background);
-        optionsMenu.pad(0);
-        optionsMenu.top().left();
-
-        menus = new Table();
-        menus.setClip(true);
-        menus.setBackground(background);
-        menus.pad(0);
-        menus.top().left();
-
-        optionWindow = new Table();
-        optionWindow.setClip(true);
-        optionWindow.setBackground(background);
-        optionWindow.pad(0);
-        optionWindow.top().left();
-
-        subMenus = new UIElement[] {
-            new GameplayOptionsMenu(),
-            new VideoOptionsMenu(optionWindow, skin),
-            new GameplayOptionsMenu()
-        };
+        subMenus = new UIElement[3];
 
         buttons = new MenuButton[] {
             new MenuButton("Gameplay", skin, () -> {
@@ -91,9 +81,7 @@ public class OptionsMenu implements UIElement {
             SolarMain.getInstance().getSettingsManager().getSettings().getScreenHeight()
         );
 
-        SolarMain.getInstance().pausedStage.addActor(optionsMenu);
-
-        hide();
+        setVisible(initVisible);
     }
 
     public void selectSubMenu(int subMenu) {
@@ -123,7 +111,13 @@ public class OptionsMenu implements UIElement {
         float menuWidth = 0.7f * Resolution.getAdjustedWidth(height);
         float menuHeight = 0.7f * menuWidth;
 
-        optionsMenu.clear();
+        if(optionsMenu != null) optionsMenu.remove();
+
+        optionsMenu = new Table();
+        optionsMenu.setClip(true);
+        optionsMenu.setBackground(background);
+        optionsMenu.pad(0);
+        optionsMenu.top().left();
         optionsMenu.setSize(menuWidth, menuHeight);
         optionsMenu.setPosition(
             0.5f * (Gdx.graphics.getWidth() - getWidth()),
@@ -135,7 +129,11 @@ public class OptionsMenu implements UIElement {
 
         float elementHeight = (0.98f * menuHeight) / ((2f * (buttons.length + 1)));
 
-        menus.clear();
+        menus = new Table();
+        menus.setClip(true);
+        menus.setBackground(background);
+        menus.pad(0);
+        menus.top().left();
         menus.setSize(0.26f * menuWidth, menuHeight);
         menus.add(title).width(menus.getWidth()).height(elementHeight).pad(0).row();
         menus.add().height(elementHeight).pad(0).row();
@@ -146,34 +144,54 @@ public class OptionsMenu implements UIElement {
             menus.add().height(elementHeight).pad(0).row();
         }
 
-        optionWindow.clear();
+        optionWindow = new Table();
+        optionWindow.setClip(true);
+        optionWindow.setBackground(background);
+        optionWindow.pad(0);
+        optionWindow.top().left();
         optionWindow.setSize(
             menuWidth - menus.getWidth(),
             menuHeight - menus.getHeight()
         );
 
+        for (UIElement uiElement : subMenus) if(uiElement != null) uiElement.dispose();
+        subMenus[0] = new GameplayOptionsMenu();
+        subMenus[1] = new VideoOptionsMenu(optionWindow, uiSkin);
+        subMenus[2] = new GameplayOptionsMenu();
+
         optionsMenu.add(menus).expandY().fill();
         optionsMenu.add(optionWindow).expand().fill();
 
-        for (UIElement uiElement : subMenus) {
-            uiElement.resizeUI(width, height);
-        }
+        for (UIElement uiElement : subMenus) uiElement.resizeUI(width, height);
+
+        SolarMain.getInstance().pausedStage.addActor(optionsMenu);
+
+        selectSubMenu(getSelectedSubMenu());
+        setVisible(isVisible());
     }
 
     @Override
     public void show() {
         optionsMenu.setVisible(true);
-        selectSubMenu(0);
+        selectSubMenu(getSelectedSubMenu());
+        isVisible = true;
     }
 
     @Override
     public void hide() {
         for (UIElement subMenu : subMenus) subMenu.hide();
         optionsMenu.setVisible(false);
+        isVisible = false;
+    }
+
+    @Override
+    public boolean isVisible() {
+        return isVisible;
     }
 
     @Override
     public void dispose() {
+        hide();
         atlas.dispose();
     }
 

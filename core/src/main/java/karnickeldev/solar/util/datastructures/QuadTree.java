@@ -1,4 +1,4 @@
-package karnickeldev.solar.util;
+package karnickeldev.solar.util.datastructures;
 
 import karnickeldev.solar.physics.PhysicsObject;
 
