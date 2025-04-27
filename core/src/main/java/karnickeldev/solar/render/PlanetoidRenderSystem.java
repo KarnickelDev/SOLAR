@@ -9,6 +9,7 @@ import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.Tags;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
+import karnickeldev.solar.server.servers.DefaultServer;
 import karnickeldev.solar.util.MathUtil;
 
 public class PlanetoidRenderSystem {
@@ -20,6 +21,10 @@ public class PlanetoidRenderSystem {
     private final Texture testTex;
 
     public static long lastFixedUpdateTime = System.currentTimeMillis();
+
+    public static int track = 0;
+
+    private static float frustumCullingRadiusSquared = 0f;
 
     public PlanetoidRenderSystem(EntityManager entityManager, SpriteBatch batch, FloatingOriginCamera camera) {
         this.em = entityManager;
@@ -39,54 +44,72 @@ public class PlanetoidRenderSystem {
         tmp.dispose();
     }
 
+    private boolean isNearFrustum(double x, double y) {
+        double dx = x - camera.getRenderOrigin().getX();
+        double dy = y - camera.getRenderOrigin().getY();
+        double distSq = dx * dx + dy * dy;
+        return distSq <= frustumCullingRadiusSquared;
+    }
+
+    private void updateFrustumCullingCircle() {
+        double halfW = (camera.viewportWidth / 2.0) * camera.getZoom();
+        double halfH = (camera.viewportHeight / 2.0) * camera.getZoom();
+
+        double radius = Math.sqrt(halfW * halfW + halfH * halfH);
+        frustumCullingRadiusSquared = (float) (radius * radius);
+    }
 
     public void renderPlanetoids() {
 
-        // Precompute view bounds in world units
-        float halfW = camera.getCamera().viewportWidth * 0.5f * camera.getZoom();
-        float halfH = camera.getCamera().viewportHeight * 0.5f * camera.getZoom();
-        float camX = (float) camera.getOrigin().getX();
-        float camY = (float) camera.getOrigin().getY();
-        float left   = camX - halfW;
-        float right  = camX + halfW;
-        float bottom = camY - halfH;
-        float top    = camY + halfH;
+        Vector2D tmp = new Vector2D();
 
-        Matrix4 pixelProjection = new Matrix4().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        batch.setProjectionMatrix(pixelProjection);
+        // Precompute frustum bounds
+        tmp.set(0,0);
+        tmp.set(camera.unproject(tmp));
+        double bottom_left_x = tmp.getX();
+        double bottom_left_y = tmp.getY();
+
+        tmp.set(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+        tmp.set(camera.unproject(tmp));
+        double top_right_x = tmp.getX();
+        double top_right_y = tmp.getY();
+
+        updateFrustumCullingCircle();
+
+        float alpha = (System.currentTimeMillis() - lastFixedUpdateTime) / (1000f / DefaultServer.TICK_RATE);
+        alpha = MathUtils.clamp(alpha, 0f, 1f);
+
+        batch.setProjectionMatrix(camera.getCombinedMatrix());
 
         batch.begin();
         for(int entity = 0; entity < em.getAll(); entity++) {
             if(!em.isValid(entity)) continue;
 
-            float alpha = (System.currentTimeMillis() - lastFixedUpdateTime) / (1e-3f / 128);
-            alpha = MathUtils.clamp(alpha, 0f, 1f);
-
-            int size = 16;
             if(em.tags.has(entity, Tags.STAR)) {
                 batch.setColor(Color.ORANGE);
             } else {
                 batch.setColor(Color.WHITE);
+            }
+            if(entity == track) {
+                batch.setColor(Color.CYAN);
             }
 
             double localX = MathUtil.lerp(em.hcs.getOldX(entity), em.hcs.getLocalX(entity), alpha);
             double localY = MathUtil.lerp(em.hcs.getOldY(entity), em.hcs.getLocalY(entity), alpha);
 
             // Cull if completely offscreen
-            if (localX < left  - 1 ||
-                localX > right + 1 ||
-                localY < bottom- 1 ||
-                localY > top   + 1) {
-                continue;
-            }
+//            if (!isNearFrustum(localX, localY)) {
+//                if(localX < bottom_left_x
+//                    || localX > top_right_x
+//                    || localY < bottom_left_y
+//                    || localY > top_right_y
+//                ) continue;
+//            }
 
-            Vector2D renderPos = camera.worldToRender(new Vector2D(localX, localY));
-            renderPos.scale(1d / camera.getZoom());
+            float size = (float) (16 * camera.getZoom());
 
-            float screenX = (float)(0.5f * Gdx.graphics.getWidth() + renderPos.getX());
-            float screenY = (float)(0.5f * Gdx.graphics.getHeight() + renderPos.getY());
+            batch.draw(testTex, (float) (localX - 0.5f*size), (float) (localY - 0.5f*size), size, size);
 
-            batch.draw(testTex, screenX - 0.5f*size, screenY - 0.5f*size, size, size);
         }
         batch.end();
     }

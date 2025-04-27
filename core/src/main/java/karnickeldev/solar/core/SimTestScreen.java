@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector3;
 import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.ecs.EntityReference;
 import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
@@ -19,24 +20,21 @@ public class SimTestScreen implements Screen {
 
     public static DefaultServer server;
 
-    private final FloatingOriginCamera camera;
+    public static FloatingOriginCamera camera;
     private final CameraInput cameraInput;
 
     private final EntityManager em;
     private final PlanetoidRenderSystem rs;
     private final KeplerianOrbitSystem os;
 
-    int track = 0;
-
     public SimTestScreen() {
-        camera = new FloatingOriginCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(),10);
+        camera = new FloatingOriginCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.update();
-
-        cameraInput = new CameraInput(camera);
 
         server = new DefaultServer();
 
         em = server.getEntityManager();
+        cameraInput = new CameraInput(camera, em);
         os = new KeplerianOrbitSystem(em);
         rs = new PlanetoidRenderSystem(em, SolarMain.getInstance().batch, camera);
     }
@@ -55,8 +53,8 @@ public class SimTestScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         // camera
-        camera.update();
         cameraInput.processInputs();
+        camera.update();
 
         SolarMain.getInstance().batch.begin();
         if(!BackgroundStarRenderer.drawStarScape(SolarMain.getInstance().batch, delta, false)) Logger.error("Erroneous input for background starscape");

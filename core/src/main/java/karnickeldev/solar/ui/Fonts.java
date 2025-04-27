@@ -17,7 +17,7 @@ public class Fonts {
     public static final char ITALIC = 1;
     public static final char BOLD = 2;
 
-    public static BitmapFont BIG, MEDIUM_BOLD, MEDIUM, SMALL;
+    public static BitmapFont BIG, MEDIUM_BOLD, MEDIUM, SMALL, VERY_SMALL;
 
     public static final String FONT = "PixelOperatorMono";
     private static final String FONTS_PATH = "fonts/";
@@ -48,6 +48,7 @@ public class Fonts {
         MEDIUM_BOLD = generateFontForResolution(appHeight, 32, BOLD);
         MEDIUM = generateFontForResolution(appHeight, 32, REGULAR);
         SMALL = generateFontForResolution(appHeight, 22, REGULAR);
+        VERY_SMALL = generateFontForResolution(appHeight, 17, REGULAR);
     }
 
     public static void resizeFonts(int appHeight) {
@@ -55,11 +56,13 @@ public class Fonts {
         BitmapFont oldMED_BOLD = MEDIUM_BOLD;
         BitmapFont oldMED = MEDIUM;
         BitmapFont oldSMALL = SMALL;
+        BitmapFont oldVERY_SMALL = VERY_SMALL;
         generateFonts(appHeight);
         oldBIG.dispose();
         oldMED_BOLD.dispose();
         oldMED.dispose();
         oldSMALL.dispose();
+        oldVERY_SMALL.dispose();
     }
 
     public static void disposeFonts() {
@@ -67,6 +70,7 @@ public class Fonts {
         MEDIUM_BOLD.dispose();
         MEDIUM.dispose();
         SMALL.dispose();
+        VERY_SMALL.dispose();
     }
 
 }

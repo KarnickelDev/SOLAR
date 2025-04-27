@@ -68,12 +68,12 @@ public class DefaultServer {
             (float)Units.convert(384399, Units.Length.KILOMETER, Units.Length.AU),
             0.055f, 0, 0, earth);
 
-        for(int i = 0; i < 0_000; i++) {
+        for(int i = 0; i < 10_000; i++) {
             EntityFactory.createStaticPlanetoidHCS(em, ""+i,
                 MathUtil.random(1e-12f, 5e-6f),
                 (int) Units.toSU(MathUtil.random(0.01f, 1e5f), Units.Length.KILOMETER),
                 PhysicsUtil.estimateSOIPlanet(Units.toSU(1, Units.Mass.TON)),
-                MathUtil.random(0.1f, 200f),
+                MathUtil.random(0.1f, 100f),
                 MathUtil.random(0, 0.8f),
                 MathUtil.random(0, 6.3f),
                 0,

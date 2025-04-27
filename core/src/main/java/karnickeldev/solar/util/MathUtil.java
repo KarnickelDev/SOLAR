@@ -47,6 +47,11 @@ public class MathUtil {
         return outMin + t * (outMax - outMin);
     }
 
+    public static float normalizeRotationDeg(float degrees) {
+        float angle = degrees % 360f;
+        if (angle < 0f) angle += 360f;
+        return angle;
+    }
 
 
 }

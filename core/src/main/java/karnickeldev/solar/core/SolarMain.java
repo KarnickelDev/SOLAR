@@ -14,6 +14,7 @@ import karnickeldev.solar.server.servers.DefaultServer;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.settings.SettingsManager;
 import karnickeldev.solar.ui.Fonts;
+import karnickeldev.solar.ui.SkinManager;
 import karnickeldev.solar.ui.UIManager;
 import karnickeldev.solar.util.MathUtil;
 
@@ -137,7 +138,7 @@ public class SolarMain extends Game {
     private final static Color bad = new Color(0.86f,0.07f,0.07f,1f);
 
     private void configureLabels() {
-        Label.LabelStyle s = fpsLabel.getStyle();
+        final Label.LabelStyle s = fpsLabel.getStyle();
         s.font = Fonts.SMALL;
 
         Color fpsColor = normal;
@@ -153,7 +154,7 @@ public class SolarMain extends Game {
         if(fps < 50) fpsColor = bad;
         fpsLabel.setStyle(s);
         fpsLabel.setText("FPS: " + fps);
-        fpsLabel.setPosition(0.92f * Gdx.graphics.getWidth(), 0.95f * Gdx.graphics.getHeight());
+        fpsLabel.setPosition(0.92f * Gdx.graphics.getWidth(), 0.96f * Gdx.graphics.getHeight());
         fpsLabel.setColor(fpsColor);
 
         float tps = DefaultServer.tpsCount.getTPS();
@@ -164,6 +165,7 @@ public class SolarMain extends Game {
         tpsLabel.setPosition(fpsLabel.getX(), fpsLabel.getY() - 0.02f*Gdx.graphics.getHeight());
         tpsLabel.setColor(tpsColor);
 
+        s.font = Fonts.VERY_SMALL;
 
         float delay = DefaultServer.tpsCount.getDelayedness();
         if(delay >= 0.05) tpsExtraColor = mid;
@@ -174,7 +176,7 @@ public class SolarMain extends Game {
                 + "\nmax: " + String.format("%.2f", DefaultServer.tpsCount.getMaxTickDuration())
                 + "\nmin: " + String.format("%.2f", DefaultServer.tpsCount.getMinTickDuration())
         );
-        tpsExtraLabel.setPosition(fpsLabel.getX(), tpsLabel.getY() - 2*0.02f*Gdx.graphics.getHeight());
+        tpsExtraLabel.setPosition(fpsLabel.getX(), tpsLabel.getY() - 0.033f*Gdx.graphics.getHeight());
         tpsExtraLabel.setColor(tpsExtraColor);
     }
 
