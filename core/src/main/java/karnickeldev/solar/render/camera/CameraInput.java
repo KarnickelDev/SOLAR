@@ -112,14 +112,15 @@ public class CameraInput extends InputAdapter {
         if(button == Input.Buttons.LEFT) {
             for(int entity = 0; entity < em.getAll(); entity++) {
                 if(em.isValid(entity)) {
-                    double x = em.hcs.getLocalX(entity);
-                    double y = em.hcs.getLocalY(entity);
+                    double x = em.hcs.getPhysicsLocalX(entity);
+                    double y = em.hcs.getPhysicsLocalY(entity);
                     Vector2D screen = camera.project(new Vector2D(x, y));
 
                     double dx = screenX - (screen.getX());
                     double dy = (screenY) - screen.getY();
                     if(dx*dx + dy*dy < 0.7f*16*16) {
                         PlanetoidRenderSystem.track = entity;
+                        //camera.track(EntityReference.create(em, entity));
                         break;
                     }
 

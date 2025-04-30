@@ -10,7 +10,7 @@ public class MassComponent implements Component {
 
     private static int CAPACITY = 64;
 
-    private float[] mass = new float[CAPACITY];
+    private double[] mass = new double[CAPACITY];
     private final BitSet hasComponent = new BitSet(CAPACITY);
 
 
@@ -23,7 +23,7 @@ public class MassComponent implements Component {
         }
     }
 
-    public void add(int entityId, float mass) {
+    public void add(int entityId, double mass) {
         ensureCapacity(entityId);
         int index = EntityManager.extractIndex(entityId);
         this.mass[index] = mass;
@@ -38,7 +38,7 @@ public class MassComponent implements Component {
         return hasComponent.get(EntityManager.extractIndex(entityId));
     }
 
-    public float getMass(int entityId) {
+    public double getMass(int entityId) {
         int index = EntityManager.extractIndex(entityId);
         if(index >= CAPACITY) return 0;
         return mass[index];

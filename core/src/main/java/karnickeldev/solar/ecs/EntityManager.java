@@ -23,7 +23,6 @@ public class EntityManager {
 
     private final byte[] generations = new byte[MAX_ENTITIES];
     private final Queue<Integer> freeIndices = new ArrayDeque<>();
-
     private int nextFree = 0;
 
     public final TagComponent tags = new TagComponent();
@@ -34,7 +33,7 @@ public class EntityManager {
     public final SphereOfInfluenceComponent sphereOfInfluence = new SphereOfInfluenceComponent();
     public final OrbitDataComponent orbitData = new OrbitDataComponent();
 
-    public final HCSComponent hcs = new HCSComponent();
+    public final HCSServerComponent hcs = new HCSServerComponent();
 
     public int create() {
         int index;

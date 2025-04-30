@@ -29,7 +29,7 @@ public class MainMenu implements UIElement {
         mainMenu.add(new MenuButton("Multiplayer", skin)).expandX().fillX().row();
         mainMenu.add(new MenuButton("Options", skin, () -> {
             //hide();
-            SolarMain.getInstance().getUIManager().getOptionsMenu().show();
+            SolarMain.getInstance().getUIManager().getMainMenuOptionsMenu().show();
         })).expandX().fillX().row();
         mainMenu.add(new MenuButton("Credits", skin)).expandX().fillX().row();
         mainMenu.add(new MenuButton("Exit", skin, () -> SolarMain.getInstance().exit())).expandX().fillX().row();

@@ -2,6 +2,7 @@ package karnickeldev.solar.render.camera;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Matrix4;
+import karnickeldev.solar.ecs.EntityReference;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.util.MathUtil;
 
@@ -15,25 +16,26 @@ public class FloatingOriginCamera {
 
     private static final float CAMERA_MOVEMENT_TICK_RATE = (1f / 128);
 
-    private static final float MIN_SPEED =1f;
+    private static final float MIN_SPEED = 1f;
     private static final float MAX_SPEED = 10f;
     private static final float ACCELERATION = 5.2f;
     private static final float DECELERATION = 18f;
 
-    public final float viewportWidth;
-    public final float viewportHeight;
+    private float viewportWidth;
+    private float viewportHeight;
 
     private double accumulator = 0;
     private float speed = MIN_SPEED;
     private byte direction = NO_MOVE;
     private boolean moveRequested = false;
 
-
     private final Vector2D directionVec = new Vector2D();
     private final Vector2D moveDirection = new Vector2D();
     private final Vector2D origin;
-    private final Vector2D prevOrigin;
+    private final Vector2D prevPosition;
     private final Vector2D renderOrigin;
+
+    public EntityReference trackedEntity;
 
     private double zoom;
 
@@ -48,22 +50,46 @@ public class FloatingOriginCamera {
         this.viewportHeight = viewportHeight;
 
         this.origin = new Vector2D();
-        this.prevOrigin = new Vector2D();
+        this.prevPosition = new Vector2D();
         this.renderOrigin = new Vector2D();
 
-        setZoom(0.01f);
+        setZoom(1f);
     }
 
     /**
      * Updates the Camera, necessary to apply any changes
      */
     public void update() {
+        viewportHeight = Gdx.graphics.getHeight();
+        viewportWidth = Gdx.graphics.getWidth();
+
         // execute camera movement
         moveHelper();
+//        Vector2D position = new Vector2D(origin);
+//
+//        if(trackedEntity != null) {
+//            position.add(
+//                trackedEntity.getEntityManager().hcs.getLocalX(trackedEntity.getEntityId()),
+//                trackedEntity.getEntityManager().hcs.getLocalY(trackedEntity.getEntityId())
+//            );
+//            rotationCenter.set(
+//                trackedEntity.getEntityManager().hcs.getLocalX(trackedEntity.getEntityId()),
+//                trackedEntity.getEntityManager().hcs.getLocalY(trackedEntity.getEntityId())
+//            );
+//            prevPosition.add(
+//                trackedEntity.getEntityManager().hcs.getLocalX(trackedEntity.getEntityId()),
+//                trackedEntity.getEntityManager().hcs.getLocalY(trackedEntity.getEntityId())
+//            );
+//        }
 
-        renderOrigin.set(prevOrigin).lerp(origin, (float) (accumulator / CAMERA_MOVEMENT_TICK_RATE));
+        //renderOrigin.set(prevPosition).lerp(origin, (float) (accumulator / CAMERA_MOVEMENT_TICK_RATE));
+        renderOrigin.set(origin);
+        updateProjectionMatrix(viewportWidth, viewportHeight);
+    }
 
-        updateProjectionMatrix(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    public void track(EntityReference trackedEntity) {
+        if(trackedEntity == null) return;
+        this.trackedEntity = trackedEntity;
     }
 
     /**
@@ -210,7 +236,7 @@ public class FloatingOriginCamera {
         zoom = MathUtil.lerp(zoom, newZoom, 10 * dt);
 
         // TODO: maybe cleaner solution possible
-        renderOrigin.set(prevOrigin).lerp(origin, (float) (accumulator / CAMERA_MOVEMENT_TICK_RATE));
+        //renderOrigin.set(prevPosition).lerp(origin, (float) (accumulator / CAMERA_MOVEMENT_TICK_RATE));
 
         Vector2D worldAfter = unproject(screenPos);
 
@@ -231,23 +257,39 @@ public class FloatingOriginCamera {
         double halfWidth = (screenWidth / 2.0) * zoom;
         double halfHeight = (screenHeight / 2.0) * zoom;
 
-        float left = (float) (renderOrigin.getX() - halfWidth);
-        float right = (float) (renderOrigin.getX() + halfWidth);
-        float bottom = (float) (renderOrigin.getY() - halfHeight);
-        float top = (float) (renderOrigin.getY() + halfHeight);
+
+        float left = (float) (origin.getX() - halfWidth);
+        float right = (float) (origin.getX() + halfWidth);
+        float bottom = (float) (origin.getY() - halfHeight);
+        float top = (float) (origin.getY() + halfHeight);
 
         projectionMatrix.setToOrtho2D(left, bottom, right - left, top - bottom);
-
-        projectionMatrix.rotate(0, 0, 1, rotationDegrees);
+//
+//        // translate so the pivot is at the origin
+//        projectionMatrix.translate((float) rotationCenter.getX(), (float) rotationCenter.getY(), 0);
+//
+//        // rotate about Z
+//        projectionMatrix.rotate(0, 0, 1, rotationDegrees);
+//
+//        // translate back
+//        projectionMatrix.translate((float) -rotationCenter.getX(), (float) -rotationCenter.getY(), 0);
     }
 
     public Matrix4 getCombinedMatrix() {
         return projectionMatrix;
     }
 
+    public float getViewportWidth() {
+        return viewportWidth;
+    }
+
+    public float getViewportHeight() {
+        return viewportHeight;
+    }
+
     /*
-    Fixed time-step method to execute camera movement/rotation, applying smoothing with lerp
-     */
+        Fixed time-step method to execute camera movement/rotation, applying smoothing with lerp
+         */
     private void moveHelper() {
         if (!moveRequested) direction = 0b0000;
 
@@ -277,7 +319,7 @@ public class FloatingOriginCamera {
 
             rotationDegrees = targetRotationDegrees;
 
-            prevOrigin.set(origin);
+            prevPosition.set(origin);
             origin.add(moveDirection.getX() * (speed * zoom), moveDirection.getY() * (speed * zoom));
             accumulator -= CAMERA_MOVEMENT_TICK_RATE;
         }

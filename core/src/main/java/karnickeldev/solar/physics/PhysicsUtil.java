@@ -57,7 +57,7 @@ public class PhysicsUtil {
         float x = (float)(Math.cos(omega) * r);
         float y = (float)(Math.sin(omega) * r);
 
-        em.hcs.add(entityId, em.orbitData.getCentralBody(entityId), x, y, x, y);
+        em.hcs.add(entityId, em.orbitData.getCentralBody(entityId), x, y, 0, 0);
     }
 
 }

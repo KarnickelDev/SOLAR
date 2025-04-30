@@ -4,7 +4,12 @@ import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.physics.Units;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class KeplerianOrbitSystem {
+
+    public static Lock lock = new ReentrantLock();
 
     private final EntityManager em;
     private final OrbitDataComponent orbitData;
@@ -18,19 +23,21 @@ public class KeplerianOrbitSystem {
         for (int entity = 0; entity < em.getAll(); entity++) {
             if(!em.isValid(entity) || !orbitData.has(entity)) continue;
 
-            float a = Units.toSU(orbitData.getSemiMajorAxis(entity), Units.Length.AU);
+            double a = orbitData.getSemiMajorAxis(entity) * 1.5e8;
+
             float e = orbitData.getEccentricity(entity);
             float omega = orbitData.getOmega(entity);
             float t0 = orbitData.getT0(entity);
-            double mu = getGravitationalParameter(orbitData.getCentralBody(entity)); // G * M
 
             int centralBodyId = orbitData.getCentralBody(entity);
 
+            double mu = getGravitationalParameter(centralBodyId); // G * M
+
             double n = Math.sqrt(mu / (a * a * a));  // mean motion
-            double M = (n * (timeDays - t0));       // mean anomaly
+            double M = (n * ((timeDays) - t0));       // mean anomaly
 
             double E = solveKepler((float)M, e);            // eccentric anomaly
-            double theta = 2f * Math.atan2(
+            double theta = 2 * Math.atan2(
                 Math.sqrt(1 + e) * Math.sin(E / 2),
                 Math.sqrt(1 - e) * Math.cos(E / 2)
             );
@@ -48,15 +55,20 @@ public class KeplerianOrbitSystem {
             double rotatedY = sinW * orbitX + cosW * orbitY;
 
             // Add central body's position
-            double cx = em.hcs.getLocalX(centralBodyId);
-            double cy = em.hcs.getLocalY(centralBodyId);
+            double cx = em.hcs.getPhysicsLocalX(centralBodyId);
+            double cy = em.hcs.getPhysicsLocalY(centralBodyId);
+
+            double globalX = cx + rotatedX;
+            double globalY = cy + rotatedY;
 
             em.hcs.add(entity, centralBodyId,
-                (cx + rotatedX),
-                (cy + rotatedY),
-                0,
-                0);
+                rotatedX,
+                rotatedY,
+                globalX,
+                globalY
+            );
         }
+        em.hcs.syncRenderBuffers();
     }
 
     private static float solveKepler(float M, float e) {
@@ -72,9 +84,11 @@ public class KeplerianOrbitSystem {
         return E;
     }
 
-    private static final double G_CONSTANT = 4 * Math.PI * Math.PI / (365.25*365.25);
+    private static final double G_CONSTANT = 4 * Math.PI * Math.PI / (365.25 * 365.25);
     private double getGravitationalParameter(int body) {
-        return G_CONSTANT * Units.convert(em.masses.getMass(body), Units.Mass.TON, Units.Mass.SOLAR_MASS);
+        double constant =  G_CONSTANT * Units.convert(em.masses.getMass(body), Units.Mass.TON, Units.Mass.SOLAR_MASS);
+        double G = Units.G_KM_TON * em.masses.getMass(body);
+        return G;
     }
 
 

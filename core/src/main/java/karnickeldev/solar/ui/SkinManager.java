@@ -1,8 +1,12 @@
 package karnickeldev.solar.ui;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.NinePatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 
 public class SkinManager {
 
@@ -13,10 +17,20 @@ public class SkinManager {
     public static final char BUTTON_MEDIUM_BOLD = 2;
     public static final char BUTTON_BIG = 3;
 
+    private static TextureAtlas textureAtlas;
+
+    private static NinePatchDrawable tableBackground;
+
     private static TextButton.TextButtonStyle button_small, button_medium, button_medium_bold, button_big;
 
     public static void update() {
         if(uiSkin == null) uiSkin = new Skin(Gdx.files.internal("uiskin.json"));
+
+        Fonts.resizeFonts(Gdx.graphics.getHeight());
+
+        textureAtlas = new TextureAtlas("uiskin.atlas");
+        tableBackground = new NinePatchDrawable(new NinePatch(new TextureRegion(
+            textureAtlas.findRegion("default-round")), 4, 4, 4, 4));
 
         TextButton test = new TextButton("test", uiSkin);
 
@@ -35,6 +49,16 @@ public class SkinManager {
 
     public static Skin getUISkin() {
         return uiSkin;
+    }
+
+    public static TextureAtlas getTextureAtlas() {
+        if(textureAtlas == null) update();
+        return textureAtlas;
+    }
+
+    public static NinePatchDrawable getTableBackground() {
+        if(tableBackground == null) update();
+        return tableBackground;
     }
 
     public static TextButton.TextButtonStyle getTextButtonStyle(char fontSize) {

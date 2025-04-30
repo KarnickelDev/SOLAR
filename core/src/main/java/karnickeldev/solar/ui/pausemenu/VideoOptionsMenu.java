@@ -5,9 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
@@ -17,6 +15,7 @@ import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.ui.Fonts;
 import karnickeldev.solar.ui.MenuButton;
 import karnickeldev.solar.ui.UIElement;
+import karnickeldev.solar.ui.UIManager;
 
 public class VideoOptionsMenu implements UIElement {
 
@@ -44,7 +43,11 @@ public class VideoOptionsMenu implements UIElement {
 
     private MenuButton apply;
 
-    protected VideoOptionsMenu(Table rootTable, Skin skin) {
+    private final OptionsMenu parent;
+
+    protected VideoOptionsMenu(Table rootTable, Skin skin, OptionsMenu parent) {
+        this.parent = parent;
+
         atlas = new TextureAtlas("uiskin.atlas");
         background = new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")),
             4, 4, 4, 4));
@@ -96,10 +99,14 @@ public class VideoOptionsMenu implements UIElement {
                 SolarMain.getInstance().getSettingsManager().saveToFile();
             }
 
-            int subMenu = SolarMain.getInstance().getUIManager().getOptionsMenu().getSelectedSubMenu();
-            SolarMain.getInstance().getUIManager().getOptionsMenu().hide();
-            SolarMain.getInstance().getUIManager().getOptionsMenu().show();
-            SolarMain.getInstance().getUIManager().getOptionsMenu().selectSubMenu(subMenu);
+            int subMenu = parent.getSelectedSubMenu();
+            parent.hide();
+            parent.show();
+            parent.selectSubMenu(subMenu);
+            SolarMain.getInstance().getUIManager().resize(
+                SolarMain.getInstance().getSettings().getScreenWidth(),
+                SolarMain.getInstance().getSettings().getScreenHeight()
+            );
         });
 
         resizeUI(

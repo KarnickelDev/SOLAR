@@ -1,5 +1,7 @@
 package karnickeldev.solar.server;
 
+import karnickeldev.solar.core.Logger;
+
 public class TPSCount {
 
     private static final float RAW_TPS_UPDATE_THRESHOLD = 0.2f; // in seconds
@@ -35,8 +37,9 @@ public class TPSCount {
             return; // Skip this tick to avoid huge delta
         }
         long delta = now - prevTick;
-        if(delta >= 0.7*Integer.MAX_VALUE) {
-            throw new RuntimeException("delta too large for Integer!");
+        if(delta >= Integer.MAX_VALUE - 16) {
+            Logger.debug("Tick delta too large for Integer!");
+            delta = Integer.MAX_VALUE;
         }
         prevTick = now;
 

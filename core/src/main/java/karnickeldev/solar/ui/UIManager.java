@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui;
 
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import karnickeldev.solar.ui.pausemenu.OptionsMenu;
 
 /**
@@ -10,7 +11,9 @@ import karnickeldev.solar.ui.pausemenu.OptionsMenu;
  */
 public class UIManager {
 
-    private OptionsMenu optionsMenu;
+    private OptionsMenu mainMenuOptionsMenu;
+
+    private EscapeMenu escapeMenu;
 
     private MainMenu mainMenu;
 
@@ -26,18 +29,28 @@ public class UIManager {
         // UI Elements
         mainMenu = new MainMenu(SkinManager.getUISkin());
 
-        optionsMenu = new OptionsMenu(SkinManager.getUISkin());
+        mainMenuOptionsMenu = new OptionsMenu(SkinManager.getUISkin(), mainMenu);
+
+        escapeMenu = new EscapeMenu();
     }
 
-    public MainMenu getMainMenu() {return mainMenu;}
-    public OptionsMenu getOptionsMenu() {return optionsMenu;}
+    public MainMenu getMainMenu() {
+        return mainMenu;
+    }
+    public OptionsMenu getMainMenuOptionsMenu() {
+        return mainMenuOptionsMenu;
+    }
+    public EscapeMenu getEscapeMenu() {
+        return escapeMenu;
+    }
 
     public void resize(int width, int height) {
         Fonts.resizeFonts(height);
         SkinManager.update();
 
         mainMenu.resizeUI(width, height);
-        optionsMenu.resizeUI(width, height);
+        mainMenuOptionsMenu.resizeUI(width, height);
+        escapeMenu.resizeUI(width, height);
     }
 
 }

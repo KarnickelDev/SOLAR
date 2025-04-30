@@ -18,7 +18,7 @@ class Simulation implements Runnable {
 
 
     protected Simulation(EntityManager entityManager, int tickRate) {
-        this.timeSeconds = 1d / tickRate;
+        this.timeSeconds = 1d / (double)tickRate;
 
         this.em = entityManager;
         os = new KeplerianOrbitSystem(em);
@@ -26,8 +26,8 @@ class Simulation implements Runnable {
 
     @Override
     public void run() {
-        time += timeSeconds * timeFactor;
+        time += timeSeconds;
         os.updateHCS(time);
-        PlanetoidRenderSystem.lastFixedUpdateTime = System.currentTimeMillis();
+        PlanetoidRenderSystem.lastFixedUpdateTime.set(System.nanoTime());
     }
 }

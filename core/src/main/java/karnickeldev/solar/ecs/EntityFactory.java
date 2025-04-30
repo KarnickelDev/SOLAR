@@ -32,7 +32,7 @@ public class EntityFactory {
             && em.sphereOfInfluence.has(entityId);
     }
 
-    public static int createStar(EntityManager em, String name, double x, double y, float mass, int radius,
+    public static int createStar(EntityManager em, String name, double x, double y, double mass, int radius,
                                  long sphereOfInfluence) {
         int entity = em.create();
         em.tags.add(entity, Tags.STAR);
@@ -51,7 +51,7 @@ public class EntityFactory {
         return entity;
     }
 
-    public static int createStar(EntityManager em, String name, double x, double y, float mass, int radius) {
+    public static int createStar(EntityManager em, String name, double x, double y, double mass, int radius) {
         return createStar(em, name, x, y, mass, radius, PhysicsUtil.estimateSOIStar(mass));
     }
 
@@ -66,25 +66,9 @@ public class EntityFactory {
             && em.orbitData.has(entityId);
     }
 
-    public static int createStaticPlanetoid(EntityManager em, String name, float mass, int radius,
-                                   long sphereOfInfluence, float semiMajorAxis, float eccentricity, float omega,
-                                   float t0, int centralBody) {
-        int entity = em.create();
-        em.tags.add(entity, Tags.PLANET);
-        em.names.add(entity, name);
-        em.masses.add(entity, mass);
-        em.radius.add(entity, radius);
-        em.sphereOfInfluence.add(entity, sphereOfInfluence);
-        em.positions.add(entity,0,0);
-        em.orbitData.add(entity, semiMajorAxis, eccentricity, omega, t0, centralBody);
-        PhysicsUtil.initializePlanetoidAtPeriapsis(em, entity);
-        assert isStaticPlanetoid(em, entity);
-        return entity;
-    }
-
-    public static int createStaticPlanetoidHCS(EntityManager em, String name, float mass, int radius,
+    public static int createStaticPlanetoidHCS(EntityManager em, String name, double mass, int radius,
                                             long sphereOfInfluence, float semiMajorAxis, float eccentricity, float omega,
-                                            float t0, int centralBody) {
+                                            float t0, int centralBody, int scale) {
         int entity = em.create();
         em.tags.add(entity, Tags.PLANET);
         em.names.add(entity, name);
@@ -98,14 +82,6 @@ public class EntityFactory {
         PhysicsUtil.initializePlanetoidAtPeriapsisHCS(em, entity);
         assert isStaticPlanetoid(em, entity);
         return entity;
-    }
-
-    public static int createStaticPlanetoid(EntityManager em, String name, float mass, int radius, OrbitData orbitData) {
-        return createStaticPlanetoid(
-            em, name, mass, radius, PhysicsUtil.estimateSOIPlanet(mass),
-            orbitData.getSemiMajorAxis(), orbitData.getEccentricity(), orbitData.getOmega(), orbitData.getT0(),
-            orbitData.getCentralBody().getEntityId()
-        );
     }
 
 }

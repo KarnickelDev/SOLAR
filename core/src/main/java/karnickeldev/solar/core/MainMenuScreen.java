@@ -82,7 +82,7 @@ public class MainMenuScreen implements Screen {
 
         game.getUIManager().getMainMenu().show();
 
-        game.getInputManager().addInput(InputManager.MAIN_MENU_INPUT, game.pausedStage);
+        game.getInputManager().addInput(game.pausedStage);
     }
 
     @Override

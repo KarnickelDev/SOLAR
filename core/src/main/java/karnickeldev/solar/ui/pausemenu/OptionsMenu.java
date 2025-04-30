@@ -23,34 +23,29 @@ public class OptionsMenu implements UIElement {
 
     Table optionsMenu, menus, optionWindow;
 
-    private final TextureAtlas atlas;
-
     private final UIElement[] subMenus;
     private int selectedSubMenu = 0;
 
-    NinePatchDrawable background;
+    private final UIElement parent;
 
     private final MenuButton[] buttons;
 
     private boolean isVisible;
 
-    public OptionsMenu(Skin skin) {
-        this(skin, 0, false);
+    public OptionsMenu(Skin skin, UIElement parent) {
+        this(skin, 0, false, parent);
     }
 
-    public OptionsMenu(Skin skin, int initSubMenu, boolean initVisible) {
+    public OptionsMenu(Skin skin, int initSubMenu, boolean initVisible, UIElement parent) {
         uiSkin = skin;
         selectedSubMenu = initSubMenu;
         isVisible = initVisible;
-
-        atlas = new TextureAtlas("uiskin.atlas");
-        background = new NinePatchDrawable(new NinePatch(new TextureRegion(atlas.findRegion("default-round")),
-            4, 4, 4, 4));
+        this.parent = parent;
 
 
         titleStyle = new Label.LabelStyle();
         titleStyle.font = Fonts.BIG;
-        titleStyle.background = background;
+        titleStyle.background = SkinManager.getTableBackground();
         titleStyle.fontColor = Color.WHITE;
 
         title = new Label("Options", titleStyle);
@@ -70,7 +65,10 @@ public class OptionsMenu implements UIElement {
             }),
             new MenuButton("Back", skin, () -> {
                 hide();
-                SolarMain.getInstance().getUIManager().getMainMenu().show();
+                if(parent != null) {
+                    parent.hide();
+                    parent.show();
+                }
             }),
         };
 
@@ -115,7 +113,7 @@ public class OptionsMenu implements UIElement {
 
         optionsMenu = new Table();
         optionsMenu.setClip(true);
-        optionsMenu.setBackground(background);
+        optionsMenu.setBackground(SkinManager.getTableBackground());
         optionsMenu.pad(0);
         optionsMenu.top().left();
         optionsMenu.setSize(menuWidth, menuHeight);
@@ -131,7 +129,7 @@ public class OptionsMenu implements UIElement {
 
         menus = new Table();
         menus.setClip(true);
-        menus.setBackground(background);
+        menus.setBackground(SkinManager.getTableBackground());
         menus.pad(0);
         menus.top().left();
         menus.setSize(0.26f * menuWidth, menuHeight);
@@ -146,7 +144,7 @@ public class OptionsMenu implements UIElement {
 
         optionWindow = new Table();
         optionWindow.setClip(true);
-        optionWindow.setBackground(background);
+        optionWindow.setBackground(SkinManager.getTableBackground());
         optionWindow.pad(0);
         optionWindow.top().left();
         optionWindow.setSize(
@@ -156,7 +154,7 @@ public class OptionsMenu implements UIElement {
 
         for (UIElement uiElement : subMenus) if(uiElement != null) uiElement.dispose();
         subMenus[0] = new GameplayOptionsMenu();
-        subMenus[1] = new VideoOptionsMenu(optionWindow, uiSkin);
+        subMenus[1] = new VideoOptionsMenu(optionWindow, uiSkin, this);
         subMenus[2] = new GameplayOptionsMenu();
 
         optionsMenu.add(menus).expandY().fill();
@@ -192,7 +190,6 @@ public class OptionsMenu implements UIElement {
     @Override
     public void dispose() {
         hide();
-        atlas.dispose();
     }
 
     private static void setButtonFont(TextButton button, BitmapFont font) {
