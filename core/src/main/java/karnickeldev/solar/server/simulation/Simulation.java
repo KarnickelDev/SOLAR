@@ -27,7 +27,7 @@ class Simulation implements Runnable {
     @Override
     public void run() {
         time += timeSeconds;
-        os.updateHCS(time);
+        os.updateHCS(time * 1e5);
         PlanetoidRenderSystem.lastFixedUpdateTime.set(System.nanoTime());
     }
 }

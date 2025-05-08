@@ -15,7 +15,7 @@ import karnickeldev.solar.util.MathUtil;
 
 public class DefaultServer {
 
-    public static final int TICK_RATE = 30;
+    public static final int TICK_RATE = 60;
 
     private final SimulationExecutor simulationExecutor;
 
@@ -79,7 +79,7 @@ public class DefaultServer {
             Units.toSU(100, Units.Mass.TON),
             1, 1,
             (float)Units.convert(7000, Units.Length.KILOMETER, Units.Length.AU),
-            0.01f, 0, 5, earth, Scale.SCALE_AU);
+            0.01f, 0, 2, earth, Scale.SCALE_AU);
 
         for(int i = 0; i < 0_000; i++) {
             EntityFactory.createStaticPlanetoidHCS(em, ""+i,

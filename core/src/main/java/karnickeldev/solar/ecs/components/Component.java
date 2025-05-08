@@ -1,8 +1,12 @@
 package karnickeldev.solar.ecs.components;
 
-interface Component {
+public interface Component {
 
-
+//    interface ComponentSnapshot {
+//
+//    }
+//
+//    ComponentSnapshot buildSnapshot();
 
     void ensureCapacity(int entityId);
 

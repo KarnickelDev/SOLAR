@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs;
 
 import karnickeldev.solar.ecs.components.*;
+import karnickeldev.solar.ecs.components.server.HCSPositionComponent;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -33,7 +34,7 @@ public class EntityManager {
     public final SphereOfInfluenceComponent sphereOfInfluence = new SphereOfInfluenceComponent();
     public final OrbitDataComponent orbitData = new OrbitDataComponent();
 
-    public final HCSServerComponent hcs = new HCSServerComponent();
+    public final HCSPositionComponent hcs = new HCSPositionComponent();
 
     public int create() {
         int index;

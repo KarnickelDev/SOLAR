@@ -5,12 +5,18 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.Tags;
-import karnickeldev.solar.ecs.components.HCSServerComponent;
+import karnickeldev.solar.ecs.components.client.HCSClientSystem;
+import karnickeldev.solar.ecs.components.server.HCSPositionComponent;
+import karnickeldev.solar.ecs.components.server.HCSPositionSnapshot;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
+import karnickeldev.solar.server.physics.KeplerianOrbitSystem;
 import karnickeldev.solar.server.servers.DefaultServer;
 import karnickeldev.solar.util.MathUtil;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PlanetoidRenderSystem {
@@ -23,9 +29,11 @@ public class PlanetoidRenderSystem {
 
     public static AtomicLong lastFixedUpdateTime = new AtomicLong(System.nanoTime());
 
-    public static int track = 0;
+    public static int track = 3;
 
     private static float frustumCullingRadiusSquared = 0f;
+
+    private final HCSClientSystem clientHCS = new HCSClientSystem();
 
     public PlanetoidRenderSystem(EntityManager entityManager, SpriteBatch batch, FloatingOriginCamera camera) {
         this.em = entityManager;
@@ -77,7 +85,20 @@ public class PlanetoidRenderSystem {
 
         double alpha = (System.nanoTime() - lastFixedUpdateTime.get()) / (1_000_000_000d / DefaultServer.TICK_RATE);
 
-        HCSServerComponent.RenderBuffer buffer = em.hcs.getLocals();
+        byte[] snapshotBytes = KeplerianOrbitSystem.currentSnapshot.get();
+        if(snapshotBytes == null || snapshotBytes.length < 8) return;
+        DataInputStream in = new DataInputStream(new ByteArrayInputStream(snapshotBytes));
+
+        HCSPositionSnapshot snap = null;
+        try {
+            snap = new HCSPositionSnapshot(0,0).deserialize(in);
+            in.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if(snap == null) return;
+
+        clientHCS.update(snap);
 
         batch.setProjectionMatrix(camera.getCombinedMatrix());
 
@@ -98,26 +119,25 @@ public class PlanetoidRenderSystem {
                 batch.setColor(Color.FOREST);
             }
 
+            double localX = clientHCS.getInterpolatedX(entity, alpha);
+            double localY = clientHCS.getInterpolatedY(entity, alpha);
 
-            double localX = MathUtil.lerp(buffer.prev[2*entity], buffer.curr[2*entity], alpha);
-            double localY = MathUtil.lerp(buffer.prev[2*entity + 1], buffer.curr[2*entity + 1], alpha);
-
-            localX -= MathUtil.lerp(buffer.prev[2*track], buffer.curr[2*track], alpha);
-            localY -= MathUtil.lerp(buffer.prev[2*track + 1], buffer.curr[2*track + 1], alpha);
+            localX -= clientHCS.getInterpolatedX(track, alpha);
+            localY -= clientHCS.getInterpolatedY(track, alpha);
 
             int parent = em.hcs.getParent(entity);
-            localX += MathUtil.lerp(buffer.prev[2*parent], buffer.curr[2*parent], alpha);
-            localY += MathUtil.lerp(buffer.prev[2*parent + 1], buffer.curr[2*parent + 1], alpha);
+            localX += clientHCS.getInterpolatedX(parent, alpha);
+            localY += clientHCS.getInterpolatedY(parent, alpha);
 
             // Cull if completely offscreen
             if (!isNearFrustum(localX, localY)) {
-                if(localX < bottom_left_x
-                    || localX > top_right_x
-                    || localY < bottom_left_y
-                    || localY > top_right_y
-                ) {
-                    //continue;
-                }
+                //continue;
+            } else if(localX < bottom_left_x
+                || localX > top_right_x
+                || localY < bottom_left_y
+                || localY > top_right_y
+            ) {
+                //continue;
             }
             float size = (float) Math.max(16 * camera.getZoom(), em.radius.getRadius(entity));
             //float size = (float) (16 * camera.getZoom());

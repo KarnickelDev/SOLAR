@@ -1,18 +1,27 @@
 package karnickeldev.solar.server.physics;
 
 import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.ecs.components.server.HCSPositionSnapshot;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
+import karnickeldev.solar.ecs.components.server.HCSServerSystem;
 import karnickeldev.solar.physics.Units;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class KeplerianOrbitSystem {
 
-    public static Lock lock = new ReentrantLock();
+    public static volatile AtomicReference<byte[]> currentSnapshot = new AtomicReference<>();
 
     private final EntityManager em;
     private final OrbitDataComponent orbitData;
+
+    HCSServerSystem hcs = new HCSServerSystem();
+
+    private long tick;
 
     public KeplerianOrbitSystem(EntityManager entityManager) {
         this.em = entityManager;
@@ -55,20 +64,35 @@ public class KeplerianOrbitSystem {
             double rotatedY = sinW * orbitX + cosW * orbitY;
 
             // Add central body's position
-            double cx = em.hcs.getPhysicsLocalX(centralBodyId);
-            double cy = em.hcs.getPhysicsLocalY(centralBodyId);
+            double cx = hcs.getLocalX(centralBodyId);
+            double cy = hcs.getLocalY(centralBodyId);
 
             double globalX = cx + rotatedX;
             double globalY = cy + rotatedY;
 
-            em.hcs.add(entity, centralBodyId,
+            hcs.add(entity, centralBodyId,
                 rotatedX,
                 rotatedY,
                 globalX,
                 globalY
             );
         }
-        em.hcs.syncRenderBuffers();
+        hcs.swapBuffers();
+
+        HCSPositionSnapshot snapshot = hcs.getCurrent().createSnapshot(tick);
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+        try (DataOutputStream out = new DataOutputStream(byteOut)) {
+            snapshot.serialize(out);
+            out.flush();
+
+            byte[] snapshotBytes = byteOut.toByteArray();
+            byteOut.close();
+            currentSnapshot.set(snapshotBytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        tick++;
     }
 
     private static float solveKepler(float M, float e) {
@@ -90,6 +114,5 @@ public class KeplerianOrbitSystem {
         double G = Units.G_KM_TON * em.masses.getMass(body);
         return G;
     }
-
 
 }

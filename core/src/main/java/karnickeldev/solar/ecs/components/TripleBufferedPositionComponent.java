@@ -1,7 +1,6 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
-import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.util.MathUtil;
 
 import java.util.Arrays;
