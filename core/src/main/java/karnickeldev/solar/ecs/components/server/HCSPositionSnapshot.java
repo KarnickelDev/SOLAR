@@ -9,13 +9,11 @@ import java.io.IOException;
 public class HCSPositionSnapshot implements ComponentSnapshot {
 
 
-    private final int size;
-
     public final int[] entities;
     public final double[] position;
     public final int[] parent;
     public final long tick;
-
+    private final int size;
     private int count = 0;
 
     public HCSPositionSnapshot(int size, long tick) {
@@ -23,17 +21,18 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
 
         this.tick = tick;
         entities = new int[size];
-        position = new double[2*size];
+        position = new double[2 * size];
         parent = new int[size];
     }
 
     public void addChange(int entityId, int parentId, double newX, double newY) {
-        if(count >= size) throw new RuntimeException("Error creating Snapshot (tried to add " + count + " entities, limit is " + size + ")");
+        if (count >= size)
+            throw new RuntimeException("Error creating Snapshot (tried to add " + count + " entities, limit is " + size + ")");
 
         entities[count] = entityId;
         parent[count] = parentId;
-        position[2* count] = newX;
-        position[2* count + 1] = newY;
+        position[2 * count] = newX;
+        position[2 * count + 1] = newY;
 
         count++;
     }
@@ -46,11 +45,11 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
     public HCSPositionSnapshot copy() {
         HCSPositionSnapshot c = new HCSPositionSnapshot(size, tick);
         c.count = count;
-        for(int i = 0; i < c.size; i++) {
+        for (int i = 0; i < c.size; i++) {
             c.entities[i] = entities[i];
             c.parent[i] = parent[i];
-            c.position[2*i] = position[2*i];
-            c.position[2*i + 1] = position[2*i + 1];
+            c.position[2 * i] = position[2 * i];
+            c.position[2 * i + 1] = position[2 * i + 1];
         }
 
         return c;
@@ -63,8 +62,8 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
         for (int i = 0; i < count; i++) {
             out.writeInt(entities[i]);
             out.writeInt(parent[i]);
-            out.writeDouble(position[2*i]);
-            out.writeDouble(position[2*i + 1]);
+            out.writeDouble(position[2 * i]);
+            out.writeDouble(position[2 * i + 1]);
         }
     }
 

@@ -1,0 +1,28 @@
+apply plugin: 'application'
+
+mainClassName = 'karnickeldev.solar.launch.TestLauncher'
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-server'
+
+group = 'karnickeldev.solar'
+version = rootProject.version
+
+repositories {
+  mavenCentral()
+}
+
+application {
+  applicationDefaultJvmArgs = ["-Dapp.mode=server"]
+}
+
+dependencies {
+  testImplementation platform('org.junit:junit-bom:5.10.0')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+
+  implementation project(':core')
+}
+
+test {
+  useJUnitPlatform()
+}

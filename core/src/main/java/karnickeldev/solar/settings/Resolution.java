@@ -1,6 +1,6 @@
 package karnickeldev.solar.settings;
 
-import karnickeldev.solar.core.Logger;
+import karnickeldev.solar.util.Logger;
 
 import java.util.Arrays;
 
@@ -20,41 +20,33 @@ public enum Resolution {
     R_1280_960(1280, 960),
     ;
 
-    private static final String DELIMITER = "x";
     public static final Resolution FALLBACK_RESOLUTION = R_1280_960;
     public static final String[] SUPPORTED_RESOLUTIONS = Arrays.stream(Resolution.values()).map(Enum::toString).toArray(String[]::new);
-
-    public static String resolutionToString(int width, int height) {
-        return width + DELIMITER + height;
-    }
-
+    private static final String DELIMITER = "x";
     private final int width, height;
+
     Resolution(int width, int height) {
         this.width = width;
         this.height = height;
     }
 
-    public int getWidth() {return width;}
-    public int getHeight() {return height;}
-
-    @Override
-    public String toString() {return resolutionToString(width, height);}
-
-
+    public static String resolutionToString(int width, int height) {
+        return width + DELIMITER + height;
+    }
 
     public static Resolution extractResolution(String resolution) throws IllegalArgumentException {
         if (resolution == null || !resolution.contains(DELIMITER)) {
             throw new IllegalArgumentException("Invalid Resolution format: \"" + resolution + "\"");
         }
 
-        for(Resolution curr : Resolution.values()) {
-            if(curr.toString().equals(resolution)) return curr;
+        for (Resolution curr : Resolution.values()) {
+            if (curr.toString().equals(resolution)) return curr;
         }
         throw new IllegalArgumentException("Can not parse String as Resolution: \"" + resolution + "\"");
     }
 
     public static Resolution matchResolution(String target) {
-        if(target == null) return Resolution.FALLBACK_RESOLUTION;
+        if (target == null) return Resolution.FALLBACK_RESOLUTION;
 
         String[] parts = target.split(DELIMITER);
         if (parts.length != 2) {
@@ -72,7 +64,7 @@ public enum Resolution {
     }
 
     private static float compute_weight(int width, int height, int targetWidth, int targetHeight) {
-        return 0.0001f*Math.abs((width * height) - (targetWidth * targetHeight)) + Math.abs((width/(float)height) - (targetWidth/(float)targetHeight));
+        return 0.0001f * Math.abs((width * height) - (targetWidth * targetHeight)) + Math.abs((width / (float) height) - (targetWidth / (float) targetHeight));
     }
 
     public static Resolution matchResolution(int targetWidth, int targetHeight) {
@@ -81,7 +73,7 @@ public enum Resolution {
         float min_weight = compute_weight(bestMatch.width, bestMatch.height, targetWidth, targetHeight);
         for (Resolution supported : Resolution.values()) {
             float curr_weight = compute_weight(supported.width, supported.height, targetWidth, targetHeight);
-            if(curr_weight < min_weight) {
+            if (curr_weight < min_weight) {
                 bestMatch = supported;
                 min_weight = curr_weight;
             }
@@ -90,7 +82,20 @@ public enum Resolution {
     }
 
     public static float getAdjustedWidth(int height) {
-        return (4f/3f) * height;
+        return (4f / 3f) * height;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    @Override
+    public String toString() {
+        return resolutionToString(width, height);
     }
 
 }

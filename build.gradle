@@ -13,16 +13,6 @@ buildscript {
   }
 }
 
-def versionProperties = new Properties()
-def versionFile = new File(getRootDir(), "core/src/main/resources/version.properties")
-versionFile.withInputStream { stream ->
-  versionProperties.load(stream)
-}
-
-version=versionProperties['version']
-ext.projectVersion = version
-ext.appName=versionProperties['appName']
-
 
 allprojects {
   apply plugin: 'eclipse'

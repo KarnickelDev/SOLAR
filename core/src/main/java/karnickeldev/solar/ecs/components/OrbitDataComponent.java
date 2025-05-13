@@ -8,23 +8,19 @@ import java.util.BitSet;
 
 public class OrbitDataComponent implements Component {
 
-    private static int CAPACITY = 16;
-
+    private int CAPACITY = 16;
+    private final BitSet hasComponent = new BitSet(CAPACITY);
     private float[] semiMajorAxis = new float[CAPACITY];
     private float[] eccentricity = new float[CAPACITY];
     private float[] omega = new float[CAPACITY];        // Argument of periapsis (radians)
     private float[] t0 = new float[CAPACITY];           // Time of periapsis passage
-
     private int[] centralBody = new int[CAPACITY];
-
-    private final BitSet hasComponent = new BitSet(CAPACITY);
-
 
     @Override
     public void ensureCapacity(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) {
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index)+1));
+        if (index >= CAPACITY) {
+            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
             semiMajorAxis = Arrays.copyOf(semiMajorAxis, CAPACITY);
             eccentricity = Arrays.copyOf(eccentricity, CAPACITY);
             omega = Arrays.copyOf(omega, CAPACITY);
@@ -60,31 +56,31 @@ public class OrbitDataComponent implements Component {
 
     public float getSemiMajorAxis(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return semiMajorAxis[index];
     }
 
     public float getEccentricity(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return eccentricity[index];
     }
 
     public float getOmega(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return omega[index];
     }
 
     public float getT0(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return t0[index];
     }
 
     public int getCentralBody(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return centralBody[index];
     }
 }

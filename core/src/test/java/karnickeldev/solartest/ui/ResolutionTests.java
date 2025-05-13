@@ -2,6 +2,7 @@ package karnickeldev.solartest.ui;
 
 import karnickeldev.solar.settings.Resolution;
 import org.junit.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ResolutionTests {
@@ -9,7 +10,7 @@ public class ResolutionTests {
 
     @Test
     public void test_extractResolution() {
-        for(int i = 0; i < Resolution.values().length; i++) {
+        for (int i = 0; i < Resolution.values().length; i++) {
             try {
                 Resolution extracted = Resolution.extractResolution(Resolution.SUPPORTED_RESOLUTIONS[i]);
                 assertEquals(extracted.toString(), Resolution.SUPPORTED_RESOLUTIONS[i]);
@@ -32,7 +33,7 @@ public class ResolutionTests {
     @Test
     public void test_matchResolution() {
 
-        for(Resolution res: Resolution.values()) {
+        for (Resolution res : Resolution.values()) {
             assertEquals(res,
                 Resolution.matchResolution(res.getWidth(), res.getHeight()));
         }

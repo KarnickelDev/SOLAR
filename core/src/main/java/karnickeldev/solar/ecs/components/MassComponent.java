@@ -6,20 +6,20 @@ import karnickeldev.solar.util.MathUtil;
 import java.util.Arrays;
 import java.util.BitSet;
 
-public class MassComponent implements Component {
+public class MassComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<MassSnapshot> {
 
-    private static int CAPACITY = 64;
-
-    private double[] mass = new double[CAPACITY];
+    private int CAPACITY = 64;
     private final BitSet hasComponent = new BitSet(CAPACITY);
-
+    private double[] mass = new double[CAPACITY];
 
     @Override
     public void ensureCapacity(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) {
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index)+1));
+        if (index >= CAPACITY) {
+            int oldCapacity = CAPACITY;
+            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
             mass = Arrays.copyOf(mass, CAPACITY);
+            dirty.clear(oldCapacity, CAPACITY);
         }
     }
 
@@ -28,6 +28,7 @@ public class MassComponent implements Component {
         int index = EntityManager.extractIndex(entityId);
         this.mass[index] = mass;
         hasComponent.set(index);
+        dirty.set(index);
     }
 
     public void remove(int entityId) {
@@ -40,8 +41,31 @@ public class MassComponent implements Component {
 
     public double getMass(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return mass[index];
     }
 
+    @Override
+    public MassSnapshot createSnapshot(long tick) {
+        int size = dirty.cardinality();
+        if (size < 1) return null;
+
+        MassSnapshot snap = new MassSnapshot(size, tick);
+
+        for (int entity = 0; entity < CAPACITY; entity++) {
+            if (!isDirty(entity)) continue;
+            snap.addChange(entity, mass[EntityManager.extractIndex(entity)]);
+        }
+        dirty.clear();
+
+        return snap;
+    }
+
+    @Override
+    public void applySnapshot(MassSnapshot snapshot) {
+        int count = snapshot.getChangedCount();
+        for (int i = 0; i < count; i++) {
+            add(snapshot.entities[i], snapshot.masses[i]);
+        }
+    }
 }

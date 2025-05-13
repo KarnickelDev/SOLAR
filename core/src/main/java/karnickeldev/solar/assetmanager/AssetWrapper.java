@@ -8,15 +8,14 @@ public class AssetWrapper implements Disposable {
     public static final String TEXTURES = "textures/";
 
     private static final AssetWrapper INSTANCE = new AssetWrapper();
-
-    public static AssetWrapper getInstance() {
-        return INSTANCE;
-    }
-
     private final AssetManager assetManager;
 
     private AssetWrapper() {
         assetManager = new AssetManager();
+    }
+
+    public static AssetWrapper getInstance() {
+        return INSTANCE;
     }
 
     public AssetManager getAssetManager() {
@@ -24,7 +23,7 @@ public class AssetWrapper implements Disposable {
     }
 
     public void loadGlobal(Asset asset) {
-        if(asset.isGlobal()) assetManager.load(asset.getPath(), asset.getType());
+        if (asset.isGlobal()) assetManager.load(asset.getPath(), asset.getType());
     }
 
     public void unload(Asset asset) {

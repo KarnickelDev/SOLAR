@@ -50,12 +50,18 @@ public class Settings {
         this(file.getAbsolutePath());
     }
 
+    private static int clampFpsLimit(int input) {
+        if (input > FPS_MAX || input < 0) return FPS_MAX;
+        return Math.max(input, FPS_MIN);
+    }
+
     /**
      * Loads this Settings Object from its physical File
+     *
      * @throws IllegalArgumentException if a malformed Unicode escape appears in read File
-     * @throws IOException if an error occurs while reading the .properties File
-     * @throws FileNotFoundException if there is no physical File present
-     * @throws NumberFormatException if a String couldn't be parsed as a Number
+     * @throws IOException              if an error occurs while reading the .properties File
+     * @throws FileNotFoundException    if there is no physical File present
+     * @throws NumberFormatException    if a String couldn't be parsed as a Number
      */
     public void load() throws IllegalArgumentException, IOException {
         properties.load(new FileReader(file_path));
@@ -91,57 +97,51 @@ public class Settings {
             && other.fps_limit == fps_limit;
     }
 
-    public void setScreenWidth(int screen_width) {
-        this.screen_width = screen_width;
-    }
-
     public int getScreenWidth() {
         return screen_width;
     }
 
-    public void setScreenHeight(int screen_height) {
-        this.screen_height = screen_height;
+    public void setScreenWidth(int screen_width) {
+        this.screen_width = screen_width;
     }
 
     public int getScreenHeight() {
         return screen_height;
     }
 
-    public void setFullscreen(boolean fullscreen) {
-        this.fullscreen = fullscreen;
+    public void setScreenHeight(int screen_height) {
+        this.screen_height = screen_height;
     }
 
     public boolean isFullscreen() {
         return fullscreen;
     }
 
-    public void setBorderless(boolean borderless) {
-        this.borderless = borderless;
+    public void setFullscreen(boolean fullscreen) {
+        this.fullscreen = fullscreen;
     }
 
     public boolean isBorderless() {
         return borderless;
     }
 
-    public void setVsync(boolean vsync) {
-        this.vsync = vsync;
+    public void setBorderless(boolean borderless) {
+        this.borderless = borderless;
     }
 
     public boolean isVsync() {
         return vsync;
     }
 
-    public void setFpsLimit(int fps_limit) {
-        this.fps_limit = fps_limit;
+    public void setVsync(boolean vsync) {
+        this.vsync = vsync;
     }
 
     public int getFpsLimit() {
         return fps_limit;
     }
 
-
-    private static int clampFpsLimit(int input) {
-        if(input > FPS_MAX || input < 0) return FPS_MAX;
-        return Math.max(input, FPS_MIN);
+    public void setFpsLimit(int fps_limit) {
+        this.fps_limit = fps_limit;
     }
 }

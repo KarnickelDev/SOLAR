@@ -1,5 +1,39 @@
+plugins {
+  id 'java-library'
+}
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 eclipse.project.name = appName + '-core'
+
+version = rootProject.version
+def appName = rootProject.ext.appName
+
+def generatedResourcesDir = "$buildDir/generated/resources"
+
+tasks.register('generateVersionProperties') {
+  def versionFile = file("$generatedResourcesDir/version.properties")
+  inputs.property("version", project.version)
+  outputs.file(versionFile)
+
+  doLast {
+    file(generatedResourcesDir).mkdirs()
+    versionFile.text = """\
+appName=${appName}
+version=${project.version}
+""".stripIndent()
+  }
+}
+
+sourceSets {
+  main {
+    resources {
+      srcDir generatedResourcesDir
+    }
+  }
+}
+
+processResources.dependsOn generateVersionProperties
+
 
 dependencies {
   api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
@@ -10,7 +44,7 @@ dependencies {
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:4.13.2'
   testImplementation 'org.apiguardian:apiguardian-api:1.1.2' // Explicitly include this
 
-  if(enableGraalNative == 'true') {
+  if (enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
   }
 }

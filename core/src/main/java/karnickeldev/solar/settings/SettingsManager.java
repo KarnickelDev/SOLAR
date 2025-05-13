@@ -1,7 +1,7 @@
 package karnickeldev.solar.settings;
 
 import com.badlogic.gdx.Gdx;
-import karnickeldev.solar.core.Logger;
+import karnickeldev.solar.util.Logger;
 
 import java.awt.*;
 import java.io.IOException;
@@ -35,14 +35,14 @@ public class SettingsManager {
 
     public void applySettings(Settings newSettings) {
         DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
-        assert(newSettings.getScreenWidth() <= displayMode.getWidth());
-        assert(newSettings.getScreenHeight() <= displayMode.getHeight());
+        assert (newSettings.getScreenWidth() <= displayMode.getWidth());
+        assert (newSettings.getScreenHeight() <= displayMode.getHeight());
 
         Gdx.graphics.setUndecorated(newSettings.isFullscreen() || newSettings.isBorderless());
 
         Gdx.graphics.setWindowedMode(newSettings.getScreenWidth(), newSettings.getScreenHeight());
 
-        if(newSettings.isFullscreen()) Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+        if (newSettings.isFullscreen()) Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
 
         Gdx.graphics.setForegroundFPS(newSettings.getFpsLimit());
         Gdx.graphics.setVSync(newSettings.isVsync());

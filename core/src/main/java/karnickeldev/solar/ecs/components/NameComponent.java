@@ -8,18 +8,16 @@ import java.util.BitSet;
 
 public class NameComponent implements Component {
 
-    private static int CAPACITY = 64;
     private static final String noname = "NO_NAME";
-
-    private String[] names = new String[CAPACITY];
+    private int CAPACITY = 64;
     private final BitSet hasComponent = new BitSet(CAPACITY);
-
+    private String[] names = new String[CAPACITY];
 
     @Override
     public void ensureCapacity(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) {
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index)+1));
+        if (index >= CAPACITY) {
+            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
             names = Arrays.copyOf(names, CAPACITY);
         }
     }
@@ -41,7 +39,7 @@ public class NameComponent implements Component {
 
     public String getName(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return noname;
+        if (index >= CAPACITY) return noname;
         return names[index];
     }
 

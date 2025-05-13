@@ -5,14 +5,11 @@ public class OrbitalObject implements PhysicsObject {
     public static final double SMALLEST_ACCELERATION = 1e-8 * 1e-3;  // multiply by 1e-3 to convert to km/s^2
 
     private final OrbitData orbitData;
-
-    private String name;
     private final float mass;
     private final int radius;
-
     private final float sphereOfInfluence;    // in km
-
     private final Vector2D position;
+    private String name;
 
     public OrbitalObject(String name, float mass, int radius, OrbitData orbitData) {
         this.name = name;
@@ -28,11 +25,11 @@ public class OrbitalObject implements PhysicsObject {
         double distanceMinForce = Math.sqrt((Units.G_KM_TON * mass) / SMALLEST_ACCELERATION);
 
         // distance where central objects gravity dominates
-        double distanceSOI = orbitData.semiMajorAxis() * Math.pow(mass / orbitData.M(), 2f/5f);
+        double distanceSOI = orbitData.semiMajorAxis() * Math.pow(mass / orbitData.M(), 2f / 5f);
 
-        if(this instanceof Star) {
+        if (this instanceof Star) {
             this.sphereOfInfluence = (float) (Units.toSU(8e4, Units.Length.AU)
-                * Math.pow(mass / Units.toSU(1, Units.Mass.SOLAR_MASS), 2f/5f));
+                * Math.pow(mass / Units.toSU(1, Units.Mass.SOLAR_MASS), 2f / 5f));
         } else {
             this.sphereOfInfluence = (float) Math.min(
                 distanceMinForce <= 0 ? distanceSOI : distanceMinForce,
@@ -78,7 +75,7 @@ public class OrbitalObject implements PhysicsObject {
     }
 
     public void update(double time) {
-        if(orbitData == null) return;
+        if (orbitData == null) return;
 
         position.set(calculatePosition(time).add(getOrbitData().getCentralBody().getPosition()));
     }
@@ -103,9 +100,9 @@ public class OrbitalObject implements PhysicsObject {
     }
 
     private double getTrueAnomaly(double t) {
-        if(orbitData == null) return 0;
+        if (orbitData == null) return 0;
 
-        double n = Math.sqrt(Units.G_KM_TON*orbitData.M() / Math.pow(getSemiMajorAxis(), 3)); // Mean motion
+        double n = Math.sqrt(Units.G_KM_TON * orbitData.M() / Math.pow(getSemiMajorAxis(), 3)); // Mean motion
         double M = n * (t - orbitData.t0());
 
         // Step 2: Solve Kepler's Equation for eccentric anomaly

@@ -6,80 +6,15 @@ import java.util.*;
 
 public class QuadTree<T extends PhysicsObject> {
 
-    private static class QuadTreeNode<T extends PhysicsObject> {
-        private double x, y;
-        private float mass;
-        private double size;
-
-        private T element;
-
-        private QuadTreeNode<T>[] children;
-
-        private QuadTreeNode(double x, double y, double size) {
-            this.x = x;
-            this.y = y;
-            this.size = size;
-            this.mass = 0;
-            this.element = null;
-
-            this.children = new QuadTreeNode[4];
-        }
-    }
-
-
-    public static class QuadTreeIterator<T extends PhysicsObject> implements Iterator<T> {
-        private final Stack<QuadTreeNode<T>> stack;
-        private T nextObject;
-
-        public QuadTreeIterator(QuadTree<T> quadTree) {
-            stack = new Stack<>();
-            if (quadTree != null && quadTree.root != null) {
-                stack.push(quadTree.root);
-            }
-            advance(); // Prepare the first object
-        }
-
-        @Override
-        public boolean hasNext() {
-            return nextObject != null;
-        }
-
-        @Override
-        public T next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            T currentObject = nextObject;
-            advance();
-            return currentObject;
-        }
-
-        // Prepares the next object by advancing the state
-        private void advance() {
-            nextObject = null; // Reset nextObject
-            while (!stack.isEmpty()) {
-                QuadTreeNode<T> node = stack.pop();
-                if (node.element != null) {
-                    nextObject = node.element; // next object
-                    return;
-                }
-                for(int i = 0; i < node.children.length; i++) {
-                    if (node.children[i] != null) {
-                        stack.push(node.children[i]);
-                    }
-                }
-            }
-        }
-    }
-
     private QuadTreeNode<T> root;
+
 
     public QuadTree() {
 
     }
 
     public void insert(T element) {
-        if(root == null) {
+        if (root == null) {
             root = new QuadTreeNode<>(element.getX(), element.getY(), element.getMass());
             root.element = element;
         } else {
@@ -104,7 +39,6 @@ public class QuadTree<T extends PhysicsObject> {
         return true;
     }
 
-
     private int getQuadrant(QuadTreeNode<T> node, T element) {
         boolean north = element.getY() < node.y;
         boolean west = element.getX() < node.x;
@@ -123,21 +57,21 @@ public class QuadTree<T extends PhysicsObject> {
     }
 
     private void insert(QuadTreeNode<T> node, T element) {
-        if(node == null || element == null) return;
+        if (node == null || element == null) return;
 
         boolean isLeaf = isLeaf(node);
-        if(node.element == null && isLeaf) {
+        if (node.element == null && isLeaf) {
             // insert into this empty node
             node.element = element;
             node.mass = element.getMass();
             node.x = element.getX();
             node.y = element.getY();
         } else {
-            if(isLeaf) {
+            if (isLeaf) {
                 subdivide(node);
 
                 // move old element into child
-                if(node.element != null) {
+                if (node.element != null) {
                     int quadrant = getQuadrant(node, node.element);
                     insert(node.children[quadrant], node.element);
                     node.element = null;
@@ -156,9 +90,9 @@ public class QuadTree<T extends PhysicsObject> {
     }
 
     private boolean remove(QuadTreeNode<T> node, T element) {
-        if(node == null || element == null) return false;
+        if (node == null || element == null) return false;
 
-        if(node.element != null && node.element.equals(element)) {
+        if (node.element != null && node.element.equals(element)) {
             // remove from leaf
             node.element = null;
             node.mass = 0;
@@ -166,10 +100,10 @@ public class QuadTree<T extends PhysicsObject> {
         }
 
         int quadrant = getQuadrant(node, element);
-        if(node.children[quadrant] != null) {
+        if (node.children[quadrant] != null) {
             // remove from child
-            if(remove(node.children[quadrant], element)) {
-                if(isCollapsible(node)) {
+            if (remove(node.children[quadrant], element)) {
+                if (isCollapsible(node)) {
                     collapse(node);
                 }
                 return true;
@@ -183,8 +117,8 @@ public class QuadTree<T extends PhysicsObject> {
         int numChildren = 0;
         QuadTreeNode<T> lastChild = null;
 
-        for(QuadTreeNode<T> child : node.children) {
-            if(child != null) {
+        for (QuadTreeNode<T> child : node.children) {
+            if (child != null) {
                 numChildren++;
                 lastChild = child;
             }
@@ -228,11 +162,76 @@ public class QuadTree<T extends PhysicsObject> {
             for (QuadTreeNode<T> child : node.children) {
                 if (child != null && !(
                     ((node.x + halfSize) < xMin)
-                    || ((node.x - halfSize) > xMin)
-                    || ((node.y + halfSize) < yMin)
-                    || ((node.y - halfSize) > yMax))
+                        || ((node.x - halfSize) > xMin)
+                        || ((node.y + halfSize) < yMin)
+                        || ((node.y - halfSize) > yMax))
                 ) {
                     queryInArea(child, xMin, yMin, xMax, yMax, results);
+                }
+            }
+        }
+    }
+
+    private static class QuadTreeNode<T extends PhysicsObject> {
+        private double x, y;
+        private float mass;
+        private double size;
+
+        private T element;
+
+        private QuadTreeNode<T>[] children;
+
+        private QuadTreeNode(double x, double y, double size) {
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.mass = 0;
+            this.element = null;
+
+            this.children = new QuadTreeNode[4];
+        }
+    }
+
+    public static class QuadTreeIterator<T extends PhysicsObject> implements Iterator<T> {
+        private final Stack<QuadTreeNode<T>> stack;
+        private T nextObject;
+
+        public QuadTreeIterator(QuadTree<T> quadTree) {
+            stack = new Stack<>();
+            if (quadTree != null && quadTree.root != null) {
+                stack.push(quadTree.root);
+            }
+            advance(); // Prepare the first object
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextObject != null;
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            T currentObject = nextObject;
+            advance();
+            return currentObject;
+        }
+
+        // Prepares the next object by advancing the state
+        private void advance() {
+            nextObject = null; // Reset nextObject
+            while (!stack.isEmpty()) {
+                QuadTreeNode<T> node = stack.pop();
+                if (node.element != null) {
+                    nextObject = node.element; // next object
+                    return;
+                }
+                for (int i = 0; i < node.children.length; i++) {
+                    if (node.children[i] != null) {
+                        stack.push(node.children[i]);
+                    }
                 }
             }
         }

@@ -1,19 +1,22 @@
 package karnickeldev.solar.ecs.components.client;
 
+import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
 import karnickeldev.solar.ecs.components.server.HCSPositionComponent;
 import karnickeldev.solar.ecs.components.server.HCSPositionSnapshot;
 import karnickeldev.solar.util.MathUtil;
 
-public class HCSClientSystem {
+public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSnapshot> {
 
     private final HCSPositionComponent[] componentBuffer = new HCSPositionComponent[2];
     private int prev = 0;
     private int curr = 1;
 
+    private long lastUpdate;
+
     private HCSPositionSnapshot lastSnapshot;
 
     public HCSClientSystem() {
-        for(int i = 0; i < componentBuffer.length; i++) {
+        for (int i = 0; i < componentBuffer.length; i++) {
             componentBuffer[i] = new HCSPositionComponent();
         }
     }
@@ -28,13 +31,18 @@ public class HCSClientSystem {
 
     public void update(HCSPositionSnapshot snapshot) {
         // make sure snapshot is new
-        if(lastSnapshot != null && snapshot.tick <= lastSnapshot.tick) return;
+        if (lastSnapshot != null && snapshot.tick <= lastSnapshot.tick) return;
 
         curr = (curr + 1) % 2;
         prev = (prev + 1) % 2;
         componentBuffer[curr].applySnapshot(snapshot);
 
         lastSnapshot = snapshot;
+        lastUpdate = System.nanoTime();
+    }
+
+    public double getAlpha(int tickRate) {
+        return (System.nanoTime() - lastUpdate) * (tickRate * 1e-9);
     }
 
     public double getInterpolatedX(int entityID, double alpha) {
@@ -47,5 +55,20 @@ public class HCSClientSystem {
         double a = componentBuffer[prev].getLocalY(entityID);
         double b = componentBuffer[curr].getLocalY(entityID);
         return MathUtil.lerp(a, b, alpha);
+    }
+
+    @Override
+    public void applySnapshot(HCSPositionSnapshot snapshot) {
+        this.update(snapshot);
+    }
+
+    @Override
+    public void ensureCapacity(int entityId) {
+        throw new UnsupportedOperationException("Not supported for " + this.getClass().getName());
+    }
+
+    @Override
+    public HCSPositionSnapshot createSnapshot(long tick) {
+        throw new UnsupportedOperationException("Not supported for " + this.getClass().getName());
     }
 }

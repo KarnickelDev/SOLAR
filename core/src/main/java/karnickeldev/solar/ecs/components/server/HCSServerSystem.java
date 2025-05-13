@@ -8,7 +8,7 @@ public class HCSServerSystem {
     private int send = 2;
 
     public HCSServerSystem() {
-        for(int i = 0; i < componentBuffer.length; i++) {
+        for (int i = 0; i < componentBuffer.length; i++) {
             componentBuffer[i] = new HCSPositionComponent();
         }
     }
@@ -45,8 +45,8 @@ public class HCSServerSystem {
         return componentBuffer[curr].getLocalY(entityId);
     }
 
-    public void add(int entityId, int parentId, double x, double y, double worldX, double worldY) {
-        componentBuffer[next].add(entityId, parentId, x, y,  worldX, worldY);
+    public void add(int entityId, int parentId, double x, double y) {
+        componentBuffer[next].add(entityId, parentId, x, y);
     }
 
 }
