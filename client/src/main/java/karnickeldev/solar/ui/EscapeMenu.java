@@ -8,6 +8,7 @@ import karnickeldev.solar.core.SimTestScreen;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.settings.Resolution;
 import karnickeldev.solar.ui.pausemenu.OptionsMenu;
+import karnickeldev.solar.world.ServerWorld;
 
 public class EscapeMenu implements UIElement {
 
@@ -31,6 +32,8 @@ public class EscapeMenu implements UIElement {
         backToMenu = new MenuButton("Back", SkinManager.getTextButtonStyle(Fonts.REGULAR), () -> {
             hide();
             SimTestScreen.server.stop();
+            SimTestScreen.server = null;
+            ServerWorld.IDS = 0;    //TODO: BAD, FIXME
             SolarMain.getInstance().setScreen(new LoadingScreen(SolarMain.getInstance(), null));
         });
 
@@ -92,7 +95,7 @@ public class EscapeMenu implements UIElement {
         isVisible = true;
         escapeTable.setVisible(true);
 
-        SolarMain.getInstance().getInputManager().getInputMultiplexer().removeProcessor(SimTestScreen.cameraInput);
+//        SolarMain.getInstance().getInputManager().getInputMultiplexer().removeProcessor(SimTestScreen.clientWorldManager.getActiveWorld().getCameraInput());
     }
 
     @Override
@@ -100,8 +103,8 @@ public class EscapeMenu implements UIElement {
         isVisible = false;
         escapeTable.setVisible(false);
 
-        if (SimTestScreen.cameraInput != null)
-            SolarMain.getInstance().getInputManager().getInputMultiplexer().addProcessor(SimTestScreen.cameraInput);
+//        if (SimTestScreen.clientWorldManager.getActiveWorld().getCameraInput() != null)
+//            SolarMain.getInstance().getInputManager().getInputMultiplexer().addProcessor(SimTestScreen.clientWorldManager.getActiveWorld().getCameraInput());
     }
 
     @Override

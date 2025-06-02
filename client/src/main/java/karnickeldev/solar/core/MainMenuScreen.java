@@ -119,7 +119,7 @@ public class MainMenuScreen implements Screen {
         }
 
         // Draw the background
-        Texture background = AssetWrapper.getInstance().getAsset(Asset.MAIN_MENU_BACKGROUND_SCENERY);
+        Texture background = AssetWrapper.getInstance().getAsset(Asset.TREE_LINE);
         game.batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         game.batch.end();

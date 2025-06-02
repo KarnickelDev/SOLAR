@@ -1,8 +1,8 @@
-package karnickeldev.solar.ecs.components.client;
+package karnickeldev.solar.ecs.systems;
 
 import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
-import karnickeldev.solar.ecs.components.server.HCSPositionComponent;
-import karnickeldev.solar.ecs.components.server.HCSPositionSnapshot;
+import karnickeldev.solar.ecs.components.HCSPositionComponent;
+import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
 import karnickeldev.solar.util.MathUtil;
 
 public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSnapshot> {
@@ -36,6 +36,7 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
         curr = (curr + 1) % 2;
         prev = (prev + 1) % 2;
         componentBuffer[curr].applySnapshot(snapshot);
+        if(lastSnapshot == null) componentBuffer[prev].applySnapshot(snapshot);
 
         lastSnapshot = snapshot;
         lastUpdate = System.nanoTime();

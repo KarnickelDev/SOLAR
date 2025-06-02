@@ -8,7 +8,8 @@ public enum Asset {
 
     STARRY_SKY_BACKGROUND_TILES(AssetWrapper.TEXTURES + "starry_sky_tiles.png", Texture.class, true),
     MAIN_MENU_BACKGROUND_SCENERY(AssetWrapper.TEXTURES + "landscape.png", Texture.class, true),
-    STARS_ATLAS(AssetWrapper.TEXTURES + "stars.atlas", TextureAtlas.class, true);;
+    TREE_LINE(AssetWrapper.TEXTURES + "treeline.png", Texture.class, true),
+    STARS_ATLAS(AssetWrapper.TEXTURES + "stars.atlas", TextureAtlas.class, true);
 
 
     private final String path;

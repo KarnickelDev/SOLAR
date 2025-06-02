@@ -37,10 +37,14 @@ public class EntityManager {
             if (index >= MAX_ENTITIES) throw new RuntimeException("Entity limit reached");
         }
         int gen = generations[index];
-        return (gen << ENTITY_BITS) | index;
+
+        int entityId = (gen << ENTITY_BITS) | index;
+        if(entityId == NO_ENTITY) throw new RuntimeException("Tried using reserved entityId");
+        return entityId;
     }
 
     public void registerEntity(int entityId) {
+        if(entityId == NO_ENTITY) throw new RuntimeException("Tried using reserved entityId");
         int index = extractIndex(entityId);
         int generation = extractGeneration(entityId);
 

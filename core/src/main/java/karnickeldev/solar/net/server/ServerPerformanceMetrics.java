@@ -5,8 +5,8 @@ import karnickeldev.solar.util.Logger;
 public class ServerPerformanceMetrics {
 
     private static final float RAW_TPS_UPDATE_THRESHOLD = 0.2f; // in seconds
-    private static final float TPS_UPDATE_THRESHOLD = 0.8f; // in seconds
-    private static final float DELAY_UPDATE_THRESHOLD = 5f;
+    public static final float TPS_UPDATE_THRESHOLD = 0.8f; // in seconds
+    private static final float DELAY_UPDATE_THRESHOLD = 6.5f;
 
     private final int[] ticks;
     private long prevTick = 0;

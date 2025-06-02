@@ -54,6 +54,10 @@ public class LoadingScreen implements Screen {
             AssetWrapper.getInstance().loadGlobal(Asset.STARS_ATLAS);
         }
 
+        if (!AssetWrapper.getInstance().isLoaded(Asset.TREE_LINE)) {
+            AssetWrapper.getInstance().loadGlobal(Asset.TREE_LINE);
+        }
+
         camera = new OrthographicCamera(
             solarMain.getSettingsManager().getSettings().getScreenWidth(),
             solarMain.getSettingsManager().getSettings().getScreenHeight()

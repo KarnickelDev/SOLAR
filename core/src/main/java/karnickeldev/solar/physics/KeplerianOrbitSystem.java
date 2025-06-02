@@ -1,36 +1,42 @@
 package karnickeldev.solar.physics;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import karnickeldev.solar.ecs.ServerECS;
 import karnickeldev.solar.ecs.components.*;
-import karnickeldev.solar.ecs.components.server.HCSPositionSnapshot;
+import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
 import karnickeldev.solar.ecs.components.server.HCSServerSystem;
 import karnickeldev.solar.net.network.ServerNetwork;
 import karnickeldev.solar.net.packets.ECSUpdatePacket;
 import karnickeldev.solar.net.packets.EntityLifecyclePacket;
+import karnickeldev.solar.net.packets.Packet;
+import karnickeldev.solar.net.packets.PacketFactory;
+import karnickeldev.solar.world.ServerWorld;
+import karnickeldev.solar.world.World;
+import karnickeldev.solar.world.WorldManager;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class KeplerianOrbitSystem {
 
-    private final ServerECS ecs;
-    private final OrbitDataComponent orbitData;
+    private final WorldManager<ServerWorld> worldManager;
     private final ServerNetwork serverNetwork;
-    HCSServerSystem hcs = new HCSServerSystem();
     boolean first = true;
     private long tick;
 
+    private MassComponent massComponent;
 
-    public KeplerianOrbitSystem(ServerECS ecs, ServerNetwork serverNetwork) {
+    public KeplerianOrbitSystem(WorldManager<ServerWorld> worldManager, ServerNetwork serverNetwork) {
         this.serverNetwork = serverNetwork;
 
-        this.ecs = ecs;
-        this.orbitData = ecs.getComponentRegistry().get(OrbitDataComponent.class);
+        this.worldManager = worldManager;
 
-        hcs.getSend().setDirty();
-        hcs.getCurrent().setDirty();
-        hcs.getNext().setDirty();
-        for (Component comp : ecs.getComponentRegistry().getAll()) {
-            if (comp instanceof DirtyFlagComponent) ((DirtyFlagComponent) comp).setDirty();
+        for(ServerWorld world: worldManager.getWorlds()) {
+            world.getECS().hcs.getNext().setDirty();
+            for (Component comp : world.getECS().getComponentRegistry().getAll()) {
+                if (comp instanceof DirtyFlagComponent) ((DirtyFlagComponent) comp).setDirty();
+            }
         }
     }
 
@@ -48,6 +54,15 @@ public class KeplerianOrbitSystem {
     }
 
     public void updateHCS(double timeDays) {
+        if(Gdx.input.isKeyPressed(Input.Keys.C)) {
+            worldManager.changeWorld(2);
+            worldManager.getWorld(2).getECS().hcs.getNext().setDirty();
+        }
+        ServerECS ecs = worldManager.getActiveWorld().getECS();
+        HCSServerSystem hcs = ecs.hcs;
+        OrbitDataComponent orbitData = ecs.getComponentRegistry().get(OrbitDataComponent.class);
+        massComponent = ecs.getComponentRegistry().get(MassComponent.class);
+
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !orbitData.has(entity)) continue;
 
@@ -83,33 +98,30 @@ public class KeplerianOrbitSystem {
             double rotatedY = sinW * orbitX + cosW * orbitY;
 
             hcs.add(entity, centralBodyId, rotatedX, rotatedY);
-
         }
         hcs.swapBuffers();
 
-        final HCSPositionSnapshot positionSnapshot = hcs.getCurrent().createSnapshot(tick);
-
-        List<ComponentSnapshot> snapshots = ecs.getComponentRegistry().createAllSnapshots(tick);
-        snapshots.add(positionSnapshot);
-
-        final ECSUpdatePacket ecsUpdatePacket = new ECSUpdatePacket(tick, snapshots.toArray(new ComponentSnapshot[0]));
+        final Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(tick, worldManager.getActiveWorld());
 
         if (first) {
             first = false;
-            int[] createdEntities = new int[ecs.getEntityManager().getAll()];
-            for (int i = 0; i < ecs.getEntityManager().getAll(); i++) {
-                createdEntities[i] = i;
+            for(ServerWorld world: worldManager.getWorlds()) {
+                Packet worldPacket = PacketFactory.createWorldUpdatePacket(world.getID(), tick);
+                serverNetwork.broadcast(worldPacket);
             }
-            final EntityLifecyclePacket lifecyclePacket = new EntityLifecyclePacket(createdEntities, new int[0], tick);
-            serverNetwork.broadcast(lifecyclePacket);
+            for(ServerWorld world: worldManager.getWorlds()) {
+                Packet lifecyclePacket = PacketFactory.createFullEntityLifecyclePacket(tick, world);
+                serverNetwork.broadcast(lifecyclePacket);
+            }
         }
+
         serverNetwork.broadcast(ecsUpdatePacket);
 
         tick++;
     }
 
     private double getGravitationalParameter(int body) {
-        return Units.G_KM_TON * ecs.getComponentRegistry().get(MassComponent.class).getMass(body);
+        return Units.G_KM_TON * massComponent.getMass(body);
     }
 
 }

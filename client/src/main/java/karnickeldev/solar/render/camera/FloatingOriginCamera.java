@@ -2,7 +2,7 @@ package karnickeldev.solar.render.camera;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Matrix4;
-import karnickeldev.solar.ecs.components.client.HCSClientSystem;
+import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.util.MathUtil;
 
@@ -14,20 +14,20 @@ public class FloatingOriginCamera {
     public static final byte LEFT = 0b0100;
     public static final byte RIGHT = 0b1000;
 
-    private static final float CAMERA_MOVEMENT_TICK_RATE = (1f / 128);
+    private static final float CAMERA_MOVEMENT_TICK_RATE = (1f / 60);
 
-    private static final float MIN_SPEED = 1f;
-    private static final float MAX_SPEED = 10f;
-    private static final float ACCELERATION = 5.2f;
-    private static final float DECELERATION = 18f;
+    private static final float MIN_SPEED = 2f;
+    private static final float MAX_SPEED = 25f;
+    private static final float ACCELERATION = 12f;
+    private static final float DECELERATION = 30f;
     private final Vector2D directionVec = new Vector2D();
     private final Vector2D moveDirection = new Vector2D();
     private final Vector2D origin;
-    private final Vector2D prevPosition;
+    private final Vector2D prevOrigin;
     private final Vector2D renderOrigin;
     private final Matrix4 projectionMatrix = new Matrix4();
     HCSClientSystem hcsClientSystem;
-    Vector2D rotationCenter = new Vector2D();
+
     private float viewportWidth;
     private float viewportHeight;
     private double accumulator = 0;
@@ -35,8 +35,13 @@ public class FloatingOriginCamera {
     private byte direction = NO_MOVE;
     private boolean moveRequested = false;
     private double zoom;
+    private double targetZoom;
+    private double renderZoom;
+    private double prevZoom;
     private float rotationDegrees;
     private float targetRotationDegrees;
+
+    private final Vector2D zoomTargetPos = new Vector2D();
 
     public FloatingOriginCamera(float viewportWidth, float viewportHeight, HCSClientSystem hcsClient) {
         this.viewportWidth = viewportWidth;
@@ -45,10 +50,10 @@ public class FloatingOriginCamera {
         this.hcsClientSystem = hcsClient;
 
         this.origin = new Vector2D();
-        this.prevPosition = new Vector2D();
+        this.prevOrigin = new Vector2D();
         this.renderOrigin = new Vector2D();
 
-        setZoom(1f);
+        zoom = prevZoom = targetZoom = renderZoom = 1f;
     }
 
     /**
@@ -61,7 +66,9 @@ public class FloatingOriginCamera {
         // execute camera movement
         moveHelper();
 
-        renderOrigin.set(prevPosition).lerp(origin, (float) (accumulator / CAMERA_MOVEMENT_TICK_RATE));
+        renderOrigin.set(prevOrigin).lerp(origin, (float) (accumulator / CAMERA_MOVEMENT_TICK_RATE));
+
+        renderZoom = MathUtil.lerp(prevZoom, zoom, accumulator / CAMERA_MOVEMENT_TICK_RATE);
 
         updateProjectionMatrix(viewportWidth, viewportHeight);
     }
@@ -90,7 +97,7 @@ public class FloatingOriginCamera {
      * @param worldPos World Coordinates
      * @return A Vector of Screen-Coordinates
      */
-    public Vector2D project(Vector2D worldPos) {
+    public Vector2D project(Vector2D worldPos, double zoom) {
         // Compute camera-local coordinates
         double localX = worldPos.getX() - renderOrigin.getX();
         double localY = worldPos.getY() - renderOrigin.getY();
@@ -110,13 +117,17 @@ public class FloatingOriginCamera {
         );
     }
 
+    public Vector2D project(Vector2D worldPos) {
+        return project(worldPos, renderZoom);
+    }
+
     /**
      * Converts World-Coordinates to Screen-Coordinates
      *
      * @param screenPos World Coordinates
      * @return A Vector of Screen-Coordinates
      */
-    public Vector2D unproject(Vector2D screenPos) {
+    public Vector2D unproject(Vector2D screenPos, double zoom) {
         // Convert from screen space to local, zoomed space
         double dx = (screenPos.getX() - viewportWidth / 2.0) * zoom;
         double dy = -(screenPos.getY() - viewportHeight / 2.0) * zoom;
@@ -135,6 +146,32 @@ public class FloatingOriginCamera {
         );
     }
 
+    public Vector2D unproject(Vector2D screenPos) {
+        return unproject(screenPos, renderZoom);
+    }
+
+    /**
+     * Applies a zoom value towards screenPos and smooths changes
+     *
+     * @param newZoom New Zoom Value
+     * @param screenPos Position to zoom toward
+     */
+    public void zoomToward(double newZoom, Vector2D screenPos) {
+        targetZoom = newZoom;
+        zoomTargetPos.set(screenPos);
+    }
+
+    public double getZoom() {
+        return zoom;
+    }
+
+    public double getRenderZoom() {
+        return renderZoom;
+    }
+
+    public double getTargetZoom() {
+        return targetZoom;
+    }
 
     /**
      * Set Camera Position
@@ -175,6 +212,16 @@ public class FloatingOriginCamera {
         );
     }
 
+    public void move(Vector2D direction) {
+        double cos = Math.cos(Math.toRadians(rotationDegrees));
+        double sin = Math.sin(Math.toRadians(rotationDegrees));
+
+        origin.add(
+            direction.getX() * cos + direction.getY() * sin,
+            -direction.getX() * sin + direction.getY() * cos
+        );
+    }
+
     /**
      * Signals camera to move, only gets executed on camera.update();
      *
@@ -187,53 +234,20 @@ public class FloatingOriginCamera {
         } else this.direction |= direction;
     }
 
-    public double getZoom() {
-        return zoom;
-    }
-
-    public void setZoom(double newZoom) {
-        this.zoom = newZoom;
-    }
-
-    /**
-     * Applies a zoom value towards screenPos and smooths changes
-     *
-     * @param newZoom   New Zoom Value
-     * @param screenPos Position to zoom toward
-     */
-    public void zoomToward(double newZoom, Vector2D screenPos) {
-        Vector2D worldBefore = unproject(screenPos);
-
-        double dt = Math.max(Gdx.graphics.getDeltaTime(), CAMERA_MOVEMENT_TICK_RATE);
-        zoom = MathUtil.lerp(zoom, newZoom, 10 * dt);
-
-        Vector2D worldAfter = unproject(screenPos);
-
-        Vector2D delta = worldBefore.subtract(worldAfter);
-        origin.add(delta.getX(), delta.getY());
-    }
-
 
     public void updateProjectionMatrix(float screenWidth, float screenHeight) {
-        double halfWidth = (screenWidth / 2.0) * zoom;
-        double halfHeight = (screenHeight / 2.0) * zoom;
+        double halfWidth = (screenWidth / 2.0) * renderZoom;
+        double halfHeight = (screenHeight / 2.0) * renderZoom;
 
-        float left = (float) (-halfWidth);
-        float right = (float) (+halfWidth);
-        float bottom = (float) (-halfHeight);
-        float top = (float) (+halfHeight);
+        float left = (float) -halfWidth;
+        float right = (float) halfWidth;
+        float bottom = (float) -halfHeight;
+        float top = (float) halfHeight;
 
         projectionMatrix.setToOrtho2D(left, bottom, right - left, top - bottom);
 
-
-        // translate so the pivot is at the origin
-        //projectionMatrix.translate((float) renderOrigin.getX(), (float) renderOrigin.getY(), 0);
-
         // rotate about Z
         projectionMatrix.rotate(0, 0, 1, rotationDegrees);
-
-        // translate back
-        //projectionMatrix.translate((float) -renderOrigin.getX(), (float) -renderOrigin.getY(), 0);
     }
 
     public Matrix4 getCombinedMatrix() {
@@ -281,7 +295,16 @@ public class FloatingOriginCamera {
 
             rotationDegrees = targetRotationDegrees;
 
-            prevPosition.set(origin);
+            prevOrigin.set(origin);
+
+            prevZoom = zoom;
+            Vector2D zoomPos = zoomTargetPos.copy();
+            Vector2D before = unproject(zoomPos, zoom);
+
+            zoom = MathUtil.lerp(zoom, targetZoom, 0.3f);
+
+            Vector2D after = unproject(zoomPos, zoom);
+
             float radians = (float) Math.toRadians(MathUtil.normalizeRotationDeg(-rotationDegrees));
             double cos = Math.cos(radians);
             double sin = Math.sin(radians);
@@ -290,11 +313,10 @@ public class FloatingOriginCamera {
             double rotatedDY = moveDirection.getX() * sin + moveDirection.getY() * cos;
 
             origin.add(rotatedDX * speed * zoom, rotatedDY * speed * zoom);
-
+            origin.add(before.subtract(after));
             accumulator -= CAMERA_MOVEMENT_TICK_RATE;
         }
         moveRequested = false;
     }
-
 }
 

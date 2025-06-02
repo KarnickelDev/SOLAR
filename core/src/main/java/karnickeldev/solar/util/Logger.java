@@ -17,9 +17,11 @@ public class Logger {
     public static final String SERVER = "[SERVER] ";
     public static final String NETWORK = "[NETWORK] ";
     public static final String UI = "[UI] ";
+
     public static final char LOG_NONE = 0, LOG_INFO = 1, LOG_ERROR = 2, LOG_DEBUG = 3;
     private static final String RESET = "\u001B[0m";
     private static final String RED = "\u001B[31m";
+
     private static char LOG_LEVEL = LOG_ERROR;
 
     private static boolean VERBOSE = false;

@@ -3,6 +3,7 @@ package karnickeldev.solar.ecs;
 import karnickeldev.solar.ecs.components.Component;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
 import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
+import karnickeldev.solar.util.Logger;
 
 import java.util.*;
 
@@ -48,6 +49,10 @@ public class ComponentRegistry {
 
     @SuppressWarnings("unchecked")
     public void applyAllSnapshots(ComponentSnapshot... snaps) {
+        if(snaps == null) {
+            Logger.log("empty snapshot");
+            return;
+        }
         for (ComponentSnapshot snap : snaps) {
             ComponentSnapshotProvider<ComponentSnapshot> provider = (ComponentSnapshotProvider<ComponentSnapshot>) snapshots.get(snap.getClass());
             if (provider != null) {

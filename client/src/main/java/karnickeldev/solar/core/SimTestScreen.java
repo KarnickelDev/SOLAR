@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import karnickeldev.solar.ecs.ClientECS;
+import karnickeldev.solar.ecs.SystemGroup;
 import karnickeldev.solar.net.network.*;
 import karnickeldev.solar.net.packets.Packet;
 import karnickeldev.solar.net.server.LocalServer;
@@ -11,8 +12,11 @@ import karnickeldev.solar.render.BackgroundStarRenderer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
+import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.ui.menus.MenuInput;
 import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.world.ClientWorld;
+import karnickeldev.solar.world.WorldManager;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,23 +24,22 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class SimTestScreen implements Screen {
 
     public static LocalServer server;
-    public static CameraInput cameraInput;
+
+    private final WorldManager<ClientWorld> clientWorldManager;
+
     public static DefaultClientNetworkListener clientListener;
-    private final ClientECS ecs;
     private final PlanetoidRenderSystem rs;
     private final NetworkThread networkThread;
-    public FloatingOriginCamera camera;
+
     ClientNetwork clientNetwork;
     MainThreadDispatcher clientDispatcher;
 
+    private final CameraInput cameraInput;
+
     public SimTestScreen() {
+        clientWorldManager = new WorldManager<>(new ClientWorld(0));
 
-        ecs = new ClientECS();
-
-        camera = new FloatingOriginCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), ecs.hcs);
-        camera.update();
-
-        clientListener = new DefaultClientNetworkListener(ecs);
+        clientListener = new DefaultClientNetworkListener(clientWorldManager);
         ServerNetworkListener serverListener = new DefaultServerNetworkListener();
 
         clientDispatcher = new DefaultMainThreadDispatcher();
@@ -50,10 +53,11 @@ public class SimTestScreen implements Screen {
 
         networkThread = new NetworkThread("SharedNetworkThread", clientNetwork, serverNetwork);
 
-        server = new LocalServer(serverNetwork, networkThread, serverDispatcher);
+        server = LocalServer.create(serverNetwork, networkThread, serverDispatcher);
 
-        cameraInput = new CameraInput(camera, ecs);
-        rs = new PlanetoidRenderSystem(ecs, SolarMain.getInstance().batch, camera);
+        rs = new PlanetoidRenderSystem(clientWorldManager, SolarMain.getInstance().batch);
+
+        cameraInput = new CameraInput(clientWorldManager);
     }
 
 
@@ -76,7 +80,7 @@ public class SimTestScreen implements Screen {
 
         // camera
         cameraInput.processInputs();
-        camera.update();
+        clientWorldManager.getActiveWorld().getCamera().update();
 
         SolarMain.getInstance().batch.begin();
         if (!BackgroundStarRenderer.drawStarScape(SolarMain.getInstance().batch, delta, false))

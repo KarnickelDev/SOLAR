@@ -1,5 +1,7 @@
 package karnickeldev.solar.ecs.components.server;
 
+import karnickeldev.solar.ecs.components.HCSPositionComponent;
+
 public class HCSServerSystem {
 
     private HCSPositionComponent[] componentBuffer = new HCSPositionComponent[3];

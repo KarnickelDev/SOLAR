@@ -8,5 +8,4 @@ public interface GameServer {
 
     boolean isRunning();
 
-
 }

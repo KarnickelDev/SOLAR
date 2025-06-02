@@ -1,8 +1,6 @@
-package karnickeldev.solar.ecs.components.server;
+package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
-import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
-import karnickeldev.solar.ecs.components.DirtyFlagComponent;
 import karnickeldev.solar.util.MathUtil;
 
 import java.util.Arrays;
@@ -58,7 +56,7 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
     public int getParent(int entityId) {
         int index = EntityManager.extractIndex(entityId);
         //if(index >= CAPACITY) return 0;
-        return parentIds[EntityManager.extractIndex(entityId)];
+        return parentIds[index];
     }
 
     public double getLocalX(int entityId) {
@@ -98,6 +96,17 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
             int entity = snapshot.entities[i];
             add(entity, snapshot.parent[i], snapshot.position[2 * i], snapshot.position[2 * i + 1]);
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        for(int i = 0; i < hasComponent.length(); i++) {
+            builder.append(i).append(": ").append(localPos[2 * i]).append(", ").append(localPos[2 * i + 1]).append(", ").append(parentIds[i]).append("\n");
+        }
+
+        return builder.toString();
     }
 }
 

@@ -5,32 +5,45 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.utils.TimeUtils;
 import karnickeldev.solar.ecs.ClientECS;
-import karnickeldev.solar.ecs.components.client.HCSClientSystem;
+import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.net.server.LocalServer;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.util.MathUtil;
+import karnickeldev.solar.world.ClientWorld;
+import karnickeldev.solar.world.WorldManager;
 
 public class CameraInput extends InputAdapter {
 
-    private static final float ZOOM_SPEED = 0.16f;
-    private static final float ZOOM_ACCELERATION = 1.17f;
-    private static final float MIN_ZOOM = 1e-30f;
-    private static final float MAX_ZOOM = 1e30f;
+    private static final float ZOOM_SPEED = 0.04f;
+    private static final float ZOOM_ACCELERATION = 1.12f;
+    private static final float MIN_ZOOM = 1e-6f;
+    private static final float MAX_ZOOM = 1e12f;
     private static final float ROTATION_SPEED = 50f;
-    private final FloatingOriginCamera camera;
-    private final ClientECS ecs;
     private long lastScrollTime = 0;
     private int scrollCount = 0;
     private int lastMouseX = 0, lastMouseY = 0;
     private boolean dragging = false;
 
-    public CameraInput(FloatingOriginCamera camera, ClientECS ecs) {
-        this.camera = camera;
-        this.ecs = ecs;
+    private final WorldManager<ClientWorld> worldManager;
+    private FloatingOriginCamera camera;
+    private ClientECS ecs;
+
+    public CameraInput(WorldManager<ClientWorld> worldManager) {
+        this.worldManager = worldManager;
+        setWorld(worldManager.getActiveWorld());
+    }
+
+    private void setWorld(ClientWorld world) {
+        if(world == null || worldManager.getActiveWorld() == null) return;
+
+        this.camera = worldManager.getActiveWorld().getCamera();
+        this.ecs = worldManager.getActiveWorld().getECS();
     }
 
     public void processInputs() {
+        setWorld(worldManager.getActiveWorld());
+
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             camera.move(FloatingOriginCamera.UP);
         }
@@ -75,7 +88,7 @@ public class CameraInput extends InputAdapter {
 
         lastScrollTime = now;
 
-        double currentZoom = camera.getZoom();
+        double currentZoom = camera.getTargetZoom();
 
         float scrollDir = Math.signum(amountY);
         double factor = ZOOM_SPEED * currentZoom * Math.pow(ZOOM_ACCELERATION, scrollCount);
@@ -100,14 +113,10 @@ public class CameraInput extends InputAdapter {
             int dx = screenX - lastMouseX;
             int dy = screenY - lastMouseY;
 
-            // Apply drag to origin
-            Vector2D origin = new Vector2D(camera.getOrigin());
-            origin.add(-dx * camera.getZoom(), dy * camera.getZoom());  // y is flipped in screen coords
+            camera.move(new Vector2D(-dx * camera.getZoom(), dy * camera.getZoom()));
 
             lastMouseX = screenX;
             lastMouseY = screenY;
-
-            camera.setPosition(origin);
 
             return true;
         }
@@ -121,16 +130,13 @@ public class CameraInput extends InputAdapter {
             HCSClientSystem hcs = ecs.hcs;
             for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
                 if (ecs.getEntityManager().isValid(entity)) {
-                    if (!hcs.getCurrent().has(entity)) continue;
-                    double x = getPosX(entity);
-                    double y = getPosY(entity);
-                    Vector2D screen = camera.project(new Vector2D(x, y));
+                    //if (!hcs.getCurrent().has(entity)) continue;
+                    Vector2D screen = camera.project(ecs.toRelativeSpace(entity, PlanetoidRenderSystem.track, hcs.getAlpha(LocalServer.TICK_RATE)));
 
-                    double dx = screenX - (screen.getX());
-                    double dy = (screenY) - screen.getY();
+                    double dx = screenX - screen.getX();
+                    double dy = screenY - screen.getY();
                     if (dx * dx + dy * dy < 16 * 16) {
                         PlanetoidRenderSystem.track = entity;
-                        camera.setPosition(0, 0);
                         break;
                     }
 
@@ -148,32 +154,6 @@ public class CameraInput extends InputAdapter {
         }
 
         return processed;
-    }
-
-    private double getPosX(int entity) {
-        double x = ecs.hcs.getInterpolatedX(entity, ecs.hcs.getAlpha(LocalServer.TICK_RATE));
-        int parent = ecs.hcs.getCurrent().getParent(entity);
-
-        x += ecs.hcs.getInterpolatedX(parent, ecs.hcs.getAlpha(LocalServer.TICK_RATE));
-        parent = ecs.hcs.getCurrent().getParent(parent);
-        x += ecs.hcs.getInterpolatedX(parent, ecs.hcs.getAlpha(LocalServer.TICK_RATE));
-
-        x -= ecs.hcs.getInterpolatedX(PlanetoidRenderSystem.track, ecs.hcs.getAlpha(LocalServer.TICK_RATE));
-
-        return x;
-    }
-
-    private double getPosY(int entity) {
-        double y = ecs.hcs.getInterpolatedY(entity, ecs.hcs.getAlpha(LocalServer.TICK_RATE));
-        int parent = ecs.hcs.getCurrent().getParent(entity);
-
-        y += ecs.hcs.getInterpolatedY(parent, ecs.hcs.getAlpha(LocalServer.TICK_RATE));
-        parent = ecs.hcs.getCurrent().getParent(parent);
-        y += ecs.hcs.getInterpolatedY(parent, ecs.hcs.getAlpha(LocalServer.TICK_RATE));
-
-        y -= ecs.hcs.getInterpolatedY(PlanetoidRenderSystem.track, ecs.hcs.getAlpha(LocalServer.TICK_RATE));
-
-        return y;
     }
 
 }

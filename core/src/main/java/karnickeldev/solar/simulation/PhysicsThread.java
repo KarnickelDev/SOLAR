@@ -69,7 +69,7 @@ public class PhysicsThread implements Runnable {
 
             // wait until next tick
             long sleepNS = nanosPerTick - (System.nanoTime() - tickStartTime);
-            long sleepMS = (sleepNS / 1_000_000) - 2;   // Thread.sleep() can be delayed > 1ms, so add buffer
+            long sleepMS = (sleepNS / 1_000_000) - 1;   // Thread.sleep() can be delayed > 1ms, so add buffer
             if (sleepMS > 0) {
                 try {
                     //noinspection BusyWait

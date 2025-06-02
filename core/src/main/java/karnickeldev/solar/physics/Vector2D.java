@@ -97,8 +97,18 @@ public final class Vector2D {
         return this;
     }
 
+    public Vector2D zero() {
+        x = 0;
+        y = 0;
+        return this;
+    }
+
     public boolean isZero() {
         return x == 0 && y == 0;
+    }
+
+    public Vector2D copy() {
+        return new Vector2D(this);
     }
 
 }

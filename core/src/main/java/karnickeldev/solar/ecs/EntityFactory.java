@@ -5,8 +5,11 @@ import karnickeldev.solar.physics.PhysicsUtil;
 
 public class EntityFactory {
 
-    public static int createGhostObject(EntityManager em, String name, double x, double y) {
-        int entity = em.create();
+    public static int createGhostObject(ServerECS ecs, String name, double x, double y) {
+        int entity = ecs.getEntityManager().create();
+        ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tags.GHOST_OBJECT);
+        ecs.getComponentRegistry().get(NameComponent.class).add(entity, name);
+        ecs.hcs.add(entity, EntityManager.NO_ENTITY, x, y);
         return entity;
     }
 
@@ -19,8 +22,7 @@ public class EntityFactory {
         ecs.getComponentRegistry().get(MassComponent.class).add(entity, mass);
         ecs.getComponentRegistry().get(RadiusComponent.class).add(entity, radius);
         ecs.getComponentRegistry().get(SphereOfInfluenceComponent.class).add(entity, sphereOfInfluence);
-
-
+        ecs.hcs.add(entity, EntityManager.NO_ENTITY, x, y);
         return entity;
     }
 
@@ -30,7 +32,7 @@ public class EntityFactory {
 
     public static int createStaticPlanetoidHCS(ServerECS ecs, String name, double mass, int radius,
                                                long sphereOfInfluence, float semiMajorAxis, float eccentricity, float omega,
-                                               float t0, int centralBody, int scale) {
+                                               float t0, int centralBody) {
         int entity = ecs.getEntityManager().create();
         ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tags.PLANET);
         ecs.getComponentRegistry().get(NameComponent.class).add(entity, name);

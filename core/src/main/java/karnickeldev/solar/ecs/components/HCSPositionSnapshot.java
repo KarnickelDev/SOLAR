@@ -1,6 +1,4 @@
-package karnickeldev.solar.ecs.components.server;
-
-import karnickeldev.solar.ecs.components.ComponentSnapshot;
+package karnickeldev.solar.ecs.components;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
