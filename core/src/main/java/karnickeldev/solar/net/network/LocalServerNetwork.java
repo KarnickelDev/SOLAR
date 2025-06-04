@@ -16,7 +16,7 @@ public class LocalServerNetwork implements ServerNetwork {
     private final ServerNetworkListener listener;
     private final MainThreadDispatcher dispatcher;
 
-    private final Queue<Packet> outgoingPacketQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Packet> outgoingPacketQueue = new ConcurrentLinkedQueue<>();
 
     public LocalServerNetwork(
         BlockingQueue<Packet> loopbackToServerQueue,
@@ -61,7 +61,11 @@ public class LocalServerNetwork implements ServerNetwork {
         while ((packet = loopbackToServerQueue.poll()) != null) {
             work = true;
             Packet finalPacket = packet;
-            dispatcher.dispatch(() -> listener.onPacketReceived(0, finalPacket));
+            if(finalPacket.isFastHandled()) {
+                listener.onPacketReceived(0, finalPacket);
+            } else {
+                dispatcher.dispatch(() -> listener.onPacketReceived(0, finalPacket));
+            }
         }
 
         return work;

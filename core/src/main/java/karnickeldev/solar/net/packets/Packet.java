@@ -8,9 +8,19 @@ import java.io.IOException;
 
 public interface Packet extends Serializable<Packet> {
 
+    int MAX_SEQUENCE = 0xFFFF;
+
     short getType();
 
-    long getCreationTick();
+    int getWorldId();
+
+    long getSimTimeMicros();
+
+    int getSequenceId();
+
+    default boolean isFastHandled() {
+        return false;
+    }
 
     void serialize(DataOutputStream out) throws IOException;
 

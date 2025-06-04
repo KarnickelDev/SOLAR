@@ -12,6 +12,11 @@ public abstract class World {
         worldTime = new WorldTime(0);
     }
 
+    @Override
+    public String toString() {
+        return "World("+getID()+')';
+    }
+
     public abstract int getID();
 
     public abstract ECSContext getECS();

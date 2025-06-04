@@ -10,12 +10,14 @@ import java.util.Arrays;
 public class ECSUpdatePacket implements Packet {
 
     private final ComponentSnapshot[] snapshots;
-    public final long tick;
-    public final int worldId;
+    private final long simTimeMicros;
+    private final int worldId;
+    public final float simSpeed;
 
-    protected ECSUpdatePacket(int worldId, long tick, ComponentSnapshot[] snapshots) {
+    protected ECSUpdatePacket(int worldId, long simTimeMicros, float simSpeed, ComponentSnapshot[] snapshots) {
         this.worldId = worldId;
-        this.tick = tick;
+        this.simTimeMicros = simTimeMicros;
+        this.simSpeed = simSpeed;
         this.snapshots = Arrays.copyOf(snapshots, snapshots.length);
     }
 
@@ -24,8 +26,19 @@ public class ECSUpdatePacket implements Packet {
         return PacketTypes.ECS_UPDATE.getType();
     }
 
-    public long getCreationTick() {
-        return tick;
+    @Override
+    public int getWorldId() {
+        return worldId;
+    }
+
+    @Override
+    public long getSimTimeMicros() {
+        return simTimeMicros;
+    }
+
+    @Override
+    public int getSequenceId() {
+        return 0;
     }
 
     public ComponentSnapshot[] getSnapshots() {
@@ -35,11 +48,12 @@ public class ECSUpdatePacket implements Packet {
     @Override
     public void serialize(DataOutputStream out) throws IOException {
         out.writeInt(worldId);
-        out.writeLong(tick);
+        out.writeLong(simTimeMicros);
         out.writeInt(snapshots.length);
+        out.writeFloat(simSpeed);
         for (int i = 0; i < snapshots.length; i++) {
             ComponentSnapshot snap = snapshots[i];
-            int type = ComponentSnapshotRegistry.getTypeId(snap.getClass());
+            int type = PacketRegistry.getTypeId(snap.getClass());
             out.writeInt(type);
             snap.serialize(out);
         }
@@ -48,14 +62,15 @@ public class ECSUpdatePacket implements Packet {
     @Override
     public Packet deserialize(DataInputStream in) throws IOException {
         int worldId = in.readInt();
-        long tick = in.readLong();
+        long simTime = in.readLong();
         int count = in.readInt();
+        float simSpeed = in.readFloat();
         ComponentSnapshot[] snaps = new ComponentSnapshot[count];
         for (int i = 0; i < count; i++) {
             int type = in.readInt();
-            snaps[i] = ComponentSnapshotRegistry.deserialize(type, in);
+            snaps[i] = PacketRegistry.deserialize(type, in);
         }
 
-        return new ECSUpdatePacket(worldId, tick, snaps);
+        return new ECSUpdatePacket(worldId, simTime, simSpeed, snaps);
     }
 }

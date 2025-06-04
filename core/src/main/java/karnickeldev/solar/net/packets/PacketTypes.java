@@ -2,10 +2,12 @@ package karnickeldev.solar.net.packets;
 
 public enum PacketTypes {
 
-    ENTITY_LIFECYCLE(0),
-    WORLD_UPDATE(1),
-    ECS_UPDATE(2),
-    SERVER_PERFORMANCE_METRICS(3),
+    PING(0),
+    PONG(1),
+    ENTITY_LIFECYCLE(2),
+    WORLD_UPDATE(3),
+    ECS_UPDATE(4),
+    SERVER_PERFORMANCE_METRICS(5),
     ;
 
     private final short type;

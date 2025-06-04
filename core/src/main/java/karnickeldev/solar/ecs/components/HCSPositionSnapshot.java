@@ -10,14 +10,14 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
     public final int[] entities;
     public final double[] position;
     public final int[] parent;
-    public final long tick;
+    public final long simTimeMicros;
     private final int size;
     private int count = 0;
 
     public HCSPositionSnapshot(int size, long tick) {
         this.size = size;
 
-        this.tick = tick;
+        this.simTimeMicros = tick;
         entities = new int[size];
         position = new double[2 * size];
         parent = new int[size];
@@ -41,7 +41,7 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
     }
 
     public HCSPositionSnapshot copy() {
-        HCSPositionSnapshot c = new HCSPositionSnapshot(size, tick);
+        HCSPositionSnapshot c = new HCSPositionSnapshot(size, simTimeMicros);
         c.count = count;
         for (int i = 0; i < c.size; i++) {
             c.entities[i] = entities[i];
@@ -55,7 +55,7 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
-        out.writeLong(tick);
+        out.writeLong(simTimeMicros);
         out.writeInt(count);
         for (int i = 0; i < count; i++) {
             out.writeInt(entities[i]);

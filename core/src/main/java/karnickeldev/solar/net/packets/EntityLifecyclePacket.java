@@ -8,13 +8,13 @@ public class EntityLifecyclePacket implements Packet {
 
     public final int[] createdEntityIds;
     public final int[] destroyedEntityIds;
-    public final long tick;
-    public final int worldId;
+    private final long simTimeMicros;
+    private final int worldId;
     public final boolean fullSnapshot;
 
-    protected EntityLifecyclePacket(int worldId, int[] createdEntities, int[] destroyedEntities, long tick, boolean fullSnapshot) {
+    protected EntityLifecyclePacket(int worldId, int[] createdEntities, int[] destroyedEntities, long simTimeMicros, boolean fullSnapshot) {
         this.worldId = worldId;
-        this.tick = tick;
+        this.simTimeMicros = simTimeMicros;
         this.createdEntityIds = new int[createdEntities.length];
         this.destroyedEntityIds = new int[destroyedEntities.length];
         this.fullSnapshot = fullSnapshot;
@@ -28,8 +28,18 @@ public class EntityLifecyclePacket implements Packet {
     }
 
     @Override
-    public long getCreationTick() {
-        return tick;
+    public int getWorldId() {
+        return worldId;
+    }
+
+    @Override
+    public long getSimTimeMicros() {
+        return simTimeMicros;
+    }
+
+    @Override
+    public int getSequenceId() {
+        return 0;
     }
 
     @Override

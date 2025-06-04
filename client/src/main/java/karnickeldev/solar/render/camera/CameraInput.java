@@ -17,7 +17,7 @@ public class CameraInput extends InputAdapter {
 
     private static final float ZOOM_SPEED = 0.04f;
     private static final float ZOOM_ACCELERATION = 1.12f;
-    private static final float MIN_ZOOM = 1e-6f;
+    private static final float MIN_ZOOM = 1e-5f;
     private static final float MAX_ZOOM = 1e12f;
     private static final float ROTATION_SPEED = 50f;
     private long lastScrollTime = 0;
@@ -131,7 +131,7 @@ public class CameraInput extends InputAdapter {
             for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
                 if (ecs.getEntityManager().isValid(entity)) {
                     //if (!hcs.getCurrent().has(entity)) continue;
-                    Vector2D screen = camera.project(ecs.toRelativeSpace(entity, PlanetoidRenderSystem.track, hcs.getAlpha(LocalServer.TICK_RATE)));
+                    Vector2D screen = camera.project(ecs.toRelativeSpace(entity, PlanetoidRenderSystem.track, hcs.getAlpha()));
 
                     double dx = screenX - screen.getX();
                     double dy = screenY - screen.getY();

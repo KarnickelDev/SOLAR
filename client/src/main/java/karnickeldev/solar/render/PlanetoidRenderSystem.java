@@ -29,11 +29,12 @@ public class PlanetoidRenderSystem {
         this.worldManager = worldManager;
         this.batch = batch;
 
-        Pixmap tmp = new Pixmap(128, 128, Pixmap.Format.RGBA8888);
+        int size = 256;
+        Pixmap tmp = new Pixmap(size, size, Pixmap.Format.RGBA8888);
         tmp.setColor(1f, 1f, 1f, 0f);
         tmp.fill();
         tmp.setColor(1f, 1f, 1f, 1f);
-        tmp.fillCircle(63, 63, 63);
+        tmp.fillCircle(size/2, size/2, size/2);
 
         testTex = new Texture(tmp);
         testTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
@@ -66,7 +67,7 @@ public class PlanetoidRenderSystem {
 
         FloatingOriginCamera camera = worldManager.getActiveWorld().getCamera();
 
-        double alpha = hcs.getAlpha(LocalServer.TICK_RATE);
+        double alpha = hcs.getAlpha();
 
         Vector2D reuseVec0 = new Vector2D();
         Vector2D reuseVec1 = new Vector2D();

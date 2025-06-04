@@ -4,36 +4,41 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class WorldUpdatePacket implements Packet {
+/**
+ * @author : KarnickelDev
+ * @since : 06.06.2025
+ **/
+public class PingPacket implements Packet {
 
-    private static int sequenceId = 0;
+    public final long clientSendTime;
 
-    private final int worldId;
-    private final long simTimeMicros;
+    protected PingPacket(long clientSendTime) {
+        this.clientSendTime = clientSendTime;
+    }
 
-    protected WorldUpdatePacket(int worldId, long simTimeMicros) {
-        this.worldId = worldId;
-        this.simTimeMicros = simTimeMicros;
+    @Override
+    public boolean isFastHandled() {
+        return true;
     }
 
     @Override
     public short getType() {
-        return PacketTypes.WORLD_UPDATE.getType();
+        return PacketTypes.PING.getType();
     }
 
     @Override
     public int getWorldId() {
-        return worldId;
+        return -1;
     }
 
     @Override
     public long getSimTimeMicros() {
-        return simTimeMicros;
+        return -1;
     }
 
     @Override
     public int getSequenceId() {
-        return sequenceId++;
+        return 0;
     }
 
     @Override

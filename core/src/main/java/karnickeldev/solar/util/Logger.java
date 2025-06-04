@@ -15,6 +15,7 @@ public class Logger {
     public static final String ASSETS = "[ASSETS] ";
     public static final String ENTITY = "[ENTITY] ";
     public static final String SERVER = "[SERVER] ";
+    public static final String SYNC = "[SYNC] ";
     public static final String NETWORK = "[NETWORK] ";
     public static final String UI = "[UI] ";
 
@@ -48,15 +49,15 @@ public class Logger {
         System.out.println(tag + message);
     }
 
-    public static void error(String message) {
+    public static synchronized void error(String message) {
         error(GENERAL, message);
     }
 
-    public static void error(String tag, String message) {
+    public static synchronized void error(String tag, String message) {
         error(tag, message, null);
     }
 
-    public static void error(String tag, String message, Throwable e) {
+    public static synchronized void error(String tag, String message, Throwable e) {
         if (LOG_LEVEL < LOG_ERROR) return;
         if (VERBOSE && e != null) {
             System.out.println(RED + tag + message + "\n" + e + RESET);
@@ -65,11 +66,11 @@ public class Logger {
         }
     }
 
-    public static void debug(String message) {
+    public static synchronized void debug(String message) {
         debug(DEBUG, message);
     }
 
-    public static void debug(String tag, String message) {
+    public static synchronized void debug(String tag, String message) {
         if (LOG_LEVEL < LOG_DEBUG) return;
         System.out.println(tag.replace("[", "[DEBUG/") + message);
     }

@@ -1,14 +1,15 @@
 package karnickeldev.solar.simulation.execution;
 
+import karnickeldev.solar.net.network.MainThreadDispatcher;
 import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
 import karnickeldev.solar.world.WorldManager;
 
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -17,112 +18,217 @@ import java.util.concurrent.locks.LockSupport;
  **/
 public class SimulationManager implements Runnable {
 
-    private final ExecutorService highPriorityThreadPool;
-    private final ExecutorService lowPriorityThreadPool;
+    private static final byte INTERRUPT = 1;
+    private static final byte TIMEOUT = 2;
+    private static final byte EXCEPTION_IN_TICK = 3;
+    private static final byte EXCEPTION_IN_SCHEDULE = 4;
+    private static final byte SHUTDOWN_TIMEOUT = 5;
+
+    private final Object schedulerLock = new Object();
+
+    private final ExecutorService simulationThreadPool;
 
     private final PriorityQueue<SimulationTask> scheduledTasks;
     private final Map<World, SimulationTask> worldSimulationTaskMap = new HashMap<>();
 
     private final WorldManager<ServerWorld> worldManager;
+    private final MainThreadDispatcher mainThreadDispatcher;
 
-    // TODO: initialize from save-file
-    private long globalSimTimeMicros = 0;
+    private long globalSimTimeMicros;
 
-    private volatile boolean running = true;
+    public final AtomicBoolean running = new AtomicBoolean(true);
 
     private long schedulerNanosPerTick;
+    private byte tickRate;
 
-    public SimulationManager(int simulationThreadCount, WorldManager<ServerWorld> worldManager) {
+    public static float simSpeed = 3600f;
+
+    private final BitMask errno = new BitMask();
+
+    public SimulationManager(int simulationThreadCount, WorldManager<ServerWorld> worldManager, MainThreadDispatcher mainThreadDispatcher) {
         this.worldManager = worldManager;
+        this.mainThreadDispatcher = mainThreadDispatcher;
 
-        int highPriorityThreads = (3*(simulationThreadCount-1)) / (4*(simulationThreadCount-1));
-        int lowPriorityThreads = (simulationThreadCount-1) - highPriorityThreads;
-
-        highPriorityThreadPool = Executors.newFixedThreadPool(Math.max(1, highPriorityThreads));
-        lowPriorityThreadPool = Executors.newFixedThreadPool(Math.max(1, lowPriorityThreads));
+        simulationThreadPool = Executors.newFixedThreadPool(3, new SimulationThreadFactory("SimThread"));
 
         scheduledTasks = new PriorityQueue<>(simulationThreadCount);
 
-        int tickRate = SimulationTask.Priority.values()[SimulationTask.Priority.values().length-1].getTickRate();
+        tickRate = 100;
         schedulerNanosPerTick = 1_000_000_000L / tickRate;
+
+        // TODO: initialize from save-file
+        globalSimTimeMicros = 0;
     }
 
     public void registerWorld(ServerWorld world) {
-        if(worldSimulationTaskMap.containsKey(world)) return;
+        synchronized (schedulerLock) {
+            if(worldSimulationTaskMap.containsKey(world)) return;
 
-        SimulationTask task = new SimulationTask(world);
-        worldSimulationTaskMap.put(world, task);
-        scheduledTasks.add(task);
+            SimulationTask task = new SimulationTask(world);
+            Objects.requireNonNull(task.getWorld().getNetwork());
+            worldSimulationTaskMap.put(world, task);
+            scheduledTasks.add(task);
+        }
     }
 
     public void unregisterWorld(ServerWorld world) {
-        SimulationTask task = worldSimulationTaskMap.remove(world);
-        if(task != null) scheduledTasks.remove(task);
+        synchronized (schedulerLock) {
+            SimulationTask task = worldSimulationTaskMap.remove(world);
+            if(task != null) scheduledTasks.remove(task);
+        }
     }
 
     public void setPriority(ServerWorld world, SimulationTask.Priority priority) {
-        SimulationTask task = worldSimulationTaskMap.get(world);
-        if(task == null) throw new RuntimeException(world.getClass().getSimpleName() + ' ' + world + " not registered");
+        synchronized (schedulerLock) {
+            SimulationTask task = worldSimulationTaskMap.get(world);
+            if(task == null) throw new RuntimeException(world.getClass().getSimpleName() + ' ' + world + " not registered");
 
-        scheduledTasks.remove(task);
-        task.setPriority(priority);
-        scheduledTasks.add(task);
+            scheduledTasks.remove(task);
+            task.setPriority(priority);
+            scheduledTasks.add(task);
+        }
     }
+
+    public void stop() {
+        if(running.compareAndSet(true, false)) {
+            synchronized(this) {
+                notifyAll();
+            }
+        }
+    }
+
+    int tmp = 0;
 
     @Override
     public void run() {
         long tickEnd;
         long tickStart;
-        while(running) {
+        long simulationStartTime = System.nanoTime();
+        globalSimTimeMicros = 10000;
+        while(running.get()) {
             /*
             Simulate one "simulation time tick" (actual world ticks executed depend on sim speed and world TickRate)
              */
             tickStart = System.nanoTime();
-            SimulationTask[] tasks = scheduledTasks.toArray(new SimulationTask[0]);
 
-            CountDownLatch latch = new CountDownLatch(tasks.length);
+            mainThreadDispatcher.update();
+
+            List<SimulationTask> tasks;
+            synchronized (schedulerLock) {
+                 tasks = new ArrayList<>(scheduledTasks);
+                 scheduledTasks.clear();
+            }
+
+            CountDownLatch latch = new CountDownLatch(tasks.size());
 
             for(SimulationTask task: tasks) {
-                ExecutorService service = getExecutorService(task);
-                service.submit(() -> {
-                    task.runUntil(globalSimTimeMicros);
-                    latch.countDown();
+                simulationThreadPool.submit(() -> {
+                    try {
+                        task.runUntil(globalSimTimeMicros);
+                    } catch (Exception e) {
+                        Logger.error("Simulation error: " + e.getMessage());
+                        errno.set(EXCEPTION_IN_TICK);
+                        running.set(false);
+                    } finally {
+                        latch.countDown();
+                    }
                     });
             }
 
             try {
-                latch.await(); // Synchronize wall-clock
+                // Synchronize wall-clock
+                if(!latch.await(60, TimeUnit.SECONDS)) {
+                    errno.set(TIMEOUT);
+                    break;
+                }
             } catch (InterruptedException e) {
-                Logger.log(Logger.SERVER, Thread.currentThread().getName() + " interrupted");
+                errno.set(INTERRUPT);
                 Thread.currentThread().interrupt();
                 break;
             }
 
             tickEnd = System.nanoTime();
 
-            globalSimTimeMicros += 1_000_000;
+
+            globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
+
+            tmp = (tmp + 1) % 100;
+            if(tmp == 0) {
+                for(SimulationTask task: tasks) {
+                    Logger.log(task+"");
+                }
+                Logger.log(" ");
+            }
 
             // Re-add tasks for next round
-            scheduledTasks.addAll(List.of(tasks));
+            synchronized (schedulerLock) {
+                try {
+                    scheduledTasks.addAll(tasks);
+                } catch (Exception e) {
+                    Logger.error("Scheduling error: " + e.getMessage());
+                    errno.set(EXCEPTION_IN_SCHEDULE);
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
 
             long nextTick = tickStart + schedulerNanosPerTick;
             if(nextTick > tickEnd) {
                 LockSupport.parkNanos(nextTick - tickEnd);
             }
+//            while(System.nanoTime() < nextTick) Thread.onSpinWait();
         }
 
-        // shutdown logging
-        if (running) {
-            running = false;
-            Logger.error(Logger.SERVER, "Server was shutdown due to being interrupted");
-        } else {
-            Logger.log(Logger.SERVER, "Physics Thread shutdown gracefully");
+        // shutdown logic
+        running.set(false);
+
+        simulationThreadPool.shutdown();
+        try {
+            boolean orderlyShutdown = simulationThreadPool.awaitTermination(3, TimeUnit.SECONDS);
+            if (!orderlyShutdown) {
+                Logger.log(Thread.currentThread().getName() + " did not shutdown in time");
+                errno.set(SHUTDOWN_TIMEOUT);
+                simulationThreadPool.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            simulationThreadPool.shutdownNow();
+            Thread.currentThread().interrupt();
         }
 
+        logShutdown(errno);
     }
 
-    private ExecutorService getExecutorService(SimulationTask task) {
-        return this.highPriorityThreadPool;
+
+
+    /**
+     * Logs a shutdown message (including crash reasons)
+     * @param errno Contains error codes
+     */
+    private static void logShutdown(BitMask errno) {
+        if (errno.getMask() == 0) {
+            Logger.log(Logger.SERVER, Thread.currentThread().getName() + " shutdown gracefully");
+        } else {
+            StringBuilder error = new StringBuilder();
+            if(errno.test(INTERRUPT)) {
+                error.append("interrupt ");
+            }
+            if(errno.test(EXCEPTION_IN_TICK)) {
+                error.append("tick_exception ");
+            }
+            if(errno.test(EXCEPTION_IN_SCHEDULE)) {
+                error.append("schedule_exception ");
+            }
+            if(errno.test(TIMEOUT)) {
+                error.append("tick_timeout ");
+            }
+            if(errno.test(SHUTDOWN_TIMEOUT)) {
+                error.append("shutdown_timeout ");
+            }
+            if(error.length() == 0) error.append("UNKNOWN");
+
+            Logger.error(Logger.SERVER, Thread.currentThread().getName() + "crashed from " + error);
+            Logger.log(Logger.SERVER, Thread.currentThread().getName() + " shutdown because of " + error);
+        }
     }
 
 }

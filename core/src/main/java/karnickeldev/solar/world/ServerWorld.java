@@ -3,21 +3,29 @@ package karnickeldev.solar.world;
 import karnickeldev.solar.ecs.ServerECS;
 import karnickeldev.solar.net.network.ServerNetwork;
 
+import java.util.Objects;
+
 public class ServerWorld extends World {
 
     public static int IDS = 0;
 
-    private final ServerECS serverECS;
+    private ServerECS serverECS;
     private final int id;
 
     private final ServerNetwork serverNetwork;
 
-    public ServerWorld(ServerNetwork serverNetwork) {
+    public static ServerWorld create(ServerNetwork serverNetwork) {
+        if(serverNetwork == null) return null;
+        ServerWorld world = new ServerWorld(serverNetwork);
+        world.serverECS = new ServerECS(world);
+        return world;
+    }
+
+    private ServerWorld(ServerNetwork serverNetwork) {
         this.id = IDS;
         IDS++;
 
-        serverECS = new ServerECS(this);
-        this.serverNetwork = serverNetwork;
+        this.serverNetwork = Objects.requireNonNull(serverNetwork);
     }
 
     @Override

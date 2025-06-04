@@ -14,7 +14,7 @@ public class EntityFactory {
     }
 
 
-    public static int createStar(ServerECS ecs, String name, double x, double y, double mass, int radius,
+    public static int createStar(ServerECS ecs, String name, double x, double y, double mass, float radius,
                                  long sphereOfInfluence) {
         int entity = ecs.getEntityManager().create();
         ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tags.STAR);
@@ -26,11 +26,11 @@ public class EntityFactory {
         return entity;
     }
 
-    public static int createStar(ServerECS ecs, String name, double x, double y, double mass, int radius) {
+    public static int createStar(ServerECS ecs, String name, double x, double y, double mass, float radius) {
         return createStar(ecs, name, x, y, mass, radius, PhysicsUtil.estimateSOIStar(mass));
     }
 
-    public static int createStaticPlanetoidHCS(ServerECS ecs, String name, double mass, int radius,
+    public static int createStaticPlanetoidHCS(ServerECS ecs, String name, double mass, float radius,
                                                long sphereOfInfluence, float semiMajorAxis, float eccentricity, float omega,
                                                float t0, int centralBody) {
         int entity = ecs.getEntityManager().create();

@@ -10,7 +10,7 @@ public class RadiusComponent extends DirtyFlagComponent implements ComponentSnap
 
     private int CAPACITY = 64;
     private final BitSet hasComponent = new BitSet(CAPACITY);
-    private int[] radius = new int[CAPACITY];
+    private float[] radius = new float[CAPACITY];
 
     @Override
     public void ensureCapacity(int entityId) {
@@ -23,7 +23,7 @@ public class RadiusComponent extends DirtyFlagComponent implements ComponentSnap
         }
     }
 
-    public void add(int entityId, int radius) {
+    public void add(int entityId, float radius) {
         ensureCapacity(entityId);
         int index = EntityManager.extractIndex(entityId);
         this.radius[index] = radius;
@@ -39,7 +39,7 @@ public class RadiusComponent extends DirtyFlagComponent implements ComponentSnap
         return hasComponent.get(EntityManager.extractIndex(entityId));
     }
 
-    public int getRadius(int entityId) {
+    public float getRadius(int entityId) {
         int index = EntityManager.extractIndex(entityId);
         if (index >= CAPACITY) return 0;
         return radius[index];

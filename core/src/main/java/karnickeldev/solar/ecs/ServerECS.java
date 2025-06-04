@@ -25,7 +25,7 @@ public class ServerECS extends ECSContext {
 
         hcs = new HCSServerSystem();
 
-        registerSystem(new KeplerianOrbitSystem<ServerWorld>(world));
+        registerSystem(new KeplerianOrbitSystem<ServerWorld>(this.world));
     }
 
 }

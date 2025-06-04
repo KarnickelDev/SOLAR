@@ -8,7 +8,7 @@ public class RadiusSnapshot implements ComponentSnapshot {
 
     public final long tick;
     public final int[] entities;
-    public final int[] radius;
+    public final float[] radius;
     private final int size;
     private int count = 0;
 
@@ -17,7 +17,7 @@ public class RadiusSnapshot implements ComponentSnapshot {
         this.tick = tick;
 
         entities = new int[size];
-        radius = new int[size];
+        radius = new float[size];
     }
 
     @Override
@@ -25,7 +25,7 @@ public class RadiusSnapshot implements ComponentSnapshot {
         return count;
     }
 
-    public void addChange(int entity, int radius) {
+    public void addChange(int entity, float radius) {
         if (count >= size) throw new RuntimeException("RadiusComponent too large");
         this.entities[count] = entity;
         this.radius[count] = radius;

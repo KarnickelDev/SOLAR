@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ComponentSnapshotRegistry {
+public class PacketRegistry {
 
     private static final int TYPE_INVALID = 0;
 

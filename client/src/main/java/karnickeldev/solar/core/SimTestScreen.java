@@ -7,6 +7,8 @@ import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.SystemGroup;
 import karnickeldev.solar.net.network.*;
 import karnickeldev.solar.net.packets.Packet;
+import karnickeldev.solar.net.packets.PacketFactory;
+import karnickeldev.solar.net.packets.PingPacket;
 import karnickeldev.solar.net.server.LocalServer;
 import karnickeldev.solar.render.BackgroundStarRenderer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
@@ -71,12 +73,20 @@ public class SimTestScreen implements Screen {
         SolarMain.getInstance().getInputManager().addInput(new MenuInput());
     }
 
+    double tmp = 0;
+
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
         clientDispatcher.update();
+
+        tmp += delta;
+        if(tmp > 1) {
+            tmp = 0;
+            clientNetwork.send(PacketFactory.createPingPacket(System.nanoTime()));
+        }
 
         // camera
         cameraInput.processInputs();

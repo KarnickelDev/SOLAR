@@ -12,6 +12,10 @@ public class BitMask {
         this.mask = mask;
     }
 
+    public int getMask() {
+        return mask;
+    }
+
     public void set(int index) {
         mask = mask | (1 << index);
     }

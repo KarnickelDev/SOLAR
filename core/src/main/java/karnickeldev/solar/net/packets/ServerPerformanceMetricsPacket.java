@@ -8,13 +8,14 @@ public class ServerPerformanceMetricsPacket implements Packet {
 
     public final float tps;
     public final float delay;
+    private final int worldId;
+    private final long simTimeMicros;
 
-    private final long tick;
-
-    public ServerPerformanceMetricsPacket(long tick, float tps, float delay) {
+    public ServerPerformanceMetricsPacket(int worldId, long simTimeMicros, float tps, float delay) {
         this.tps = tps;
         this.delay = delay;
-        this.tick = tick;
+        this.simTimeMicros = simTimeMicros;
+        this.worldId = worldId;
     }
 
     @Override
@@ -23,8 +24,18 @@ public class ServerPerformanceMetricsPacket implements Packet {
     }
 
     @Override
-    public long getCreationTick() {
-        return tick;
+    public int getWorldId() {
+        return worldId;
+    }
+
+    @Override
+    public long getSimTimeMicros() {
+        return simTimeMicros;
+    }
+
+    @Override
+    public int getSequenceId() {
+        return 0;
     }
 
     @Override

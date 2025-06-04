@@ -1,6 +1,7 @@
 package karnickeldev.solar.simulation.execution;
 
 import karnickeldev.solar.world.ServerWorld;
+import karnickeldev.solar.world.TickPerformanceTracker;
 
 /**
  * @author : KarnickelDev
@@ -8,12 +9,16 @@ import karnickeldev.solar.world.ServerWorld;
  **/
 public class SimulationTask implements Comparable<SimulationTask> {
 
-    private static final byte MAX_TICK_RATE = 120;
+    private static final byte MAX_TICK_RATE = 100;
+
+    private static final long PROMOTE_TIMEOUT = 1_500_000_000L;
 
     public enum Priority implements Comparable<Priority> {
         LOW(20),
-        NORMAL(40),
-        HIGH(60),
+        REDUCED(40),
+        NORMAL(60),
+        HIGH(80),
+        VERY_HIGH(100),
         ;
 
         private final byte tickRate;
@@ -35,6 +40,8 @@ public class SimulationTask implements Comparable<SimulationTask> {
         Priority[] priorities = Priority.values();
         if(priorities.length >= Byte.MAX_VALUE) throw new IllegalStateException(SimulationTask.class.getSimpleName()
             + " Can not have that many Priorities!");
+        if(priorities[priorities.length-1].getTickRate() > MAX_TICK_RATE) throw new IllegalStateException(
+            SimulationTask.class.getSimpleName() + "Priorities are capped at a tick rate of " + MAX_TICK_RATE + "Hz");
         for(int i = 1; i < priorities.length; i++) {
             if(priorities[i-1].getTickRate() >= priorities[i].getTickRate())
                 throw new IllegalStateException(SimulationTask.class.getSimpleName() +
@@ -47,13 +54,27 @@ public class SimulationTask implements Comparable<SimulationTask> {
     private Priority priority;
     private boolean tickCatchupAllowed = true;
 
+    public final TickPerformanceTracker tpsTracker;
+
+    private short badTickStats = 0;
+    private short goodTickStats = 0;
+
+    private long lastPriorityChange = 0;
+
     public SimulationTask(ServerWorld world) {
         this.world = world;
+        tpsTracker = new TickPerformanceTracker(Priority.NORMAL.getTickRate());
         setPriority(Priority.NORMAL);
+    }
+
+    @Override
+    public String toString() {
+        return "SimTask(wID:" + getWorld().getID() + ",p:" + getPriority() + ",tps:" + Math.round(tpsTracker.getTPS()) + ",avg:" + (tpsTracker.getAvgTickDuration()/1e6f) + ')';
     }
 
     public void setPriority(Priority priority) {
         this.priority = (priority == null) ? Priority.NORMAL : priority;
+        tpsTracker.setTickRate(this.priority.getTickRate());
     }
 
     public Priority getPriority() {
@@ -70,31 +91,78 @@ public class SimulationTask implements Comparable<SimulationTask> {
         return Byte.compare(this.getDynamicPriority(), other.getDynamicPriority());
     }
 
-    public void promote() {
+    /**
+     * Promotes this world to a higher tick rate
+     * @return True if the priority changed
+     */
+    public boolean promote() {
         int oldOrder = priority.ordinal();
         for(Priority currPriority: Priority.values()) {
-            if(currPriority.ordinal() > oldOrder) {
+            if(currPriority.ordinal() == oldOrder+1) {
                 setPriority(currPriority);
-                return;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Demotes this world to a lower tick rate
+     * @return True if the priority changed
+     */
+    public boolean demote() {
+        int oldOrder = priority.ordinal();
+        for(Priority currPriority: Priority.values()) {
+            if(currPriority.ordinal() == oldOrder-1) {
+                setPriority(currPriority);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void maybeDemoteOrPromote() {
+        long tickBudgetNanos = 1_000_000_000L / priority.getTickRate();
+        float overloadRatio = (float)tpsTracker.getAvgTickDuration() / tickBudgetNanos;
+
+        if (overloadRatio > 0.95f || tpsTracker.getTPS()+3 < priority.getTickRate()) { // consistently over budget
+            badTickStats++;
+            goodTickStats = 0;
+        } else {
+            goodTickStats++;
+            badTickStats = 0;
+        }
+
+        if (badTickStats > 16) {
+            badTickStats = 0;
+            if(demote()) {
+                lastPriorityChange = System.nanoTime();
+            }
+        } else if (goodTickStats > 64 && overloadRatio < 0.55f) {
+            goodTickStats = 0;
+            if(System.nanoTime() - lastPriorityChange >= PROMOTE_TIMEOUT && promote()) {
+                lastPriorityChange = System.nanoTime();
             }
         }
     }
 
-    public void demote() {
-        int oldOrder = priority.ordinal();
-        for(Priority currPriority: Priority.values()) {
-            if(currPriority.ordinal() < oldOrder) {
-                setPriority(currPriority);
-                return;
-            }
-        }
-    }
+    public void runUntil(long targetSimTimeMicros) {
+        long timeAccumulatorMicros = targetSimTimeMicros - world.getWorldTime().getSimTimeMicros();
+        long tickIntervalMicros = Math.round(1_000_000L / (double)priority.getTickRate() * SimulationManager.simSpeed);
 
-    public void runUntil(long targetSimTimeMacros) {
-        while(world.getWorldTime().getSimTimeMicros() + priority.microsPerTick <= targetSimTimeMacros) {
-            world.getWorldTime().advance(priority.microsPerTick);
-            world.update(world.getWorldTime().getSimTimeMicros());
+        while (timeAccumulatorMicros >= tickIntervalMicros) {
+            long start = System.nanoTime();
+
+            world.update(tickIntervalMicros);
+            world.getWorldTime().advance(tickIntervalMicros);
+
+            tpsTracker.recordTick(start, System.nanoTime());
+
+            timeAccumulatorMicros -= tickIntervalMicros;
+            maybeDemoteOrPromote();
         }
+
+
     }
 
     public ServerWorld getWorld() {

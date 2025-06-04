@@ -6,6 +6,7 @@ import karnickeldev.solar.ecs.components.ComponentSnapshot;
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
 import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
 import karnickeldev.solar.ecs.components.TagComponent;
+import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.net.packets.*;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientWorld;
@@ -34,16 +35,22 @@ public class DefaultClientNetworkListener implements ClientNetworkListener {
     @Override
     public void onPacketReceived(Packet packet) {
 
+        if(packet.getType() == PacketTypes.PONG.getType()) {
+            PingPongPacket pp = (PingPongPacket) packet;
+            long rtt = System.nanoTime() - pp.clientSendTime;
+            Logger.log("Ping: " + (rtt/(2_000_000)) + "ms");
+        }
+
         if(packet.getType() == PacketTypes.WORLD_UPDATE.getType()) {
             WorldUpdatePacket p = (WorldUpdatePacket) packet;
 
-            if(worldManager.addWorld(new ClientWorld(p.worldId)) != null) Logger.error("double world creation");
+            if(worldManager.addWorld(new ClientWorld(p.getWorldId())) != null) Logger.error("double world creation");
         }
 
         if (packet.getType() == PacketTypes.ENTITY_LIFECYCLE.getType()) {
             assert packet instanceof EntityLifecyclePacket;
             EntityLifecyclePacket p = (EntityLifecyclePacket) packet;
-            int worldId = p.worldId;
+            int worldId = p.getWorldId();
 
             if(worldManager.getWorld(worldId) == null) {
                 worldManager.addWorld(new ClientWorld(worldId));
@@ -61,13 +68,15 @@ public class DefaultClientNetworkListener implements ClientNetworkListener {
 
         if (packet.getType() == PacketTypes.ECS_UPDATE.getType()) {
             assert packet instanceof ECSUpdatePacket;
-            ComponentSnapshot[] snapshots = ((ECSUpdatePacket) packet).getSnapshots();
-            int worldId = ((ECSUpdatePacket) packet).worldId;
+            ECSUpdatePacket p = (ECSUpdatePacket) packet;
+            ComponentSnapshot[] snapshots = p.getSnapshots();
+            int worldId = p.getWorldId();
             if(worldId != worldManager.getActiveWorld().getID()) {
                 worldManager.changeWorld(worldId);
             }
-
+            HCSClientSystem.simSpeed = p.simSpeed;
             worldManager.getWorld(worldId).getECS().getComponentRegistry().applyAllSnapshots(snapshots);
+            worldManager.changeWorld(1);
         }
 
         if (packet.getType() == PacketTypes.SERVER_PERFORMANCE_METRICS.getType()) {

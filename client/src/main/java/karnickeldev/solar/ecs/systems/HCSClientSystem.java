@@ -3,6 +3,10 @@ package karnickeldev.solar.ecs.systems;
 import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
 import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
+import karnickeldev.solar.simulation.execution.SimulationManager;
+import karnickeldev.solar.simulation.execution.SimulationManagerThread;
+import karnickeldev.solar.simulation.execution.SimulationTask;
+import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
 
 public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSnapshot> {
@@ -11,9 +15,11 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
     private int prev = 0;
     private int curr = 1;
 
-    private long lastUpdate;
+    public static float simSpeed = 1;
 
-    private HCSPositionSnapshot lastSnapshot;
+    private long previousUpdate, currentUpdate;
+
+    private HCSPositionSnapshot lastSnapshot, previousSnapshot;
 
     public HCSClientSystem() {
         for (int i = 0; i < componentBuffer.length; i++) {
@@ -31,19 +37,30 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
     public void update(HCSPositionSnapshot snapshot) {
         // make sure snapshot is new
-        if (lastSnapshot != null && snapshot.tick <= lastSnapshot.tick) return;
+        if (lastSnapshot != null && snapshot.simTimeMicros <= lastSnapshot.simTimeMicros) return;
 
         curr = (curr + 1) % 2;
         prev = (prev + 1) % 2;
         componentBuffer[curr].applySnapshot(snapshot);
         if(lastSnapshot == null) componentBuffer[prev].applySnapshot(snapshot);
 
+        previousSnapshot = lastSnapshot;
         lastSnapshot = snapshot;
-        lastUpdate = System.nanoTime();
+        previousUpdate = currentUpdate;
+        currentUpdate = System.nanoTime();
     }
 
-    public double getAlpha(int tickRate) {
-        return (System.nanoTime() - lastUpdate) * (tickRate * 1e-9);
+    public double getAlpha() {
+        if(lastSnapshot == null || previousSnapshot == null) return 0;
+
+        long now = System.nanoTime();
+        long elapsedMicros = (now - currentUpdate) / 1000;
+
+        long simDelta = (lastSnapshot.simTimeMicros - previousSnapshot.simTimeMicros);
+        if (simDelta <= 0) return 0; // Avoid divide by zero or bad data
+
+        double alpha = (double)(elapsedMicros) / (simDelta / (SimulationManager.simSpeed));
+        return MathUtil.clamp(alpha, 0, 1);
     }
 
     public double getInterpolatedX(int entityID, double alpha) {

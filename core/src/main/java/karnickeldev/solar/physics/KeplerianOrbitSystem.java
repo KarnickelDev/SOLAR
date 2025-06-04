@@ -11,6 +11,7 @@ import karnickeldev.solar.net.packets.ECSUpdatePacket;
 import karnickeldev.solar.net.packets.EntityLifecyclePacket;
 import karnickeldev.solar.net.packets.Packet;
 import karnickeldev.solar.net.packets.PacketFactory;
+import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
 import karnickeldev.solar.world.WorldManager;
@@ -101,7 +102,7 @@ public class KeplerianOrbitSystem {
         }
         hcs.swapBuffers();
 
-        final Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(tick, worldManager.getActiveWorld());
+        final Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(tick, SimulationManager.simSpeed, worldManager.getActiveWorld());
 
         if (first) {
             first = false;

@@ -65,7 +65,7 @@ public class PhysicsThread implements Runnable {
                 }
             }
 
-            serverNetwork.broadcast(new ServerPerformanceMetricsPacket(tick, tpsCounter.getTPS(), tpsCounter.getDelayedness()));
+            serverNetwork.broadcast(new ServerPerformanceMetricsPacket(0, tick, tpsCounter.getTPS(), tpsCounter.getDelayedness()));
 
             // wait until next tick
             long sleepNS = nanosPerTick - (System.nanoTime() - tickStartTime);

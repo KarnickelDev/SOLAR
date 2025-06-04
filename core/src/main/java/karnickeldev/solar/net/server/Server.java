@@ -4,35 +4,36 @@ import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
 import karnickeldev.solar.net.network.MainThreadDispatcher;
 import karnickeldev.solar.net.network.NetworkThread;
 import karnickeldev.solar.net.network.ServerNetwork;
-import karnickeldev.solar.net.packets.ComponentSnapshotRegistry;
-import karnickeldev.solar.simulation.SimulationExecutor;
-import karnickeldev.solar.simulation.execution.SimulationManager;
+import karnickeldev.solar.net.packets.PacketRegistry;
+import karnickeldev.solar.simulation.execution.SimulationManagerThread;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.WorldManager;
 
 public abstract class Server implements GameServer {
 
-    public static final int TICK_RATE = 60;
+    private static Server instance = null;
+    public static Server getInstance() {
+        return instance;
+    }
 
     protected final ServerNetwork serverNetwork;
     protected final NetworkThread networkThread;
 
     protected final WorldManager<ServerWorld> worldManager;
-    protected final SimulationExecutor simulationExecutor;
 
-    protected final SimulationManager simulationManager;
+    protected final SimulationManagerThread simulationManagerThread;
 
     private boolean running = false;
 
-    public Server(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, SimulationExecutor simulationExecutor, MainThreadDispatcher mainThreadDispatcher) {
+    public Server(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, MainThreadDispatcher dispatcher) {
         this.serverNetwork = serverNetwork;
         this.networkThread = networkThread;
-        this.simulationExecutor = simulationExecutor;
         this.worldManager = worldManager;
 
-        this.simulationManager = new SimulationManager(8, worldManager);
+        this.simulationManagerThread = new SimulationManagerThread(8, worldManager, dispatcher);
 
-        ComponentSnapshotRegistry.register(1, HCSPositionSnapshot.class, new HCSPositionSnapshot(0, 0));
+        PacketRegistry.register(1, HCSPositionSnapshot.class, new HCSPositionSnapshot(0, 0));
+        instance = this;
     }
 
     public final void start() {
@@ -41,25 +42,20 @@ public abstract class Server implements GameServer {
         serverNetwork.start();
         networkThread.start();
 
-        simulationExecutor.start();
+        simulationManagerThread.start();
     }
 
     public final void stop() {
-        running = false;
-
-        simulationExecutor.stop();
+        simulationManagerThread.stop();
 
         serverNetwork.shutdown();
 
         networkThread.stop();
+        running = false;
     }
 
     public final boolean isRunning() {
         return running;
-    }
-
-    protected void tick() {
-
     }
 
     protected abstract void preTick();
@@ -74,7 +70,7 @@ public abstract class Server implements GameServer {
         return networkThread;
     }
 
-    public final SimulationExecutor getSimulationExecutor() {
-        return simulationExecutor;
+    public final SimulationManagerThread getSimulationManagerThread() {
+        return simulationManagerThread;
     }
 }

@@ -106,7 +106,7 @@ public class FixedTimestepRunnable implements Runnable {
 
             long systemTime = System.nanoTime();
             if(systemTime - lastPerformanceReport >= PERFORMANCE_REPORT_TIMEOUT) {
-                serverNetwork.broadcast(new ServerPerformanceMetricsPacket(tick, performanceMetrics.getTPS(), performanceMetrics.getDelayedness()));
+                serverNetwork.broadcast(new ServerPerformanceMetricsPacket(0, tick, performanceMetrics.getTPS(), performanceMetrics.getDelayedness()));
                 lastPerformanceReport = systemTime;
             }
 

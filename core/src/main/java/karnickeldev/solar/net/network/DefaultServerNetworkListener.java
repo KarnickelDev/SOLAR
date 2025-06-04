@@ -1,6 +1,7 @@
 package karnickeldev.solar.net.network;
 
-import karnickeldev.solar.net.packets.Packet;
+import karnickeldev.solar.net.packets.*;
+import karnickeldev.solar.net.server.Server;
 import karnickeldev.solar.util.Logger;
 
 public class DefaultServerNetworkListener implements ServerNetworkListener {
@@ -17,6 +18,15 @@ public class DefaultServerNetworkListener implements ServerNetworkListener {
 
     @Override
     public void onPacketReceived(int clientId, Packet packet) {
-        //Logger.log(Logger.SERVER, "Packet received");
+
+        long now = System.nanoTime();
+
+        if(packet.getType() == PacketTypes.PING.getType()) {
+            PingPacket p = (PingPacket) packet;
+            PingPongPacket pp = PacketFactory.createPingPongPacket(p.clientSendTime, now);
+            pp.serverSendTime = now;
+            Server.getInstance().getServerNetwork().sendToClient(clientId, pp);
+        }
+
     }
 }

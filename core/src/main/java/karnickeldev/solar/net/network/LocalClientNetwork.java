@@ -59,7 +59,11 @@ public class LocalClientNetwork implements ClientNetwork {
             work = true;
             //Logger.log("Client received Packet " + packet.getTick());
             Packet finalPacket = packet;
-            dispatcher.dispatch(() -> listener.onPacketReceived(finalPacket));
+            if(finalPacket.isFastHandled()) {
+                listener.onPacketReceived(finalPacket);
+            } else {
+                dispatcher.dispatch(() -> listener.onPacketReceived(finalPacket));
+            }
         }
 
         return work;

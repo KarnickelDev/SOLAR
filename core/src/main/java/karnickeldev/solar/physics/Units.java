@@ -9,8 +9,8 @@ public class Units {
         return value * unit.getBaseFactor();
     }
 
-    public static double toSU(float value, Convertible unit) {
-        return value * unit.getBaseFactor();
+    public static float toSU(float value, Convertible unit) {
+        return (float) (value * unit.getBaseFactor());
     }
 
     public static double convert(double value, Convertible from, Convertible to) {

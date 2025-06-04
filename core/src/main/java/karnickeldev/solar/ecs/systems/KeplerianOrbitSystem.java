@@ -1,5 +1,6 @@
 package karnickeldev.solar.ecs.systems;
 
+import com.badlogic.gdx.utils.Null;
 import karnickeldev.solar.ecs.ServerECS;
 import karnickeldev.solar.ecs.SystemGroup;
 import karnickeldev.solar.ecs.components.MassComponent;
@@ -9,8 +10,12 @@ import karnickeldev.solar.net.network.ServerNetwork;
 import karnickeldev.solar.net.packets.Packet;
 import karnickeldev.solar.net.packets.PacketFactory;
 import karnickeldev.solar.physics.Units;
+import karnickeldev.solar.simulation.execution.SimulationManager;
+import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
+
+import java.util.Objects;
 
 /**
  * @author : KarnickelDev
@@ -26,19 +31,17 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
 
     public KeplerianOrbitSystem(ServerWorld world) {
         this.world = world;
-        this.serverNetwork = world.getNetwork();
+        this.serverNetwork = Objects.requireNonNull(world.getNetwork());
     }
 
     @Override
     public void update(long time) {
-
         ServerECS ecs = world.getECS();
         HCSServerSystem hcs = ecs.hcs;
         OrbitDataComponent orbitData = ecs.getComponentRegistry().get(OrbitDataComponent.class);
         MassComponent massComponent = ecs.getComponentRegistry().get(MassComponent.class);
 
-        double simTimeSec = world.getWorldTime().getSimTimeMicros() * 1e-6;
-        double simTimeDays = simTimeSec / (3600*24);
+        double simTimeSec = world.getWorldTime().getSimTimeMicros() / 1e6;
 
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !orbitData.has(entity)) continue;
@@ -54,7 +57,7 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
             double mu = Units.G_KM_TON * massComponent.getMass(centralBodyId); // G * M
 
             double n = Math.sqrt(mu / (a * a * a));     // mean motion
-            double M = (n * ((simTimeDays) - t0));             // mean anomaly
+            double M = (n * ((simTimeSec) - t0));       // mean anomaly
 
             double E = solveKepler((float) M, e);       // eccentric anomaly
             double theta = 2 * Math.atan2(
@@ -78,21 +81,17 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
         }
         hcs.swapBuffers();
 
-        final Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(tick, world);
-
+        final Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(world.getWorldTime().getSimTimeMicros(), SimulationManager.simSpeed, world);
         if (first) {
             first = false;
 
-            Packet worldPacket = PacketFactory.createWorldUpdatePacket(world.getID(), tick);
+            Packet worldPacket = PacketFactory.createWorldUpdatePacket(world.getID(), world.getWorldTime().getSimTimeMicros());
             serverNetwork.broadcast(worldPacket);
 
-            Packet lifecyclePacket = PacketFactory.createFullEntityLifecyclePacket(tick, world);
+            Packet lifecyclePacket = PacketFactory.createFullEntityLifecyclePacket(world.getWorldTime().getSimTimeMicros(), world);
             serverNetwork.broadcast(lifecyclePacket);
         }
-
-        serverNetwork.broadcast(ecsUpdatePacket);
-
-        tick++;
+        if(ecsUpdatePacket != null && time != 0) serverNetwork.broadcast(ecsUpdatePacket);
     }
 
 

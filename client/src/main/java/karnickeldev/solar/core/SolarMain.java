@@ -166,8 +166,6 @@ public class SolarMain extends Game {
         fpsLabel.setPosition(0.92f * Gdx.graphics.getWidth(), 0.96f * Gdx.graphics.getHeight());
         fpsLabel.setColor(fpsColor);
 
-        if (tps < 0.95f * LocalServer.TICK_RATE) tpsColor = mid;
-        if (tps < 0.85f * LocalServer.TICK_RATE) tpsColor = bad;
         tpsLabel.setStyle(s);
         tpsLabel.setText("TPS: " + String.format("%.2f", tps));
         tpsLabel.setPosition(fpsLabel.getX(), fpsLabel.getY() - 0.02f * Gdx.graphics.getHeight());
