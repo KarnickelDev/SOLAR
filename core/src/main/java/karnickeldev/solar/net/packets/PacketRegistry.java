@@ -1,30 +1,29 @@
 package karnickeldev.solar.net.packets;
 
-import karnickeldev.solar.ecs.components.ComponentSnapshot;
+import karnickeldev.solar.net.network.core.Deserializer;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author : KarnickelDev
+ * @since : 21.06.2025
+ **/
 public class PacketRegistry {
 
-    private static final int TYPE_INVALID = 0;
+    private static final Map<Short, Deserializer<? extends Packet>> deserializers = new HashMap<>();
 
-    private static final Map<Integer, ComponentSnapshot> typeToSnapshot = new HashMap<>();
-    private static final Map<Class<?>, Integer> classToType = new HashMap<>();
-
-    public static void register(int id, Class<?> clazz, ComponentSnapshot snapshot) {
-        typeToSnapshot.put(id, snapshot);
-        classToType.put(clazz, id);
+    public static <T extends Packet> void register(short type, Deserializer<T> deserializer) {
+        deserializers.put(type, deserializer);
     }
 
-    public static int getTypeId(Class<?> clazz) {
-        return classToType.getOrDefault(clazz, TYPE_INVALID);
-    }
-
-    public static ComponentSnapshot deserialize(int id, DataInputStream in) throws IOException {
-        ComponentSnapshot snapshot = typeToSnapshot.get(id);
-        return snapshot.deserialize(in);
+    public static Packet deserializePacket(short type, DataInputStream in) throws IOException {
+        Deserializer<? extends Packet> deserializer = deserializers.get(type);
+        if (deserializer == null) {
+            throw new IOException("Unknown packet type: " + type);
+        }
+        return deserializer.deserialize(in);
     }
 }

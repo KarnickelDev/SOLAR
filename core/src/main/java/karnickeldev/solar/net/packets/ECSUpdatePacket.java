@@ -1,5 +1,6 @@
 package karnickeldev.solar.net.packets;
 
+import karnickeldev.solar.ecs.registries.SnapshotRegistry;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
 
 import java.io.DataInputStream;
@@ -53,14 +54,13 @@ public class ECSUpdatePacket implements Packet {
         out.writeFloat(simSpeed);
         for (int i = 0; i < snapshots.length; i++) {
             ComponentSnapshot snap = snapshots[i];
-            int type = PacketRegistry.getTypeId(snap.getClass());
+            int type = SnapshotRegistry.getTypeId(snap.getClass());
             out.writeInt(type);
             snap.serialize(out);
         }
     }
 
-    @Override
-    public Packet deserialize(DataInputStream in) throws IOException {
+    public static Packet deserialize(DataInputStream in) throws IOException {
         int worldId = in.readInt();
         long simTime = in.readLong();
         int count = in.readInt();
@@ -68,7 +68,7 @@ public class ECSUpdatePacket implements Packet {
         ComponentSnapshot[] snaps = new ComponentSnapshot[count];
         for (int i = 0; i < count; i++) {
             int type = in.readInt();
-            snaps[i] = PacketRegistry.deserialize(type, in);
+            snaps[i] = SnapshotRegistry.deserialize(type, in);
         }
 
         return new ECSUpdatePacket(worldId, simTime, simSpeed, snaps);

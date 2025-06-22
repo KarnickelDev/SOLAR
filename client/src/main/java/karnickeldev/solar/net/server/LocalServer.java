@@ -1,9 +1,12 @@
 package karnickeldev.solar.net.server;
 
 import karnickeldev.solar.ecs.EntityFactory;
-import karnickeldev.solar.net.network.MainThreadDispatcher;
-import karnickeldev.solar.net.network.NetworkThread;
-import karnickeldev.solar.net.network.ServerNetwork;
+import karnickeldev.solar.net.network.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.net.network.core.NetworkThread;
+import karnickeldev.solar.net.network.core.ServerNetwork;
+import karnickeldev.solar.net.network.handlers.HandlerRegistry;
+import karnickeldev.solar.net.network.handlers.PingPongHandler;
+import karnickeldev.solar.net.packets.PacketTypes;
 import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.simulation.execution.SimulationTask;
 import karnickeldev.solar.util.MathUtil;
@@ -26,6 +29,8 @@ public class LocalServer extends Server implements GameServer {
 
         createWorld();
         worldManager.changeWorld(1);
+
+        HandlerRegistry.registerHandler(PacketTypes.PONG.getType(), new PingPongHandler());
     }
 
     @Override

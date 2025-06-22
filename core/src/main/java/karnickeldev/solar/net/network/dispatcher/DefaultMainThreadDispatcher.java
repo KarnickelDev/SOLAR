@@ -1,4 +1,4 @@
-package karnickeldev.solar.net.network;
+package karnickeldev.solar.net.network.dispatcher;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 

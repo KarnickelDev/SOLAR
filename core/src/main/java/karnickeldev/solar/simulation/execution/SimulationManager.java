@@ -1,6 +1,6 @@
 package karnickeldev.solar.simulation.execution;
 
-import karnickeldev.solar.net.network.MainThreadDispatcher;
+import karnickeldev.solar.net.network.dispatcher.MainThreadDispatcher;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.world.ServerWorld;
@@ -103,8 +103,11 @@ public class SimulationManager implements Runnable {
     public void run() {
         long tickEnd;
         long tickStart;
+
         long simulationStartTime = System.nanoTime();
+
         globalSimTimeMicros = 10000;
+
         while(running.get()) {
             /*
             Simulate one "simulation time tick" (actual world ticks executed depend on sim speed and world TickRate)
@@ -173,10 +176,7 @@ public class SimulationManager implements Runnable {
             }
 
             long nextTick = tickStart + schedulerNanosPerTick;
-            if(nextTick > tickEnd) {
-                LockSupport.parkNanos(nextTick - tickEnd);
-            }
-//            while(System.nanoTime() < nextTick) Thread.onSpinWait();
+            if(nextTick > tickEnd) LockSupport.parkNanos(nextTick - tickEnd);
         }
 
         // shutdown logic

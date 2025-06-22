@@ -20,6 +20,13 @@ public class MassSnapshot implements ComponentSnapshot {
         masses = new double[size];
     }
 
+    private MassSnapshot(long tick, int[] entities, double[] masses) {
+        this.tick = tick;
+        this.size = entities.length;
+        this.count = entities.length;
+        this.entities = entities;
+        this.masses = masses;
+    }
 
     public void addChange(int entityId, double mass) {
         if (count >= size) throw new RuntimeException("Snapshot too small");
@@ -36,11 +43,25 @@ public class MassSnapshot implements ComponentSnapshot {
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
-
+        out.writeLong(tick);
+        out.writeInt(count);
+        for(int i = 0; i < count; i++) {
+            out.writeInt(entities[i]);
+            out.writeDouble(masses[i]);
+        }
     }
 
-    @Override
-    public ComponentSnapshot deserialize(DataInputStream in) throws IOException {
-        return null;
+    public static MassSnapshot deserialize(DataInputStream in) throws IOException {
+        long tick = in.readLong();
+        int count = in.readInt();
+
+        int[] entities = new int[count];
+        double[] masses = new double[count];
+        for(int i = 0; i < count; i++) {
+            entities[i] = in.readInt();
+            masses[i] = in.readDouble();
+        }
+
+        return new MassSnapshot(tick, entities, masses);
     }
 }

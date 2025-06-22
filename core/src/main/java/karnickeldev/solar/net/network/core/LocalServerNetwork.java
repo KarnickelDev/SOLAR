@@ -1,9 +1,10 @@
-package karnickeldev.solar.net.network;
+package karnickeldev.solar.net.network.core;
 
+import karnickeldev.solar.net.network.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.net.network.listener.ServerNetworkListener;
 import karnickeldev.solar.net.packets.Packet;
 import karnickeldev.solar.util.Logger;
 
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 

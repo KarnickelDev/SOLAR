@@ -1,9 +1,10 @@
 package karnickeldev.solar.net.sync;
 
+import karnickeldev.solar.net.network.handlers.HandlerRegistry;
+import karnickeldev.solar.net.network.handlers.PacketHandler;
 import karnickeldev.solar.net.packets.Packet;
 import karnickeldev.solar.util.Logger;
 
-import java.util.Map;
 import java.util.TreeMap;
 
 /**
@@ -14,14 +15,13 @@ public class PacketSyncLayer {
 
     private final TreeMap<Integer, Packet> buffer = new TreeMap<>();
 
-    private final Map<Short, Object> handlers;
 
     private final SimTimeEstimator timeEstimator = new SimTimeEstimator();
 
     private int nextExpectedSequence = 0;
 
-    public PacketSyncLayer(Map<Short, Object> handlers) {
-        this.handlers = handlers;
+    public PacketSyncLayer() {
+
     }
 
     public void receivePacket(Packet packet) {
@@ -47,11 +47,12 @@ public class PacketSyncLayer {
     private void dispatch(Packet packet) {
         short type = packet.getType();
 
-        Object handler = handlers.get(type);
+        PacketHandler<Packet> handler = HandlerRegistry.getHandler(packet);
         if(handler == null) {
-            Logger.log(Logger.SYNC, "No handler for Packet");
+            Logger.log(Logger.SYNC, "No handler registered for Packet type " + type);
         } else {
             // handle packet
+            handler.handle(packet);
         }
     }
 

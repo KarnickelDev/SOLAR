@@ -2,8 +2,7 @@ package karnickeldev.solar.world;
 
 import com.badlogic.gdx.Gdx;
 import karnickeldev.solar.ecs.ClientECS;
-import karnickeldev.solar.net.network.ClientNetwork;
-import karnickeldev.solar.net.network.Network;
+import karnickeldev.solar.net.network.core.ClientNetwork;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
 
 public class ClientWorld extends World {

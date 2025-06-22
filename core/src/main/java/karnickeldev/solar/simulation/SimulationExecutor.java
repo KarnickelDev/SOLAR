@@ -1,8 +1,8 @@
 package karnickeldev.solar.simulation;
 
 
-import karnickeldev.solar.net.network.MainThreadDispatcher;
-import karnickeldev.solar.net.network.ServerNetwork;
+import karnickeldev.solar.net.network.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.net.network.core.ServerNetwork;
 import karnickeldev.solar.net.server.ServerPerformanceMetrics;
 import karnickeldev.solar.physics.KeplerianOrbitSystem;
 import karnickeldev.solar.util.Logger;

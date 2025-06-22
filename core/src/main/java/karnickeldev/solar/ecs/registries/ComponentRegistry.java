@@ -1,4 +1,4 @@
-package karnickeldev.solar.ecs;
+package karnickeldev.solar.ecs.registries;
 
 import karnickeldev.solar.ecs.components.Component;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
@@ -12,17 +12,21 @@ public class ComponentRegistry {
     private final Map<Class<? extends Component>, Component> components = new HashMap<>();
     private final Map<Class<? extends ComponentSnapshot>, ComponentSnapshotProvider<? extends ComponentSnapshot>> snapshots = new HashMap<>();
 
-    public <T extends Component, P extends ComponentSnapshot> void register(Class<T> type, T component) {
+    public <T extends Component> void register(Class<T> type, T component) {
         components.put(type, component);
     }
 
-    public <S extends ComponentSnapshot> void registerHandler(Class<S> snapshotClass, ComponentSnapshotProvider<S> providerAndHandler) {
+    public <S extends ComponentSnapshot> void registerSnapshot(Class<S> snapshotClass, ComponentSnapshotProvider<S> providerAndHandler) {
         snapshots.put(snapshotClass, providerAndHandler);
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends Component> T get(Class<T> type) {
-        return (T) components.get(type);
+        try {
+            return type.cast(components.get(type));
+        } catch (ClassCastException e) {
+            Logger.log("Class can't be cast to Component");
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -30,21 +34,30 @@ public class ComponentRegistry {
         return (T) snapshots.get(type);
     }
 
-    public Collection<Component> getAll() {
+    public Collection<Component> getAllComponents() {
         return components.values();
     }
 
-    public List<ComponentSnapshot> createAllSnapshots(long tick) {
-        List<ComponentSnapshot> snapshots = new ArrayList<>(components.size());
+    public List<ComponentSnapshot> createAllSnapshots(long simTimeMicros) {
+        List<ComponentSnapshot> snaps = new ArrayList<>(snapshots.size());
 
-        for (Component component : components.values()) {
-            if (component instanceof ComponentSnapshotProvider) {
-                ComponentSnapshot snap = ((ComponentSnapshotProvider<?>) component).createSnapshot(tick);
-                if (snap != null) snapshots.add(snap);
-            }
+        for (Class<? extends ComponentSnapshot> snap : snapshots.keySet()) {
+            ComponentSnapshot s = getSnapshotProvider(snap).createSnapshot(simTimeMicros);
+            if (s != null) snaps.add(s);
         }
 
-        return snapshots;
+        return snaps;
+    }
+
+    public List<ComponentSnapshot> createFullSnapshot(long simTimeMicros) {
+        List<ComponentSnapshot> snaps = new ArrayList<>(snapshots.size());
+
+        for (Class<? extends ComponentSnapshot> snap : snapshots.keySet()) {
+            ComponentSnapshot s = getSnapshotProvider(snap).createFullSnapshot(simTimeMicros);
+            if (s != null) snaps.add(s);
+        }
+
+        return snaps;
     }
 
     @SuppressWarnings("unchecked")

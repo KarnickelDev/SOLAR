@@ -1,7 +1,7 @@
 package karnickeldev.solar.world;
 
 import karnickeldev.solar.ecs.ECSContext;
-import karnickeldev.solar.net.network.Network;
+import karnickeldev.solar.net.network.core.Network;
 
 public abstract class World {
 

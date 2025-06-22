@@ -1,17 +1,15 @@
 package karnickeldev.solar.ecs.systems;
 
-import com.badlogic.gdx.utils.Null;
 import karnickeldev.solar.ecs.ServerECS;
 import karnickeldev.solar.ecs.SystemGroup;
 import karnickeldev.solar.ecs.components.MassComponent;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.ecs.components.server.HCSServerSystem;
-import karnickeldev.solar.net.network.ServerNetwork;
+import karnickeldev.solar.net.network.core.ServerNetwork;
 import karnickeldev.solar.net.packets.Packet;
 import karnickeldev.solar.net.packets.PacketFactory;
 import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.simulation.execution.SimulationManager;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
 
@@ -25,9 +23,6 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
 
     private final ServerWorld world;
     private final ServerNetwork serverNetwork;
-
-    private boolean first = true;
-    private long tick = 0;
 
     public KeplerianOrbitSystem(ServerWorld world) {
         this.world = world;
@@ -82,22 +77,20 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
         hcs.swapBuffers();
 
         final Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(world.getWorldTime().getSimTimeMicros(), SimulationManager.simSpeed, world);
-        if (first) {
-            first = false;
 
-            Packet worldPacket = PacketFactory.createWorldUpdatePacket(world.getID(), world.getWorldTime().getSimTimeMicros());
-            serverNetwork.broadcast(worldPacket);
+//        Packet worldPacket = PacketFactory.createWorldUpdatePacket(world.getID(), world.getWorldTime().getSimTimeMicros());
+//        serverNetwork.broadcast(worldPacket);
 
-            Packet lifecyclePacket = PacketFactory.createFullEntityLifecyclePacket(world.getWorldTime().getSimTimeMicros(), world);
-            serverNetwork.broadcast(lifecyclePacket);
-        }
+//        Packet lifecyclePacket = PacketFactory.createFullEntityLifecyclePacket(world.getWorldTime().getSimTimeMicros(), world);
+//        serverNetwork.broadcast(lifecyclePacket);
+
         if(ecsUpdatePacket != null && time != 0) serverNetwork.broadcast(ecsUpdatePacket);
     }
 
 
     @Override
     public byte priority() {
-        return 0;
+        return 42;
     }
 
     @Override

@@ -6,10 +6,11 @@ import java.io.IOException;
 
 public class ServerPerformanceMetricsPacket implements Packet {
 
-    public final float tps;
-    public final float delay;
     private final int worldId;
     private final long simTimeMicros;
+
+    public final float tps;
+    public final float delay;
 
     public ServerPerformanceMetricsPacket(int worldId, long simTimeMicros, float tps, float delay) {
         this.tps = tps;
@@ -40,11 +41,17 @@ public class ServerPerformanceMetricsPacket implements Packet {
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
-
+        out.writeInt(worldId);
+        out.writeLong(simTimeMicros);
+        out.writeFloat(tps);
+        out.writeFloat(delay);
     }
 
-    @Override
-    public Packet deserialize(DataInputStream in) throws IOException {
-        return null;
+    public static ServerPerformanceMetricsPacket deserialize(DataInputStream in) throws IOException {
+        int worldId = in.readInt();
+        long simTimeMicros = in.readLong();
+        float tps = in.readFloat();
+        float delay = in.readFloat();
+        return new ServerPerformanceMetricsPacket(worldId, simTimeMicros, tps, delay);
     }
 }

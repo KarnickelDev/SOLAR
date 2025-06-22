@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
 
 import java.util.Arrays;
@@ -55,7 +56,7 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
 
     public int getParent(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        //if(index >= CAPACITY) return 0;
+        if(index >= CAPACITY) return EntityManager.NO_ENTITY;
         return parentIds[index];
     }
 
@@ -80,6 +81,27 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
 
         for (int entity = 0; entity < getCapacity(); entity++) {
             if (!isDirty(entity)) continue;
+
+            snapshot.addChange(
+                entity,
+                getParent(entity),
+                getLocalX(entity), getLocalY(entity)
+            );
+        }
+        return snapshot;
+    }
+
+    @Override
+    public HCSPositionSnapshot createFullSnapshot(long tick) {
+        int size = CAPACITY;
+        if (size < 1) return null;
+
+        HCSPositionSnapshot snapshot = new HCSPositionSnapshot(size, tick);
+
+        if(!has(0)) Logger.log("ALARM !!!!!!!!!!!!!!!");
+
+        for (int entity = 0; entity < getCapacity(); entity++) {
+            if (!has(entity)) continue;
 
             snapshot.addChange(
                 entity,

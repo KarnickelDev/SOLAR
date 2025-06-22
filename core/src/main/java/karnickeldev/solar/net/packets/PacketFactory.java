@@ -1,8 +1,7 @@
 package karnickeldev.solar.net.packets;
 
-import karnickeldev.solar.ecs.components.Component;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
-import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
+import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
 
@@ -55,6 +54,25 @@ public class PacketFactory {
         snaps.removeAll(Collections.singleton(null));
         if(snaps.isEmpty()) return null;
         return new ECSUpdatePacket(world.getID(), simTime, simSpeed, snaps.toArray(ComponentSnapshot[]::new));
+    }
+
+    public static ECSUpdatePacket createFullECSUpdatePacket(long simTime, float simSpeed, ServerWorld world) {
+        List<ComponentSnapshot> snaps = world.getECS().getComponentRegistry().createFullSnapshot(simTime);
+        snaps.add(world.getECS().hcs.getCurrent().createFullSnapshot(simTime));
+        snaps.removeAll(Collections.singleton(null));
+        if(snaps.isEmpty()) return null;
+
+
+        return new ECSUpdatePacket(world.getID(), simTime, simSpeed, snaps.toArray(ComponentSnapshot[]::new));
+    }
+
+    public static FullSnapshotPacket createFullSnapshotPacket(ServerWorld world) {
+        Packet[] packets = new Packet[] {
+            createWorldUpdatePacket(world.getID(), world.getWorldTime().getSimTimeMicros()),
+            createFullEntityLifecyclePacket(world.getWorldTime().getSimTimeMicros(), world),
+            createFullECSUpdatePacket(world.getWorldTime().getSimTimeMicros(), SimulationManager.simSpeed, world)
+        };
+        return new FullSnapshotPacket(world.getID(), world.getWorldTime().getSimTimeMicros(), packets);
     }
 
 }

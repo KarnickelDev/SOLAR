@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
 
 import java.util.Arrays;
@@ -39,6 +40,11 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
         return index < CAPACITY && (tagMasks[index] & tagMask) != 0;
     }
 
+    public int get(int entityId) {
+        int index = entityId & EntityManager.INDEX_MASK;
+        return tagMasks[index];
+    }
+
     public void clearAll(int entityId) {
         int index = entityId & EntityManager.INDEX_MASK;
         if (index >= CAPACITY) return;
@@ -54,6 +60,21 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
 
         for (int entity = 0; entity < CAPACITY; entity++) {
             if (!isDirty(entity)) continue;
+            snap.addChange(entity, tagMasks[EntityManager.extractIndex(entity)]);
+        }
+        dirty.clear();
+
+        return snap;
+    }
+
+    @Override
+    public TagSnapshot createFullSnapshot(long tick) {
+        int size = CAPACITY;
+        if (size < 1) return null;
+
+        TagSnapshot snap = new TagSnapshot(size, tick);
+
+        for (int entity = 0; entity < CAPACITY; entity++) {
             snap.addChange(entity, tagMasks[EntityManager.extractIndex(entity)]);
         }
         dirty.clear();

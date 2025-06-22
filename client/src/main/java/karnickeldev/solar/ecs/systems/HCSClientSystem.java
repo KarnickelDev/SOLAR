@@ -15,7 +15,7 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
     private int prev = 0;
     private int curr = 1;
 
-    public static float simSpeed = 1;
+    public static float simSpeed = 3600f;
 
     private long previousUpdate, currentUpdate;
 
@@ -42,10 +42,14 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
         curr = (curr + 1) % 2;
         prev = (prev + 1) % 2;
         componentBuffer[curr].applySnapshot(snapshot);
-        if(lastSnapshot == null) componentBuffer[prev].applySnapshot(snapshot);
+
+        if(lastSnapshot == null) {
+            componentBuffer[prev].applySnapshot(snapshot);
+        }
+
 
         previousSnapshot = lastSnapshot;
-        lastSnapshot = snapshot;
+        lastSnapshot = snapshot.copy();
         previousUpdate = currentUpdate;
         currentUpdate = System.nanoTime();
     }
@@ -77,7 +81,7 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
     @Override
     public void applySnapshot(HCSPositionSnapshot snapshot) {
-        this.update(snapshot);
+        if(snapshot != null) this.update(snapshot.copy());
     }
 
     @Override
@@ -87,6 +91,11 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
     @Override
     public HCSPositionSnapshot createSnapshot(long tick) {
+        throw new UnsupportedOperationException("Not supported for " + this.getClass().getName());
+    }
+
+    @Override
+    public HCSPositionSnapshot createFullSnapshot(long simTimeMicros) {
         throw new UnsupportedOperationException("Not supported for " + this.getClass().getName());
     }
 }

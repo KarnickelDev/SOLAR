@@ -62,6 +62,22 @@ public class MassComponent extends DirtyFlagComponent implements ComponentSnapsh
     }
 
     @Override
+    public MassSnapshot createFullSnapshot(long tick) {
+        int size = hasComponent.cardinality();
+        if (size < 1) return null;
+
+        MassSnapshot snap = new MassSnapshot(size, tick);
+
+        for (int entity = 0; entity < CAPACITY; entity++) {
+            if (!has(entity)) continue;
+            snap.addChange(entity, mass[EntityManager.extractIndex(entity)]);
+        }
+        dirty.clear();
+
+        return snap;
+    }
+
+    @Override
     public void applySnapshot(MassSnapshot snapshot) {
         int count = snapshot.getChangedCount();
         for (int i = 0; i < count; i++) {

@@ -3,6 +3,8 @@ package karnickeldev.solar.ecs;
 import karnickeldev.solar.ecs.components.Component;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
 import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
+import karnickeldev.solar.ecs.registries.ComponentRegistry;
+import karnickeldev.solar.ecs.registries.SystemRegistry;
 import karnickeldev.solar.ecs.systems.ECSSystem;
 
 public abstract class ECSContext {
@@ -38,13 +40,13 @@ public abstract class ECSContext {
     }
 
     public <S extends ComponentSnapshot> void registerHandler(Class<S> snapshotClass, ComponentSnapshotProvider<S> providerAndHandler) {
-        componentRegistry.registerHandler(snapshotClass, providerAndHandler);
+        componentRegistry.registerSnapshot(snapshotClass, providerAndHandler);
     }
 
     public <S extends ComponentSnapshot, T extends Component & ComponentSnapshotProvider<S>>
     void registerComponentAndHandler(Class<T> componentType, Class<S> snapshotType, T instance) {
         componentRegistry.register(componentType, instance);
-        componentRegistry.registerHandler(snapshotType, instance);
+        componentRegistry.registerSnapshot(snapshotType, instance);
     }
 
     public void update(long deltaTime) {

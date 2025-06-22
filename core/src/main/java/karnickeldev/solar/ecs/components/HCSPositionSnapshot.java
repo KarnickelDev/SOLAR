@@ -36,6 +36,18 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
     }
 
     @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append('[');
+        for(int i = 0; i < count; i++) {
+            builder.append(entities[i]).append(", ").append(parent[i]).append(", ").append(position[2 * i]).append(", ").append(position[2 * i + 1]);
+            if(i != count-1) builder.append(", ");
+        }
+        builder.append(']');
+        return builder.toString();
+    }
+
+    @Override
     public int getChangedCount() {
         return count;
     }
@@ -65,8 +77,7 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
         }
     }
 
-    @Override
-    public HCSPositionSnapshot deserialize(DataInputStream in) throws IOException {
+    public static HCSPositionSnapshot deserialize(DataInputStream in) throws IOException {
         long tick = in.readLong();
         int count = in.readInt();
 

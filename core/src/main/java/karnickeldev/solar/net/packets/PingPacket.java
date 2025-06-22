@@ -43,11 +43,10 @@ public class PingPacket implements Packet {
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
-
+        out.writeLong(clientSendTime);
     }
 
-    @Override
-    public Packet deserialize(DataInputStream in) throws IOException {
-        return null;
+    public static PingPacket deserialize(DataInputStream in) throws IOException {
+        return PacketFactory.createPingPacket(in.readLong());
     }
 }

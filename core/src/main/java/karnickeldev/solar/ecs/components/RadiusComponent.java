@@ -46,13 +46,27 @@ public class RadiusComponent extends DirtyFlagComponent implements ComponentSnap
     }
 
     @Override
-    public RadiusSnapshot createSnapshot(long tick) {
+    public RadiusSnapshot createSnapshot(long simTimeMicros) {
         int size = dirty.cardinality();
         if (size < 1) return null;
 
-        RadiusSnapshot snap = new RadiusSnapshot(size, tick);
+        RadiusSnapshot snap = new RadiusSnapshot(size, simTimeMicros);
         for (int entity = 0; entity < CAPACITY; entity++) {
             if (!isDirty(entity)) continue;
+            snap.addChange(entity, radius[EntityManager.extractIndex(entity)]);
+        }
+        dirty.clear();
+        return snap;
+    }
+
+    @Override
+    public RadiusSnapshot createFullSnapshot(long simTimeMicros) {
+        int size = hasComponent.cardinality();
+        if (size < 1) return null;
+
+        RadiusSnapshot snap = new RadiusSnapshot(size, simTimeMicros);
+        for (int entity = 0; entity < CAPACITY; entity++) {
+            if (!has(entity)) continue;
             snap.addChange(entity, radius[EntityManager.extractIndex(entity)]);
         }
         dirty.clear();

@@ -6,7 +6,9 @@ public interface ECSSystem {
 
     void update(long deltaTime);
 
-    byte priority();
+    default byte priority() {
+        return 0;
+    }
 
     SystemGroup getGroup();
 

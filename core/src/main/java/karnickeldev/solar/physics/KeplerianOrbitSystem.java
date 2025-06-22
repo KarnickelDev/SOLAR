@@ -4,20 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import karnickeldev.solar.ecs.ServerECS;
 import karnickeldev.solar.ecs.components.*;
-import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
 import karnickeldev.solar.ecs.components.server.HCSServerSystem;
-import karnickeldev.solar.net.network.ServerNetwork;
-import karnickeldev.solar.net.packets.ECSUpdatePacket;
-import karnickeldev.solar.net.packets.EntityLifecyclePacket;
+import karnickeldev.solar.net.network.core.ServerNetwork;
 import karnickeldev.solar.net.packets.Packet;
 import karnickeldev.solar.net.packets.PacketFactory;
 import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.world.ServerWorld;
-import karnickeldev.solar.world.World;
 import karnickeldev.solar.world.WorldManager;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class KeplerianOrbitSystem {
 
@@ -35,7 +28,7 @@ public class KeplerianOrbitSystem {
 
         for(ServerWorld world: worldManager.getWorlds()) {
             world.getECS().hcs.getNext().setDirty();
-            for (Component comp : world.getECS().getComponentRegistry().getAll()) {
+            for (Component comp : world.getECS().getComponentRegistry().getAllComponents()) {
                 if (comp instanceof DirtyFlagComponent) ((DirtyFlagComponent) comp).setDirty();
             }
         }

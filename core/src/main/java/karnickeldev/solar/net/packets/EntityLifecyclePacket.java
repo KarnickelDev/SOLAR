@@ -44,11 +44,37 @@ public class EntityLifecyclePacket implements Packet {
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
+        out.writeInt(worldId);
+        out.writeBoolean(fullSnapshot);
+        out.writeLong(simTimeMicros);
 
+        out.writeInt(createdEntityIds.length);
+        for (int createdEntityId : createdEntityIds) {
+            out.writeInt(createdEntityId);
+        }
+        out.writeInt(destroyedEntityIds.length);
+        for (int destroyedEntityId : destroyedEntityIds) {
+            out.writeInt(destroyedEntityId);
+        }
     }
 
-    @Override
-    public Packet deserialize(DataInputStream in) throws IOException {
-        return null;
+    public static Packet deserialize(DataInputStream in) throws IOException {
+        int worldId = in.readInt();
+        boolean fullSnapshot = in.readBoolean();
+        long simTimeMicros = in.readLong();
+
+        int createdCount = in.readInt();
+        int[] createdEntities = new int[createdCount];
+        for(int i = 0; i < createdCount; i++) {
+            createdEntities[i] = in.readInt();
+        }
+
+        int destroyedCount = in.readInt();
+        int[] destroyedEntities = new int[destroyedCount];
+        for (int i = 0; i < destroyedCount; i++) {
+            destroyedEntities[i] = in.readInt();
+        }
+
+        return PacketFactory.createEntityLifecyclePacket(simTimeMicros, worldId, createdEntities, destroyedEntities, fullSnapshot);
     }
 }

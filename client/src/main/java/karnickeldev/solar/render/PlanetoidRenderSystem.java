@@ -10,7 +10,6 @@ import karnickeldev.solar.ecs.Tags;
 import karnickeldev.solar.ecs.components.RadiusComponent;
 import karnickeldev.solar.ecs.components.TagComponent;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
-import karnickeldev.solar.net.server.LocalServer;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.world.ClientWorld;

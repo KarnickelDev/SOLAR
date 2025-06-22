@@ -9,6 +9,8 @@ public class HCSServerSystem {
     private int next = 1;
     private int send = 2;
 
+    private boolean initialized = false;
+
     public HCSServerSystem() {
         for (int i = 0; i < componentBuffer.length; i++) {
             componentBuffer[i] = new HCSPositionComponent();
@@ -37,6 +39,23 @@ public class HCSServerSystem {
         send = oldCurr;
 
         componentBuffer[next].clearDirty();
+
+        // make sure one-time-only changes are present in all buffer objects
+        if(!initialized) {
+            initialized = true;
+            for(int i = 0; i < componentBuffer.length; i++) {
+                if(i == curr) continue;
+                for(int e = 0; e < getCurrent().getCapacity(); e++) {
+                    if(!getCurrent().has(e)) continue;
+                    componentBuffer[i].add(
+                        e,
+                        getCurrent().getParent(e),
+                        getCurrent().getLocalX(e),
+                        getCurrent().getLocalY(e)
+                    );
+                }
+            }
+        }
     }
 
     public double getLocalX(int entityId) {

@@ -47,11 +47,13 @@ public class PingPongPacket implements Packet {
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
-
+        out.writeLong(clientSendTime);
+        out.writeLong(serverReceiveTime);
     }
 
-    @Override
-    public Packet deserialize(DataInputStream in) throws IOException {
-        return null;
+    public static Packet deserialize(DataInputStream in) throws IOException {
+        long sendTime = in.readLong();
+        long receiveTime = in.readLong();
+        return PacketFactory.createPingPongPacket(sendTime, receiveTime);
     }
 }

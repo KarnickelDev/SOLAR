@@ -45,6 +45,10 @@ public class WorldManager<T extends World> {
         return world;
     }
 
+    public boolean containsWorld(int id) {
+        return worlds.containsKey(id);
+    }
+
     public Collection<T> getWorlds() {
         return worlds.values();
     }

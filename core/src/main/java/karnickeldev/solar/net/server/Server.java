@@ -1,10 +1,14 @@
 package karnickeldev.solar.net.server;
 
+import karnickeldev.solar.ecs.components.ComponentType;
 import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
-import karnickeldev.solar.net.network.MainThreadDispatcher;
-import karnickeldev.solar.net.network.NetworkThread;
-import karnickeldev.solar.net.network.ServerNetwork;
-import karnickeldev.solar.net.packets.PacketRegistry;
+import karnickeldev.solar.ecs.components.RadiusSnapshot;
+import karnickeldev.solar.ecs.components.TagSnapshot;
+import karnickeldev.solar.net.network.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.net.network.core.NetworkThread;
+import karnickeldev.solar.net.network.core.ServerNetwork;
+import karnickeldev.solar.ecs.registries.SnapshotRegistry;
+import karnickeldev.solar.net.packets.PacketTypes;
 import karnickeldev.solar.simulation.execution.SimulationManagerThread;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.WorldManager;
@@ -31,12 +35,14 @@ public abstract class Server implements GameServer {
         this.worldManager = worldManager;
 
         this.simulationManagerThread = new SimulationManagerThread(8, worldManager, dispatcher);
-
-        PacketRegistry.register(1, HCSPositionSnapshot.class, new HCSPositionSnapshot(0, 0));
         instance = this;
     }
 
     public final void start() {
+
+        PacketTypes.registerAll();
+        ComponentType.registerSnapshotDeserializers();
+
         running = true;
 
         serverNetwork.start();
@@ -68,6 +74,10 @@ public abstract class Server implements GameServer {
 
     public final NetworkThread getNetworkThread() {
         return networkThread;
+    }
+
+    public final WorldManager<ServerWorld> getWorldManager() {
+        return worldManager;
     }
 
     public final SimulationManagerThread getSimulationManagerThread() {

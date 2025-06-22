@@ -36,11 +36,24 @@ public class TagSnapshot implements ComponentSnapshot {
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
-
+        out.writeLong(tick);
+        out.writeInt(count);
+        for (int i = 0; i < count; i++) {
+            out.writeInt(entities[i]);
+            out.writeInt(tagMasks[i]);
+        }
     }
 
-    @Override
-    public ComponentSnapshot deserialize(DataInputStream in) throws IOException {
-        return null;
+    public static TagSnapshot deserialize(DataInputStream in) throws IOException {
+        long tick = in.readLong();
+        int count = in.readInt();
+
+        TagSnapshot snap = new TagSnapshot(count, tick);
+
+        for (int i = 0; i < count; i++) {
+            snap.addChange(in.readInt(), in.readInt());
+        }
+
+        return snap;
     }
 }

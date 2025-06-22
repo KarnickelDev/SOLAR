@@ -4,21 +4,21 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class WorldUpdatePacket implements Packet {
-
-    private static int sequenceId = 0;
+/**
+ * @author : KarnickelDev
+ * @since : 22.06.2025
+ **/
+public class FullSnapshotRequestPacket implements Packet {
 
     private final int worldId;
-    private final long simTimeMicros;
 
-    protected WorldUpdatePacket(int worldId, long simTimeMicros) {
+    public FullSnapshotRequestPacket(int worldId) {
         this.worldId = worldId;
-        this.simTimeMicros = simTimeMicros;
     }
 
     @Override
     public short getType() {
-        return PacketTypes.WORLD_UPDATE.getType();
+        return PacketTypes.FULL_SNAPSHOT_REQUEST.getType();
     }
 
     @Override
@@ -28,21 +28,20 @@ public class WorldUpdatePacket implements Packet {
 
     @Override
     public long getSimTimeMicros() {
-        return simTimeMicros;
+        return 0;
     }
 
     @Override
     public int getSequenceId() {
-        return sequenceId++;
+        return 0;
     }
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
         out.writeInt(worldId);
-        out.writeLong(simTimeMicros);
     }
 
-    public static Packet deserialize(DataInputStream in) throws IOException {
-        return PacketFactory.createWorldUpdatePacket(in.readInt(), in.readLong());
+    public static FullSnapshotRequestPacket deserialize(DataInputStream in) throws IOException {
+        return new FullSnapshotRequestPacket(in.readInt());
     }
 }

@@ -1,4 +1,4 @@
-package karnickeldev.solar.net.network;
+package karnickeldev.solar.net.network.core;
 
 public interface Network {
 

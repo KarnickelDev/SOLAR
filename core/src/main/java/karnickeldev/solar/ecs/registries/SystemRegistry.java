@@ -1,5 +1,6 @@
-package karnickeldev.solar.ecs;
+package karnickeldev.solar.ecs.registries;
 
+import karnickeldev.solar.ecs.SystemGroup;
 import karnickeldev.solar.ecs.systems.ECSSystem;
 
 import java.util.*;

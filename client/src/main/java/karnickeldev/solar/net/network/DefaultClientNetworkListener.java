@@ -3,10 +3,8 @@ package karnickeldev.solar.net.network;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
-import karnickeldev.solar.ecs.components.HCSPositionComponent;
-import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
-import karnickeldev.solar.ecs.components.TagComponent;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
+import karnickeldev.solar.net.network.listener.ClientNetworkListener;
 import karnickeldev.solar.net.packets.*;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientWorld;
@@ -34,8 +32,8 @@ public class DefaultClientNetworkListener implements ClientNetworkListener {
 
     @Override
     public void onPacketReceived(Packet packet) {
-
         if(packet.getType() == PacketTypes.PONG.getType()) {
+            //HandlerRegistry.getHandler(packet).handle(packet);
             PingPongPacket pp = (PingPongPacket) packet;
             long rtt = System.nanoTime() - pp.clientSendTime;
             Logger.log("Ping: " + (rtt/(2_000_000)) + "ms");
@@ -43,8 +41,12 @@ public class DefaultClientNetworkListener implements ClientNetworkListener {
 
         if(packet.getType() == PacketTypes.WORLD_UPDATE.getType()) {
             WorldUpdatePacket p = (WorldUpdatePacket) packet;
-
-            if(worldManager.addWorld(new ClientWorld(p.getWorldId())) != null) Logger.error("double world creation");
+            if(worldManager.containsWorld(p.getWorldId())) {
+                Logger.error("double world creation");
+            } else {
+                worldManager.addWorld(new ClientWorld(p.getWorldId()));
+                Logger.log(Logger.GENERAL, "Added new World " + p.getWorldId());
+            }
         }
 
         if (packet.getType() == PacketTypes.ENTITY_LIFECYCLE.getType()) {
@@ -52,8 +54,9 @@ public class DefaultClientNetworkListener implements ClientNetworkListener {
             EntityLifecyclePacket p = (EntityLifecyclePacket) packet;
             int worldId = p.getWorldId();
 
-            if(worldManager.getWorld(worldId) == null) {
-                worldManager.addWorld(new ClientWorld(worldId));
+            if(!worldManager.containsWorld(worldId)) {
+                Logger.error("Error handling EntityLifecyclePacket: unknown WorldId " + worldId);
+                return;
             }
 
             ClientECS ecs = worldManager.getWorld(worldId).getECS();
@@ -70,13 +73,27 @@ public class DefaultClientNetworkListener implements ClientNetworkListener {
             assert packet instanceof ECSUpdatePacket;
             ECSUpdatePacket p = (ECSUpdatePacket) packet;
             ComponentSnapshot[] snapshots = p.getSnapshots();
+
             int worldId = p.getWorldId();
-            if(worldId != worldManager.getActiveWorld().getID()) {
-                worldManager.changeWorld(worldId);
+            if(worldManager.containsWorld(worldId)) {
+                if(worldId != worldManager.getActiveWorld().getID()) {
+                    worldManager.changeWorld(worldId);
+                }
+            } else {
+                Logger.error("Received ECS Update for unknown World " + worldId);
+                return;
             }
             HCSClientSystem.simSpeed = p.simSpeed;
             worldManager.getWorld(worldId).getECS().getComponentRegistry().applyAllSnapshots(snapshots);
-            worldManager.changeWorld(1);
+        }
+
+        if(packet.getType() == PacketTypes.FULL_SNAPSHOT.getType()) {
+            Logger.log("Resyncing with server");
+            assert packet instanceof FullSnapshotPacket;
+            FullSnapshotPacket full = (FullSnapshotPacket) packet;
+            for(int i = 0; i < full.packets.length; i++) {
+                onPacketReceived(full.packets[i]);
+            }
         }
 
         if (packet.getType() == PacketTypes.SERVER_PERFORMANCE_METRICS.getType()) {

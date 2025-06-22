@@ -1,5 +1,7 @@
 package karnickeldev.solar.ecs;
 
+import karnickeldev.solar.util.Logger;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -47,6 +49,11 @@ public class EntityManager {
         if(entityId == NO_ENTITY) throw new RuntimeException("Tried using reserved entityId");
         int index = extractIndex(entityId);
         int generation = extractGeneration(entityId);
+
+        if(index < nextFree && !freeIndices.contains(index)) {
+            Logger.error("Double entity creation");
+            return;
+        }
 
         if (generations[index] > generation) throw new RuntimeException("Probably ECS de-sync");
         generations[index] = (byte) generation;

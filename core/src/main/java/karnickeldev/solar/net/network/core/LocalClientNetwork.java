@@ -1,5 +1,8 @@
-package karnickeldev.solar.net.network;
+package karnickeldev.solar.net.network.core;
 
+import karnickeldev.solar.net.network.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.net.network.listener.ClientNetworkListener;
+import karnickeldev.solar.net.packets.FullSnapshotRequestPacket;
 import karnickeldev.solar.net.packets.Packet;
 import karnickeldev.solar.util.Logger;
 
@@ -72,6 +75,7 @@ public class LocalClientNetwork implements ClientNetwork {
     @Override
     public void connect() {
         dispatcher.dispatch(listener::onConnected);
+        send(new FullSnapshotRequestPacket(1));
     }
 
     @Override

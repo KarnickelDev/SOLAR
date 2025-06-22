@@ -35,11 +35,26 @@ public class RadiusSnapshot implements ComponentSnapshot {
 
     @Override
     public void serialize(DataOutputStream out) throws IOException {
-
+        out.writeLong(tick);
+        out.writeInt(count);
+        for(int i = 0; i < count; i++) {
+            out.writeInt(entities[i]);
+            out.writeFloat(radius[i]);
+        }
     }
 
-    @Override
-    public ComponentSnapshot deserialize(DataInputStream in) throws IOException {
-        return null;
+    public static RadiusSnapshot deserialize(DataInputStream in) throws IOException {
+        long tick = in.readLong();
+        int count = in.readInt();
+
+        RadiusSnapshot snap = new RadiusSnapshot(count, tick);
+
+        for(int i = 0; i < count; i++) {
+            int entity = in.readInt();
+            float radius = in.readFloat();
+            snap.addChange(entity, radius);
+        }
+
+        return snap;
     }
 }

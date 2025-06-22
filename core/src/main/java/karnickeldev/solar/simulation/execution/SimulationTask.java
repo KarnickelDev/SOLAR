@@ -1,5 +1,6 @@
 package karnickeldev.solar.simulation.execution;
 
+import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.TickPerformanceTracker;
 
@@ -52,13 +53,11 @@ public class SimulationTask implements Comparable<SimulationTask> {
     private final ServerWorld world;
 
     private Priority priority;
-    private boolean tickCatchupAllowed = true;
 
     public final TickPerformanceTracker tpsTracker;
 
     private short badTickStats = 0;
     private short goodTickStats = 0;
-
     private long lastPriorityChange = 0;
 
     public SimulationTask(ServerWorld world) {
@@ -69,7 +68,8 @@ public class SimulationTask implements Comparable<SimulationTask> {
 
     @Override
     public String toString() {
-        return "SimTask(wID:" + getWorld().getID() + ",p:" + getPriority() + ",tps:" + Math.round(tpsTracker.getTPS()) + ",avg:" + (tpsTracker.getAvgTickDuration()/1e6f) + ')';
+        return "SimTask(wID:" + getWorld().getID() + ",p:" + getPriority() + ",tps:" + Math.round(tpsTracker.getTPS())
+            + ",avg:" + (tpsTracker.getAvgTickDuration()/1e6f) + ')';
     }
 
     public void setPriority(Priority priority) {
@@ -159,7 +159,7 @@ public class SimulationTask implements Comparable<SimulationTask> {
             tpsTracker.recordTick(start, System.nanoTime());
 
             timeAccumulatorMicros -= tickIntervalMicros;
-            maybeDemoteOrPromote();
+            //maybeDemoteOrPromote();
         }
 
 
@@ -167,17 +167,5 @@ public class SimulationTask implements Comparable<SimulationTask> {
 
     public ServerWorld getWorld() {
         return world;
-    }
-
-    public boolean isTickCatchupAllowed() {
-        return tickCatchupAllowed;
-    }
-
-    public void enableTickCatchup() {
-        tickCatchupAllowed = true;
-    }
-
-    public void disableTickCatchup() {
-        tickCatchupAllowed = false;
     }
 }

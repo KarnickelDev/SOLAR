@@ -1,12 +1,8 @@
 package karnickeldev.solar.net.packets;
 
-import karnickeldev.solar.net.network.Serializable;
+import karnickeldev.solar.net.network.core.Serializable;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-public interface Packet extends Serializable<Packet> {
+public interface Packet extends Serializable {
 
     int MAX_SEQUENCE = 0xFFFF;
 
@@ -21,9 +17,5 @@ public interface Packet extends Serializable<Packet> {
     default boolean isFastHandled() {
         return false;
     }
-
-    void serialize(DataOutputStream out) throws IOException;
-
-    Packet deserialize(DataInputStream in) throws IOException;
 
 }

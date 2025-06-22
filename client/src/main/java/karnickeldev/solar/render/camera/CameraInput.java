@@ -46,6 +46,7 @@ public class CameraInput extends InputAdapter {
 
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             camera.move(FloatingOriginCamera.UP);
+            System.out.println("W");
         }
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
             camera.move(FloatingOriginCamera.LEFT);
