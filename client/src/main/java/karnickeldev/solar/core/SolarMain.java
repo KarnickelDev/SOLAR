@@ -11,7 +11,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import karnickeldev.solar.Metadata;
 import karnickeldev.solar.assetmanager.AssetWrapper;
-import karnickeldev.solar.net.server.LocalServer;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.settings.SettingsManager;
 import karnickeldev.solar.ui.Fonts;

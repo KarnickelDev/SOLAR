@@ -1,7 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.registries.SnapshotRegistry;
-import karnickeldev.solar.net.network.core.Deserializer;
+import karnickeldev.solar.network.net.core.Deserializer;
 
 /**
  * @author : KarnickelDev

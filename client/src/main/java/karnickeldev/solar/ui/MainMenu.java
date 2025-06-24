@@ -24,9 +24,12 @@ public class MainMenu implements UIElement {
 
         mainMenu.add(new MenuButton("Singleplayer", skin, () -> {
             hide();
-            SolarMain.getInstance().setScreen(new SimTestScreen());
+            SolarMain.getInstance().setScreen(new SimTestScreen(false));
         })).expandX().fillX().row();
-        mainMenu.add(new MenuButton("Multiplayer", skin)).expandX().fillX().row();
+        mainMenu.add(new MenuButton("Multiplayer", skin, () -> {
+            hide();
+            SolarMain.getInstance().setScreen(new SimTestScreen(true));
+        })).expandX().fillX().row();
         mainMenu.add(new MenuButton("Options", skin, () -> {
             //hide();
             SolarMain.getInstance().getUIManager().getMainMenuOptionsMenu().show();

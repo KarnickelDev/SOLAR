@@ -1,7 +1,8 @@
 package karnickeldev.solar.ecs.registries;
 
+import io.netty.buffer.ByteBuf;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
-import karnickeldev.solar.net.network.core.Deserializer;
+import karnickeldev.solar.network.net.core.Deserializer;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -10,21 +11,21 @@ import java.util.Map;
 
 public class SnapshotRegistry {
 
-    private static final int TYPE_INVALID = -1;
+    private static final short TYPE_INVALID = -1;
 
-    private static final Map<Integer, Deserializer<? extends ComponentSnapshot>> typeToDeserializer = new HashMap<>();
-    private static final Map<Class<?>, Integer> classToType = new HashMap<>();
+    private static final Map<Short, Deserializer<? extends ComponentSnapshot>> typeToDeserializer = new HashMap<>();
+    private static final Map<Class<?>, Short> classToType = new HashMap<>();
 
-    public static void register(int id, Class<?> clazz, Deserializer<ComponentSnapshot> deserializer) {
+    public static void register(short id, Class<?> clazz, Deserializer<ComponentSnapshot> deserializer) {
         typeToDeserializer.put(id, deserializer);
         classToType.put(clazz, id);
     }
 
-    public static int getTypeId(Class<?> clazz) {
+    public static short getTypeId(Class<?> clazz) {
         return classToType.getOrDefault(clazz, TYPE_INVALID);
     }
 
-    public static ComponentSnapshot deserialize(int id, DataInputStream in) throws IOException {
+    public static ComponentSnapshot deserialize(short id, ByteBuf in) {
         return typeToDeserializer.get(id).deserialize(in);
     }
 }

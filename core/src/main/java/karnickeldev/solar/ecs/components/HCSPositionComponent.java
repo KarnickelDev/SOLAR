@@ -1,7 +1,6 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
 
 import java.util.Arrays;
@@ -97,8 +96,6 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
         if (size < 1) return null;
 
         HCSPositionSnapshot snapshot = new HCSPositionSnapshot(size, tick);
-
-        if(!has(0)) Logger.log("ALARM !!!!!!!!!!!!!!!");
 
         for (int entity = 0; entity < getCapacity(); entity++) {
             if (!has(entity)) continue;

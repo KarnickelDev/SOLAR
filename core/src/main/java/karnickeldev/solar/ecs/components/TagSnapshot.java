@@ -1,5 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -35,7 +37,7 @@ public class TagSnapshot implements ComponentSnapshot {
     }
 
     @Override
-    public void serialize(DataOutputStream out) throws IOException {
+    public void serialize(ByteBuf out) {
         out.writeLong(tick);
         out.writeInt(count);
         for (int i = 0; i < count; i++) {
@@ -44,7 +46,7 @@ public class TagSnapshot implements ComponentSnapshot {
         }
     }
 
-    public static TagSnapshot deserialize(DataInputStream in) throws IOException {
+    public static TagSnapshot deserialize(ByteBuf in) {
         long tick = in.readLong();
         int count = in.readInt();
 

@@ -159,6 +159,7 @@ public class SimulationTask implements Comparable<SimulationTask> {
             tpsTracker.recordTick(start, System.nanoTime());
 
             timeAccumulatorMicros -= tickIntervalMicros;
+            //TODO: re-enable
             //maybeDemoteOrPromote();
         }
 

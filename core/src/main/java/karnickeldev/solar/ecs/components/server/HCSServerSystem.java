@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs.components.server;
 
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
+import karnickeldev.solar.util.Logger;
 
 public class HCSServerSystem {
 

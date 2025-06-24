@@ -1,7 +1,7 @@
 package karnickeldev.solar.world;
 
 import karnickeldev.solar.ecs.ServerECS;
-import karnickeldev.solar.net.network.core.ServerNetwork;
+import karnickeldev.solar.network.net.core.ServerNetwork;
 
 import java.util.Objects;
 

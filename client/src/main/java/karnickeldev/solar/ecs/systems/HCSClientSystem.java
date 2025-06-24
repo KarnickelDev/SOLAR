@@ -49,7 +49,7 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
 
         previousSnapshot = lastSnapshot;
-        lastSnapshot = snapshot.copy();
+        lastSnapshot = snapshot;
         previousUpdate = currentUpdate;
         currentUpdate = System.nanoTime();
     }

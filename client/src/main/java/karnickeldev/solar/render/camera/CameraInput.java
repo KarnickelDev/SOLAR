@@ -6,7 +6,6 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.utils.TimeUtils;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
-import karnickeldev.solar.net.server.LocalServer;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.util.MathUtil;
@@ -46,7 +45,6 @@ public class CameraInput extends InputAdapter {
 
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             camera.move(FloatingOriginCamera.UP);
-            System.out.println("W");
         }
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
             camera.move(FloatingOriginCamera.LEFT);
