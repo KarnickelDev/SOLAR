@@ -113,7 +113,7 @@ public class Lwjgl3Launcher {
         configuration.setWindowedMode(settings.getScreenWidth(), settings.getScreenHeight());
         if (settings.isFullscreen()) configuration.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
 
-        configuration.setWindowIcon("icon_256.png", "icon_128.png", "icon_64.png", "icon_48.png", "icon_32.png", "icon_16.png");
+        configuration.setWindowIcon("color_256.png", "color_128.png", "color_64.png", "color_48.png", "color_32.png", "color_16.png");
 
         DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment()
             .getDefaultScreenDevice().getDisplayMode();

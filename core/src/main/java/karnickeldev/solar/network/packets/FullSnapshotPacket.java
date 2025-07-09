@@ -10,7 +10,7 @@ import java.io.IOException;
  * @author : KarnickelDev
  * @since : 22.06.2025
  **/
-public class FullSnapshotPacket extends Packet {
+public class FullSnapshotPacket extends GameStatePacket {
 
     private int worldId;
     private long simTimeMicros;

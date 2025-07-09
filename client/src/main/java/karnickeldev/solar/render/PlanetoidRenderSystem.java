@@ -10,6 +10,7 @@ import karnickeldev.solar.ecs.Tags;
 import karnickeldev.solar.ecs.components.RadiusComponent;
 import karnickeldev.solar.ecs.components.TagComponent;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
+import karnickeldev.solar.network.net.DefaultClientNetworkListener;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.world.ClientWorld;
@@ -20,7 +21,7 @@ public class PlanetoidRenderSystem {
     public static int track = 3;
     private static float frustumCullingRadiusSquared = 0f;
     private final SpriteBatch batch;
-    private final Texture testTex;
+    public static Texture testTex;
 
     private final WorldManager<ClientWorld> worldManager;
 
@@ -72,7 +73,7 @@ public class PlanetoidRenderSystem {
         Vector2D reuseVec1 = new Vector2D();
 
         batch.setProjectionMatrix(camera.getCombinedMatrix());
-        batch.begin();
+        //batch.begin();
 
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity)) continue;
@@ -114,7 +115,16 @@ public class PlanetoidRenderSystem {
 
             batch.draw(testTex, (float) (localX - 0.5 * size), (float) (localY - 0.5 * size), size, size);
         }
-        batch.end();
+        float tsize = (float) (16 * camera.getRenderZoom());
+        batch.setColor(Color.GREEN);
+        for(Double[] camPos: DefaultClientNetworkListener.clientCamPos.values()) {
+            Vector2D remotePos = new Vector2D(camPos[0], camPos[1]);
+
+            Vector2D pos = remotePos.scale(1).subtract(camera.getRenderOrigin());
+
+            batch.draw(testTex, (float)pos.getX() - 0.5f*tsize, (float)pos.getY() - 0.5f*tsize, tsize, tsize);
+        }
+        //batch.end();
     }
 
 }

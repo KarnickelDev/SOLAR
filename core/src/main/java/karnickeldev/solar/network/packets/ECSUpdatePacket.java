@@ -7,9 +7,10 @@ import karnickeldev.solar.ecs.components.ComponentSnapshot;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
-public class ECSUpdatePacket extends Packet {
+public class ECSUpdatePacket extends GameStatePacket {
 
     private ComponentSnapshot[] snapshots;
     private long simTimeMicros;
@@ -68,7 +69,7 @@ public class ECSUpdatePacket extends Packet {
     }
 
     public static ECSUpdatePacket create(ByteBuf in) {
-        ECSUpdatePacket p = new ECSUpdatePacket(0,0,0,null);
+        ECSUpdatePacket p = new ECSUpdatePacket(0,0,0,new ComponentSnapshot[0]);
         p.readBody(in);
         return p;
     }

@@ -1,6 +1,6 @@
 package karnickeldev.solar.simulation.execution;
 
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.world.ServerWorld;
@@ -32,7 +32,7 @@ public class SimulationManager implements Runnable {
     private final Map<World, SimulationTask> worldSimulationTaskMap = new HashMap<>();
 
     private final WorldManager<ServerWorld> worldManager;
-    private final MainThreadDispatcher mainThreadDispatcher;
+    private final Dispatcher dispatcher;
 
     private long globalSimTimeMicros;
 
@@ -41,13 +41,13 @@ public class SimulationManager implements Runnable {
     private long schedulerNanosPerTick;
     private byte tickRate;
 
-    public static float simSpeed = 3600f;
+    public static float simSpeed = 1f;
 
     private final BitMask errno = new BitMask();
 
-    public SimulationManager(int simulationThreadCount, WorldManager<ServerWorld> worldManager, MainThreadDispatcher mainThreadDispatcher) {
+    public SimulationManager(int simulationThreadCount, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
         this.worldManager = worldManager;
-        this.mainThreadDispatcher = mainThreadDispatcher;
+        this.dispatcher = dispatcher;
 
         simulationThreadPool = Executors.newFixedThreadPool(3, new SimulationThreadFactory("SimThread"));
 
@@ -114,7 +114,7 @@ public class SimulationManager implements Runnable {
              */
             tickStart = System.nanoTime();
 
-            mainThreadDispatcher.update();
+            dispatcher.update();
 
             List<SimulationTask> tasks;
             synchronized (schedulerLock) {
@@ -155,13 +155,13 @@ public class SimulationManager implements Runnable {
 
             globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
 
-            tmp = (tmp + 1) % 100;
-            if(tmp == 0) {
-                for(SimulationTask task: tasks) {
-                    Logger.log(task+"");
-                }
-                Logger.log(" ");
-            }
+//            tmp = (tmp + 1) % 100;
+//            if(tmp == 0) {
+//                for(SimulationTask task: tasks) {
+//                    Logger.log(task+"");
+//                }
+//                Logger.log(" ");
+//            }
 
             // Re-add tasks for next round
             synchronized (schedulerLock) {

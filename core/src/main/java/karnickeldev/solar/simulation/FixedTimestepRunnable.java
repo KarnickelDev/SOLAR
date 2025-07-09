@@ -1,6 +1,6 @@
 package karnickeldev.solar.simulation;
 
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.network.server.ServerPerformanceMetrics;
@@ -23,7 +23,7 @@ public class FixedTimestepRunnable implements Runnable {
     private final Runnable simulationStep;
     private final long nanosPerTick;
 
-    private final MainThreadDispatcher dispatcher;
+    private final Dispatcher dispatcher;
     private final ServerNetwork serverNetwork;
     private final ServerPerformanceMetrics performanceMetrics;
 
@@ -33,7 +33,7 @@ public class FixedTimestepRunnable implements Runnable {
 
     long tick;
 
-    public FixedTimestepRunnable(int tickRate, Runnable simulationStep, MainThreadDispatcher dispatcher,
+    public FixedTimestepRunnable(int tickRate, Runnable simulationStep, Dispatcher dispatcher,
                                  ServerNetwork serverNetwork, ServerPerformanceMetrics performanceMetrics) {
         nanosPerTick = 1_000_000_000 / tickRate;
 

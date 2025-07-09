@@ -1,6 +1,7 @@
 package karnickeldev.solar.network.net.handlers;
 
 import karnickeldev.solar.network.packets.PingPongPacket;
+import karnickeldev.solar.network.util.PingTracker;
 import karnickeldev.solar.util.Logger;
 
 /**
@@ -11,14 +12,9 @@ public class PingPongHandler implements PacketHandler<PingPongPacket> {
 
 
     @Override
-    public void handle(PingPongPacket packet) {
+    public void handle(int clientId, PingPongPacket packet) {
         long rtt = System.nanoTime() - packet.getClientSendTime();
-        Logger.log("Ping: " + (rtt/(2_000_000)) + "ms");
-    }
-
-    @Override
-    public short getPacketType() {
-        return 0;
+        PingTracker.add(rtt / 1_000);
     }
 
     @Override

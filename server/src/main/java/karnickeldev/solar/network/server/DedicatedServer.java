@@ -1,7 +1,7 @@
 package karnickeldev.solar.network.server;
 
 import karnickeldev.solar.ecs.EntityFactory;
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.NetworkThread;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
@@ -16,12 +16,12 @@ import java.util.Objects;
 
 public class DedicatedServer extends Server implements GameServer {
 
-    public static DedicatedServer create(ServerNetwork serverNetwork, NetworkThread networkThread, MainThreadDispatcher dispatcher) {
+    public static DedicatedServer create(ServerNetwork serverNetwork, NetworkThread networkThread, Dispatcher dispatcher) {
         WorldManager<ServerWorld> worldManager = new WorldManager<>(ServerWorld.create(serverNetwork));
         return new DedicatedServer(serverNetwork, networkThread, worldManager, dispatcher);
     }
 
-    private DedicatedServer(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, MainThreadDispatcher dispatcher) {
+    private DedicatedServer(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
         super(serverNetwork, networkThread, worldManager, dispatcher);
 
         Objects.requireNonNull(this.serverNetwork);

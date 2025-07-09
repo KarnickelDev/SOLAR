@@ -4,7 +4,7 @@ import karnickeldev.solar.network.packets.Packet;
 
 public interface ClientNetwork extends Network {
 
-    void connect();
+    boolean connect();
 
     void disconnect();
 

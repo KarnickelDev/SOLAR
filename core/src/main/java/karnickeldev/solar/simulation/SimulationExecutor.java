@@ -1,7 +1,7 @@
 package karnickeldev.solar.simulation;
 
 
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.server.ServerPerformanceMetrics;
 import karnickeldev.solar.physics.KeplerianOrbitSystem;
@@ -15,7 +15,7 @@ public class SimulationExecutor {
     private final PhysicsThread physicsThread;
     private final Simulation simulation;
 
-    public SimulationExecutor(ServerNetwork serverNetwork, ServerPerformanceMetrics performanceMetrics, KeplerianOrbitSystem os, MainThreadDispatcher dispatcher, int tickRate) {
+    public SimulationExecutor(ServerNetwork serverNetwork, ServerPerformanceMetrics performanceMetrics, KeplerianOrbitSystem os, Dispatcher dispatcher, int tickRate) {
         this.tickRate = tickRate;
         simulation = new Simulation(os, this.tickRate);
         physicsThread = new PhysicsThread(tickRate, simulation, dispatcher, performanceMetrics, serverNetwork);

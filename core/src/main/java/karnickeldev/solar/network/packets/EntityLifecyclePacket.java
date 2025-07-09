@@ -6,7 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class EntityLifecyclePacket extends Packet {
+public class EntityLifecyclePacket extends GameStatePacket {
 
     public int[] createdEntityIds;
     public int[] destroyedEntityIds;
@@ -70,7 +70,7 @@ public class EntityLifecyclePacket extends Packet {
     }
 
     public static EntityLifecyclePacket create(ByteBuf in) {
-        EntityLifecyclePacket pkt = new EntityLifecyclePacket(0,null,null,0,false);
+        EntityLifecyclePacket pkt = new EntityLifecyclePacket(0,new int[0],new int[0],0,false);
         pkt.readBody(in);
         return pkt;
     }

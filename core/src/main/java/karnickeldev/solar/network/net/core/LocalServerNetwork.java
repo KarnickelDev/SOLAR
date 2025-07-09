@@ -1,6 +1,7 @@
 package karnickeldev.solar.network.net.core;
 
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.util.Logger;
@@ -15,7 +16,7 @@ public class LocalServerNetwork implements ServerNetwork {
     private final BlockingQueue<Packet> loopbackToServerQueue;
     private final BlockingQueue<Packet> loopbackFromServerQueue;
     private final ServerNetworkListener listener;
-    private final MainThreadDispatcher dispatcher;
+    private final Dispatcher dispatcher;
 
     private final ConcurrentLinkedQueue<Packet> outgoingPacketQueue = new ConcurrentLinkedQueue<>();
 
@@ -23,7 +24,7 @@ public class LocalServerNetwork implements ServerNetwork {
         BlockingQueue<Packet> loopbackToServerQueue,
         BlockingQueue<Packet> loopbackFromServerQueue,
         ServerNetworkListener listener,
-        MainThreadDispatcher dispatcher) {
+        Dispatcher dispatcher) {
         this.loopbackToServerQueue = loopbackToServerQueue;
         this.loopbackFromServerQueue = loopbackFromServerQueue;
         this.listener = listener;
@@ -63,9 +64,11 @@ public class LocalServerNetwork implements ServerNetwork {
             work = true;
             Packet finalPacket = packet;
             if(finalPacket.isFastHandled()) {
-                listener.onPacketReceived(0, finalPacket);
+                //listener.onPacketReceived(0, finalPacket);
+                HandlerRegistry.getHandler(packet).handle(0, packet);
             } else {
-                dispatcher.dispatch(() -> listener.onPacketReceived(0, finalPacket));
+                //dispatcher.dispatch(() -> listener.onPacketReceived(0, finalPacket));
+                dispatcher.dispatch(() -> HandlerRegistry.getHandler(finalPacket).handle(0, finalPacket));
             }
         }
 
@@ -73,8 +76,9 @@ public class LocalServerNetwork implements ServerNetwork {
     }
 
     @Override
-    public void start() {
+    public boolean start() {
         Logger.log(Logger.SERVER, "Server-Network started");
+        return true;
     }
 
     @Override

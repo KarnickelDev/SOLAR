@@ -2,126 +2,99 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
-import karnickeldev.solar.ecs.components.ComponentType;
-import karnickeldev.solar.network.net.*;
-import karnickeldev.solar.network.net.core.*;
-import karnickeldev.solar.network.net.dispatcher.DefaultMainThreadDispatcher;
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
-import karnickeldev.solar.network.net.listener.DefaultServerNetworkListener;
-import karnickeldev.solar.network.net.listener.ServerNetworkListener;
-import karnickeldev.solar.network.packets.Packet;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import karnickeldev.solar.context.*;
 import karnickeldev.solar.network.packets.PacketFactory;
-import karnickeldev.solar.network.packets.PacketTypes;
-import karnickeldev.solar.network.server.LocalServer;
-import karnickeldev.solar.render.BackgroundStarRenderer;
-import karnickeldev.solar.render.PlanetoidRenderSystem;
+import karnickeldev.solar.network.packets.TestCamPacket;
+import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.render.camera.CameraInput;
-import karnickeldev.solar.ui.menus.MenuInput;
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.ui.components.DebugToolTip;
+import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 public class SimTestScreen implements Screen {
 
-    public static LocalServer server;
-
-    private final WorldManager<ClientWorld> clientWorldManager;
-
-    public static DefaultClientNetworkListener clientListener;
-    private final PlanetoidRenderSystem rs;
-    private final NetworkThread networkThread;
-
-    ClientNetwork clientNetwork;
-    MainThreadDispatcher clientDispatcher;
+    private final DebugToolTip debug;
 
     private final CameraInput cameraInput;
 
-    private final boolean multiplayer;
+    private final Viewport backgroundViewport;
+    private final Viewport screenViewport;
 
-    public SimTestScreen(boolean multiplayer) {
-        this.multiplayer = multiplayer;
+    public SimTestScreen() {
+        backgroundViewport = new ExtendViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT);
+        screenViewport = new ScreenViewport();
 
-        clientWorldManager = new WorldManager<>(new ClientWorld(0));
+        cameraInput = GameContext.get().getCameraInput();
 
-        clientListener = new DefaultClientNetworkListener(clientWorldManager);
-        clientDispatcher = new DefaultMainThreadDispatcher();
-
-        if(multiplayer) {
-            clientNetwork = new DedicatedClientNetwork(25907, clientListener, clientDispatcher);
-            networkThread = new NetworkThread(clientNetwork, "ClientNetworkThread");
-        } else {
-            ServerNetworkListener serverListener = new DefaultServerNetworkListener();
-
-            MainThreadDispatcher serverDispatcher = new DefaultMainThreadDispatcher();
-
-            BlockingQueue<Packet> toServer = new LinkedBlockingQueue<>(128);
-            BlockingQueue<Packet> fromServer = new LinkedBlockingQueue<>(128);
-
-            clientNetwork = new LocalClientNetwork(toServer, fromServer, clientListener, clientDispatcher);
-            ServerNetwork serverNetwork = new LocalServerNetwork(toServer, fromServer, serverListener, serverDispatcher);
-
-            networkThread = new NetworkThread("SharedNetworkThread", clientNetwork, serverNetwork);
-
-            server = LocalServer.create(serverNetwork, networkThread, serverDispatcher);
-        }
-
-        rs = new PlanetoidRenderSystem(clientWorldManager, SolarMain.getInstance().batch);
-
-        cameraInput = new CameraInput(clientWorldManager);
+        debug = new DebugToolTip();
+        UI.getUIManager().addComponent("debug",debug);
     }
 
 
     @Override
     public void show() {
+        GameContextContainer gameContext = GameContext.get();
 
-        if(multiplayer) PacketTypes.registerAll();
-        ComponentType.registerSnapshotDeserializers();
-
-        if(!multiplayer) server.start();
-        networkThread.start();
-        clientNetwork.connect();
+        Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager().getInputMultiplexer());
 
         SolarMain.getInstance().getInputManager().addInput(cameraInput);
-        SolarMain.getInstance().getInputManager().addInput(new MenuInput());
     }
 
     double tmp = 0;
+    TestCamPacket camPacket = new TestCamPacket();
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+        ScreenUtils.clear(0,0,0,1,true);
 
-        clientDispatcher.update();
+        GameContextContainer gameContext = GameContext.get();
+
+        WorldManager<ClientWorld> clientWorldManager = gameContext.getWorldManager();
 
         tmp += delta;
-        if(tmp > 1) {
+        camPacket.x = clientWorldManager.getActiveWorld().getCamera().getRenderOrigin().getX();
+        camPacket.y = clientWorldManager.getActiveWorld().getCamera().getRenderOrigin().getY();
+        if(tmp > 0.3) {
             tmp = 0;
-            clientNetwork.send(PacketFactory.createPingPacket(System.nanoTime()));
+            gameContext.getClientNetwork().send(PacketFactory.createPingPacket(System.nanoTime()));
+            gameContext.getClientNetwork().send(camPacket);
         }
 
         // camera
-        cameraInput.processInputs();
+        gameContext.getCameraInput().processInputs();
         clientWorldManager.getActiveWorld().getCamera().update();
 
-        SolarMain.getInstance().batch.begin();
-        if (!BackgroundStarRenderer.drawStarScape(SolarMain.getInstance().batch, delta, false))
-            Logger.error("Erroneous input for background starscape");
-        SolarMain.getInstance().batch.end();
+        long simTimeEstimate = GameContext.get().getTime().getSimTimeEstimate();
+        gameContext.getSyncLayer().update(simTimeEstimate);
 
-        rs.renderPlanetoids();
+        // probably better to process before sending
+        gameContext.getDispatcher().update();
 
-        SolarMain.getInstance().pausedStage.act(delta);
-        SolarMain.getInstance().pausedStage.draw();
+        backgroundViewport.apply();
+        SolarMain.getInstance().getBatch().setColor(1,1,1,1);
+        SolarMain.getInstance().getBatch().setProjectionMatrix(backgroundViewport.getCamera().combined);
+        SolarMain.getInstance().getBatch().begin();
+        SolarMain.getInstance().getBatch().draw(StarField.starFieldBuffer.getColorBufferTexture(),0,0);
+        //SolarMain.getInstance().getBatch().end();
+
+        screenViewport.apply();
+        gameContext.getPlanetoidRenderSystem().renderPlanetoids();
+        SolarMain.getInstance().getBatch().end();
+
+        UI.getUIManager().act(delta);
+        UI.getUIManager().draw();
     }
 
     @Override
     public void resize(int width, int height) {
-
+        backgroundViewport.update(width, height, true);
+        screenViewport.update(width, height);
+        debug.resize(width, height);
     }
 
     @Override
@@ -136,7 +109,8 @@ public class SimTestScreen implements Screen {
 
     @Override
     public void hide() {
-
+        UI.getUIManager().hideComponent("debug");
+        SolarMain.getInstance().getInputManager().removeInput(cameraInput);
     }
 
     @Override

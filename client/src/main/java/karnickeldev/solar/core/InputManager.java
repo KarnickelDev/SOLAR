@@ -26,7 +26,7 @@ public class InputManager {
         inputMultiplexer.addProcessor(processor);
     }
 
-    public void removeInput(int processor) {
+    public void removeInput(InputProcessor processor) {
         inputMultiplexer.removeProcessor(processor);
     }
 

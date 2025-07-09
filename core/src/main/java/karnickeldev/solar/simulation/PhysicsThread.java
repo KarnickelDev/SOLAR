@@ -1,6 +1,6 @@
 package karnickeldev.solar.simulation;
 
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.network.server.ServerPerformanceMetrics;
@@ -11,13 +11,13 @@ public class PhysicsThread implements Runnable {
     private final long nanosPerTick;
 
     private final Runnable simulation;
-    private final MainThreadDispatcher dispatcher;
+    private final Dispatcher dispatcher;
     private final ServerPerformanceMetrics tpsCounter;
     private final ServerNetwork serverNetwork;
     long tick = 0;
     private volatile boolean running = true;
 
-    public PhysicsThread(int tickRate, Runnable simulation, MainThreadDispatcher dispatcher, ServerPerformanceMetrics tpsCounter, ServerNetwork serverNetwork) {
+    public PhysicsThread(int tickRate, Runnable simulation, Dispatcher dispatcher, ServerPerformanceMetrics tpsCounter, ServerNetwork serverNetwork) {
         nanosPerTick = 1_000_000_000 / tickRate;
         this.simulation = simulation;
         this.dispatcher = dispatcher;

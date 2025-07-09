@@ -4,14 +4,13 @@ import karnickeldev.solar.network.packets.Packet;
 
 public interface ServerNetwork extends Network {
 
-    void start();
+    boolean start();
 
     void shutdown();
 
-
     void broadcast(Packet packet);
 
-    void sendToClient(int id, Packet packet);
+    void sendToClient(int clientId, Packet packet);
 
     boolean updateNetwork();
 

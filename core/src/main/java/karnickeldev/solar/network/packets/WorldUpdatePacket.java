@@ -6,7 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class WorldUpdatePacket extends Packet {
+public class WorldUpdatePacket extends GameStatePacket {
 
     private int worldId;
     private long simTimeMicros;

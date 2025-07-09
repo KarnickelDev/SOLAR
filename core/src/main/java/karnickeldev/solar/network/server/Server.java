@@ -1,7 +1,7 @@
 package karnickeldev.solar.network.server;
 
 import karnickeldev.solar.ecs.components.ComponentType;
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.NetworkThread;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.packets.PacketTypes;
@@ -10,11 +10,6 @@ import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.WorldManager;
 
 public abstract class Server implements GameServer {
-
-    private static Server instance = null;
-    public static Server getInstance() {
-        return instance;
-    }
 
     protected final ServerNetwork serverNetwork;
     protected final NetworkThread networkThread;
@@ -25,18 +20,18 @@ public abstract class Server implements GameServer {
 
     private boolean running = false;
 
-    public Server(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, MainThreadDispatcher dispatcher) {
+    public Server(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
         this.serverNetwork = serverNetwork;
         this.networkThread = networkThread;
         this.worldManager = worldManager;
 
         this.simulationManagerThread = new SimulationManagerThread(8, worldManager, dispatcher);
-        instance = this;
     }
 
     public final void start() {
 
-        PacketTypes.registerAll();
+        PacketTypes.registerCommon();
+
         ComponentType.registerSnapshotDeserializers();
 
         // make sure buffers are correctly initialized

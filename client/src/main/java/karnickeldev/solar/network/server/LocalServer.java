@@ -1,13 +1,13 @@
 package karnickeldev.solar.network.server;
 
 import karnickeldev.solar.ecs.EntityFactory;
-import karnickeldev.solar.network.net.dispatcher.MainThreadDispatcher;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.NetworkThread;
 import karnickeldev.solar.network.net.core.ServerNetwork;
-import karnickeldev.solar.network.net.handlers.HandlerRegistry;
-import karnickeldev.solar.network.net.handlers.PingPongHandler;
+import karnickeldev.solar.network.net.handlers.*;
 import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.physics.Units;
+import karnickeldev.solar.simulation.execution.SimulationTask;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.WorldManager;
 
@@ -15,20 +15,18 @@ import java.util.Objects;
 
 public class LocalServer extends Server implements GameServer {
 
-    public static LocalServer create(ServerNetwork serverNetwork, NetworkThread networkThread, MainThreadDispatcher dispatcher) {
+    public static LocalServer create(ServerNetwork serverNetwork, NetworkThread networkThread, Dispatcher dispatcher) {
         WorldManager<ServerWorld> worldManager = new WorldManager<>(ServerWorld.create(serverNetwork));
         return new LocalServer(serverNetwork, networkThread, worldManager, dispatcher);
     }
 
-    private LocalServer(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, MainThreadDispatcher dispatcher) {
+    private LocalServer(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
         super(serverNetwork, networkThread, worldManager, dispatcher);
 
         Objects.requireNonNull(this.serverNetwork);
 
         createWorld();
         worldManager.changeWorld(1);
-
-        HandlerRegistry.registerHandler(PacketTypes.PONG.getType(), new PingPongHandler());
     }
 
     @Override
@@ -97,7 +95,7 @@ public class LocalServer extends Server implements GameServer {
 //        worldManager.addWorld(world2);
 //        simulationManagerThread.getSimulationManager().registerWorld(world2);
 //        simulationManagerThread.getSimulationManager().setPriority(world2, SimulationTask.Priority.NORMAL);
-//        simulationManagerThread.getSimulationManager().setPriority(world1, SimulationTask.Priority.NORMAL);
+        simulationManagerThread.getSimulationManager().setPriority(world1, SimulationTask.Priority.LOW);
 //
 //        int sun2 = EntityFactory.createStar(world2.getECS(), "sun2", 0, 0,
 //            Units.toSU(1, Units.Mass.SOLAR_MASS), Units.toSU(600000, Units.Length.KILOMETER));

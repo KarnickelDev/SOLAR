@@ -54,7 +54,7 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
             double n = Math.sqrt(mu / (a * a * a));     // mean motion
             double M = (n * ((simTimeSec) - t0));       // mean anomaly
 
-            double E = solveKepler((float) M, e);       // eccentric anomaly
+            double E = solveKepler((double) M, e);       // eccentric anomaly
             double theta = 2 * Math.atan2(
                 Math.sqrt(1 + e) * Math.sin(E / 2),
                 Math.sqrt(1 - e) * Math.cos(E / 2)
@@ -98,13 +98,13 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
         return SystemGroup.UPDATE;
     }
 
-    private static float solveKepler(float M, float e) {
-        float E = M;
-        float epsilon = 1e-5f;
+    private static double solveKepler(double M, double e) {
+        double E = M;
+        double epsilon = 1e-5f;
         for (int i = 0; i < 5; i++) {
-            float f = E - e * (float) Math.sin(E) - M;
-            float fPrime = 1 - e * (float) Math.cos(E);
-            float delta = f / fPrime;
+            double f = E - e * Math.sin(E) - M;
+            double fPrime = 1 - e * Math.cos(E);
+            double delta = f / fPrime;
             E -= delta;
             if (Math.abs(delta) < epsilon) break;
         }

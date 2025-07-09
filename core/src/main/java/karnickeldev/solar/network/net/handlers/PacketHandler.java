@@ -8,9 +8,7 @@ import karnickeldev.solar.network.packets.Packet;
  **/
 public interface PacketHandler<T extends Packet> {
 
-    void handle(T packet);
-
-    short getPacketType();
+    void handle(int clientId, T packet);
 
     Class<T> getPacketClass();
 

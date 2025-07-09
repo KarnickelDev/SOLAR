@@ -57,5 +57,9 @@ public class MathUtil {
         return angle;
     }
 
+    public static float mapLinear(float value, float inX, float inY, float outX, float outY) {
+        float v = clamp(value, inX, inY);
+        return outX + (v / (inY - inX)) * (outY - outX);
+    }
 
 }
