@@ -56,10 +56,10 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
         if (simB == simA) return 0;
 
-        long curr = GameContext.get().getTimeSyncManager().getCurrentTimeMicros();
+        long curr = GameContext.get().getTimeSyncManager().estimateSimTime((System.nanoTime() / 1000));
 
         double alpha = (double)(curr - simB) / ((double)(simB - simA));
-        return MathUtil.clamp(alpha, 0.0, 3); // slightly allow extrapolation
+        return MathUtil.clamp(alpha, 0, 1.1); // slightly allow extrapolation
     }
 
     public double getInterpolatedX(int entityID, double alpha) {

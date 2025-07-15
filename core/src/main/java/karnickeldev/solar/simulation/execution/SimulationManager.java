@@ -47,6 +47,7 @@ public class SimulationManager implements Runnable {
     private byte tickRate;
 
     public static float simSpeed = 1;
+    public static float targetSimSpeed = simSpeed;
 
     private final BitMask errno = new BitMask();
 
@@ -67,7 +68,7 @@ public class SimulationManager implements Runnable {
 
 
     public void mulSimSpeed(float v) {
-        simSpeed *= v;
+        targetSimSpeed *= v;
     }
 
     public void registerWorld(ServerWorld world) {
@@ -173,6 +174,7 @@ public class SimulationManager implements Runnable {
 
             tickEnd = System.nanoTime();
 
+            simSpeed = (float) MathUtil.lerp(simSpeed, targetSimSpeed, 0.2);
 
             //globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
             globalSimTimeMicros += Math.round((schedulerNanosPerTick / 1000d) * simSpeed);
@@ -199,8 +201,8 @@ public class SimulationManager implements Runnable {
             }
 
             long nextTick = tickStart + schedulerNanosPerTick;
-            if(nextTick > tickEnd) LockSupport.parkNanos(nextTick - tickEnd);
-            //while(System.nanoTime() < nextTick) Thread.onSpinWait();
+            //if(nextTick > tickEnd) LockSupport.parkNanos(nextTick - tickEnd);
+            while(System.nanoTime() < nextTick) Thread.onSpinWait();
         }
 
         // shutdown logic

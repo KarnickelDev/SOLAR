@@ -41,7 +41,7 @@ public class PacketSyncLayer {
 
         while (!buffer.isEmpty()) {
             GameStatePacket next = buffer.peek();
-            if (next.getSimTimeMicros() < currentTimeMicros - syncDelayMicros) {
+            if (next.getSimTimeMicros() < currentTimeMicros) {
                 buffer.poll();
                 PacketHandler<Packet> handler = HandlerRegistry.getHandler(next);
                 handler.handle(0, next);

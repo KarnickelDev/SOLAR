@@ -162,7 +162,6 @@ public class NettyClientNetwork implements ClientNetwork {
         } else {
             if(pkt instanceof GameStatePacket) {
                 GameStatePacket p = (GameStatePacket) pkt;
-                timeSyncManager.recordSyncSample(p.getSimTimeMicros(),System.nanoTime()/1000L);
                 syncLayer.receivePacket(p);
             } else {
                 dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));

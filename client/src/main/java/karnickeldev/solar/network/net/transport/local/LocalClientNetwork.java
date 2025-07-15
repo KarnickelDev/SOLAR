@@ -77,8 +77,6 @@ public class LocalClientNetwork implements ClientNetwork {
         } else {
             if(pkt instanceof ECSUpdatePacket) {
                 ECSUpdatePacket p = (ECSUpdatePacket) pkt;
-                GameContext.get().getTimeSyncManager().setSimSpeed(p.getSimSpeed());
-                GameContext.get().getTimeSyncManager().recordSyncSample(p.getSimTimeMicros(),System.nanoTime()/1000L);
                 GameContext.get().getSyncLayer().receivePacket(p);
             } else {
                 dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));

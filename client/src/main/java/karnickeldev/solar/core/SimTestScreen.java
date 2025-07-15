@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.*;
 import karnickeldev.solar.network.packets.*;
+import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.ui.components.DebugToolTip;
@@ -74,7 +75,7 @@ public class SimTestScreen implements Screen {
         clientWorldManager.getActiveWorld().getCamera().update();
 
         // do not use current here, we manually subtract PacketSyncDelay
-        gameContext.getSyncLayer().update(gameContext.getTimeSyncManager().getSimTimeEstimate());
+        gameContext.getSyncLayer().update(gameContext.getTimeSyncManager().estimateSimTime((System.nanoTime() / 1000) + PacketSyncLayer.syncDelayMicros));
 
         // probably better to do after processing input
         gameContext.getDispatcher().update();
