@@ -43,40 +43,13 @@ public class SettingsManager {
         assert (newSettings.getScreenWidth() <= displayMode.getWidth());
         assert (newSettings.getScreenHeight() <= displayMode.getHeight());
 
-        Gdx.graphics.setUndecorated(newSettings.isFullscreen() || newSettings.isBorderless());
+        Gdx.graphics.setUndecorated(newSettings.isBorderless() && ! newSettings.isFullscreen());
 
         Gdx.graphics.setWindowedMode(newSettings.getScreenWidth(), newSettings.getScreenHeight());
 
         if (newSettings.isFullscreen()) Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
 
         updateFPS(newSettings);
-    }
-
-    /**
-     * Applies new settings and changes current setting configuration
-     * @return True if the new settings differed from old ones
-     */
-    public boolean applySettings(String resolution, boolean vsync, boolean fullscreen, boolean borderless, String fpsLimit) {
-        Settings newSettings = new Settings(settings);
-
-        Resolution res = Resolution.extractResolution(resolution);
-        newSettings.setScreenWidth(res.getWidth());
-        newSettings.setScreenHeight(res.getHeight());
-
-        newSettings.setVsync(vsync);
-        newSettings.setFullscreen(fullscreen);
-        newSettings.setBorderless(borderless);
-
-        int newFPSLimit = settings.getFpsLimit();
-        try {
-            newFPSLimit = Integer.parseInt(fpsLimit);
-        } catch (NumberFormatException ignored) {}
-
-        newSettings.setFpsLimit(newFPSLimit);
-        boolean diff = !newSettings.equals(settings);
-        applySettings(newSettings);
-        this.settings = newSettings;
-        return diff;
     }
 
     public void saveToFile() {

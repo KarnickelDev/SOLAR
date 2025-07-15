@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.Tags;
 import karnickeldev.solar.ecs.components.RadiusComponent;
@@ -48,10 +49,10 @@ public class PlanetoidRenderSystem {
     }
 
     private void updateFrustumCullingCircle() {
-        double halfW = (worldManager.getActiveWorld().getCamera().getViewportWidth() / 2.0) * worldManager.getActiveWorld().getCamera().getRenderZoom();
-        double halfH = (worldManager.getActiveWorld().getCamera().getViewportWidth() / 2.0) * worldManager.getActiveWorld().getCamera().getRenderZoom();
+        FloatingOriginCamera cam = worldManager.getActiveWorld().getCamera();
+        double halfW = (cam.getViewportWidth() / 2.0) * cam.getZoom();
 
-        frustumCullingRadiusSquared = (float) (halfW * halfW + halfH * halfH);
+        frustumCullingRadiusSquared = (float) (2 * halfW * halfW);
     }
 
     public void renderPlanetoids() {
@@ -66,6 +67,7 @@ public class PlanetoidRenderSystem {
         RadiusComponent radius = ecs.getComponentRegistry().get(RadiusComponent.class);
 
         FloatingOriginCamera camera = worldManager.getActiveWorld().getCamera();
+        double renderZoom = camera.getRenderZoom();
 
         double alpha = hcs.getAlpha();
 
@@ -78,15 +80,6 @@ public class PlanetoidRenderSystem {
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity)) continue;
 
-            if (tags.has(entity, Tags.STAR)) {
-                batch.setColor(Color.ORANGE);
-            } else {
-                batch.setColor(Color.WHITE);
-            }
-            if (entity == track) {
-                batch.setColor(Color.CYAN);
-            }
-
             reuseVec0.zero();
             reuseVec1.zero();
 
@@ -97,23 +90,35 @@ public class PlanetoidRenderSystem {
             double screenX = screenPos.getX();
             double screenY = screenPos.getY();
 
+            double size = (float) Math.max(16 * renderZoom, radius.getRadius(entity));
+            float sizePixels = (float) (size / renderZoom);
+
+            if (screenX < -sizePixels || screenX > width + sizePixels || screenY < -sizePixels || screenY > height + sizePixels) {
+                continue;
+            }
+
             ePos.subtract(camera.getRenderOrigin());
 
             double localX = ePos.getX();
             double localY = ePos.getY();
 
-            float size = (float) Math.max(16 * camera.getRenderZoom(), radius.getRadius(entity));
-            float sizePixels = (float) (size / camera.getRenderZoom());
+
 
             // Cull if completely offscreen
             if (!isNearFrustum(localX, localY, size)) {
                 continue;
-            } else if (screenX < -sizePixels || screenX > width + sizePixels || screenY < -sizePixels || screenY > height + sizePixels) {
-                continue;
             }
 
+            if (tags.has(entity, Tags.STAR)) {
+                batch.setColor(Color.ORANGE);
+            } else {
+                batch.setColor(Color.WHITE);
+            }
+            if (entity == track) {
+                batch.setColor(Color.CYAN);
+            }
 
-            batch.draw(testTex, (float) (localX - 0.5 * size), (float) (localY - 0.5 * size), size, size);
+            batch.draw(testTex, (float) (localX - 0.5 * size), (float) (localY - 0.5 * size), (float)size, (float)size);
         }
         float tsize = (float) (16 * camera.getRenderZoom());
         batch.setColor(Color.GREEN);

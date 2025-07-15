@@ -56,8 +56,8 @@ public class Lwjgl3Launcher {
 
             settings.setBorderless(false);
             settings.setFullscreen(false);
-            settings.setVsync(true);
-            settings.setFpsLimit(300);
+            settings.setVsync(false);
+            settings.setFpsLimit(150);
 
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
             int width = gd.getDisplayMode().getWidth();

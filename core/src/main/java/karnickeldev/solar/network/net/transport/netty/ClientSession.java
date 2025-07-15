@@ -31,7 +31,9 @@ public class ClientSession {
     }
 
     public void send(Packet packet) {
-        if(channel.isActive()) channel.writeAndFlush(packet);
+        channel.eventLoop().execute(() -> {
+            if(channel.isActive()) channel.writeAndFlush(packet);
+        });
     }
 
     public void close() {

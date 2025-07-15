@@ -7,9 +7,8 @@ import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.world.ClientWorld;
-import karnickeldev.solar.world.TimeEstimator;
+import karnickeldev.solar.world.TimeSyncManager;
 import karnickeldev.solar.world.WorldManager;
-import karnickeldev.solar.world.WorldTime;
 
 /**
  * @author : KarnickelDev
@@ -20,11 +19,10 @@ public class GameContextContainer {
     private final WorldManager<ClientWorld> worldManager;
     private final Dispatcher dispatcher;
 
-    private final NetworkThread networkThread;
     private final ClientNetwork clientNetwork;
     private final ClientNetworkListener clientListener;
 
-    private final TimeEstimator time;
+    private final TimeSyncManager timeSyncManager;
     private final PlanetoidRenderSystem rs;
     private final CameraInput cameraInput;
 
@@ -33,15 +31,14 @@ public class GameContextContainer {
     private final boolean multiplayer;
 
     public GameContextContainer(boolean multiplayer, WorldManager<ClientWorld> worldManager, Dispatcher dispatcher,
-                                NetworkThread networkThread, ClientNetwork clientNetwork, ClientNetworkListener clientListener,
-                                TimeEstimator time, PlanetoidRenderSystem rs, CameraInput cameraInput, PacketSyncLayer syncLayer) {
+                                ClientNetwork clientNetwork, ClientNetworkListener clientListener,
+                                TimeSyncManager timeSyncManager, PlanetoidRenderSystem rs, CameraInput cameraInput, PacketSyncLayer syncLayer) {
         this.multiplayer = multiplayer;
         this.worldManager = worldManager;
         this.dispatcher = dispatcher;
-        this.networkThread = networkThread;
         this.clientNetwork = clientNetwork;
         this.clientListener = clientListener;
-        this.time = time;
+        this.timeSyncManager = timeSyncManager;
         this.rs = rs;
         this.cameraInput = cameraInput;
         this.syncLayer = syncLayer;
@@ -63,10 +60,6 @@ public class GameContextContainer {
         return dispatcher;
     }
 
-    public NetworkThread getNetworkThread() {
-        return networkThread;
-    }
-
     public ClientNetwork getClientNetwork() {
         return clientNetwork;
     }
@@ -75,8 +68,8 @@ public class GameContextContainer {
         return clientListener;
     }
 
-    public TimeEstimator getTime() {
-        return time;
+    public TimeSyncManager getTimeSyncManager() {
+        return timeSyncManager;
     }
 
     public CameraInput getCameraInput() {

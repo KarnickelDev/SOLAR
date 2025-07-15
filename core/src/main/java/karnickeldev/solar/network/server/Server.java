@@ -2,7 +2,6 @@ package karnickeldev.solar.network.server;
 
 import karnickeldev.solar.ecs.components.ComponentType;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
-import karnickeldev.solar.network.net.core.NetworkThread;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.simulation.execution.SimulationManagerThread;
@@ -12,18 +11,19 @@ import karnickeldev.solar.world.WorldManager;
 public abstract class Server implements GameServer {
 
     protected final ServerNetwork serverNetwork;
-    protected final NetworkThread networkThread;
 
     protected final WorldManager<ServerWorld> worldManager;
 
     protected final SimulationManagerThread simulationManagerThread;
 
+    protected final Dispatcher dispatcher;
+
     private boolean running = false;
 
-    public Server(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
+    public Server(ServerNetwork serverNetwork, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
         this.serverNetwork = serverNetwork;
-        this.networkThread = networkThread;
         this.worldManager = worldManager;
+        this.dispatcher = dispatcher;
 
         this.simulationManagerThread = new SimulationManagerThread(8, worldManager, dispatcher);
     }
@@ -42,7 +42,6 @@ public abstract class Server implements GameServer {
         running = true;
 
         serverNetwork.start();
-        networkThread.start();
 
         simulationManagerThread.start();
     }
@@ -52,7 +51,9 @@ public abstract class Server implements GameServer {
 
         serverNetwork.shutdown();
 
-        networkThread.stop();
+        dispatcher.shutdown();
+        dispatcher.update(30_000);
+
         running = false;
     }
 
@@ -64,12 +65,12 @@ public abstract class Server implements GameServer {
 
     protected abstract void postTick();
 
-    public final ServerNetwork getServerNetwork() {
-        return serverNetwork;
+    public final Dispatcher getDispatcher() {
+        return dispatcher;
     }
 
-    public final NetworkThread getNetworkThread() {
-        return networkThread;
+    public final ServerNetwork getServerNetwork() {
+        return serverNetwork;
     }
 
     public final WorldManager<ServerWorld> getWorldManager() {

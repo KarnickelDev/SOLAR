@@ -1,8 +1,7 @@
 package karnickeldev.solar.network.net.handlers;
 
 import karnickeldev.solar.network.packets.PingPongPacket;
-import karnickeldev.solar.network.util.PingTracker;
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.network.net.core.PingTracker;
 
 /**
  * @author : KarnickelDev

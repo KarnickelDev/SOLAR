@@ -3,9 +3,13 @@ package karnickeldev.solar.ui.core;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.ui.components.Message;
 import karnickeldev.solar.ui.components.UIComponent;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,10 +30,24 @@ public class UIManager {
 
     private UIManager() {
         this.stage = new Stage(new FitViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT, new OrthographicCamera()));
+
+        addComponent("message", new Message());
+        hideComponent("message");
     }
 
-    /** Adds a Component by name */
+    /** Adds a Component by name if it's not present */
     public void addComponent(String name, UIComponent component) {
+        if(uiComponents.containsKey(name)) {
+            getStage().addActor(uiComponents.get(name).getGroup());
+            return;
+        }
+        uiComponents.put(name, component);
+        getStage().addActor(uiComponents.get(name).getGroup());
+        uiComponents.get(name).resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    /** Adds a Component by name, overwriting existing Components of that name*/
+    public void addForceComponent(String name, UIComponent component) {
         uiComponents.put(name, component);
         getStage().addActor(uiComponents.get(name).getGroup());
         uiComponents.get(name).resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -41,23 +59,61 @@ public class UIManager {
     }
 
     /** Shows a component by name */
-    public void showComponent(String name) {
-        UIComponent component = uiComponents.get(name);
-        if (component != null) component.getGroup().setVisible(true);
+    public void showComponent(String... names) {
+        for(String name: names) {
+            UIComponent component = uiComponents.get(name);
+            if (component != null) component.show();
+        }
     }
 
     /** Hides a component by name */
-    public void hideComponent(String name) {
-        UIComponent component = uiComponents.get(name);
-        if (component != null) component.getGroup().setVisible(false);
+    public void hideComponent(String... names) {
+        for(String name: names) {
+            UIComponent component = uiComponents.get(name);
+            if (component != null) component.hide();
+        }
+    }
+
+    /** Disables Component interactions (still visible) */
+    public void disableComponent(String... names) {
+        for(String name: names) {
+            UIComponent component = uiComponents.get(name);
+            if(component != null) component.getGroup().setTouchable(Touchable.disabled);
+        }
+    }
+
+    /** Enables Component interactions */
+    public void enableComponent(String... names) {
+        for(String name: names) {
+            UIComponent component = uiComponents.get(name);
+            if(component != null) component.getGroup().setTouchable(Touchable.enabled);
+        }
     }
 
     /** Removes a component from stage and internal map */
-    public void removeComponent(String name) {
-        UIComponent component = uiComponents.remove(name);
-        if (component != null) {
-            component.getGroup().remove();
+    public void removeComponent(String... names) {
+        for(String name: names) {
+            UIComponent component = uiComponents.remove(name);
+            if (component != null) component.getGroup().remove();
         }
+    }
+
+    public Collection<UIComponent> getComponents() {
+        return uiComponents.values();
+    }
+
+    public void hideAll() {
+        for(UIComponent component: uiComponents.values()) {
+            component.hide();
+        }
+    }
+
+    public void showMessage(String message) {
+        UIComponent msg = uiComponents.get("message");
+        assert msg instanceof Message;
+        Message msgComp = (Message) msg;
+        msgComp.setText(message);
+        msgComp.show();
     }
 
     /** Handles resizing all UI component (called from resize in screens) */
@@ -70,11 +126,11 @@ public class UIManager {
 
     /** Updates all UI logic (called from render loop) */
     public void act(float delta) {
+        stage.getViewport().apply();
         for(UIComponent component: uiComponents.values()) {
             component.update(delta);
         }
         stage.act(delta);
-        stage.getViewport().apply();
     }
 
     /** Renders all visible UI groups */

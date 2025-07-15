@@ -10,7 +10,8 @@ import karnickeldev.solar.core.gamestates.GameState;
 import karnickeldev.solar.core.gamestates.GameStateID;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.ui.components.DebugToolTip;
-import karnickeldev.solar.ui.components.MainMenu;
+import karnickeldev.solar.ui.components.mainmenu.MainMenu;
+import karnickeldev.solar.ui.components.mainmenu.MultiplayerMenu;
 import karnickeldev.solar.ui.components.optionsmenu.OptionsMenu;
 import karnickeldev.solar.ui.core.UI;
 
@@ -25,21 +26,35 @@ public class MainMenuScreen implements GameState {
 
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
 
-    private final DebugToolTip debug = new DebugToolTip();
     private final MainMenu mainMenu = new MainMenu();
     private final OptionsMenu optionsMenu = new OptionsMenu();
 
+    private Runnable onInitRunnable;
+
     public MainMenuScreen(SolarMain solarMain) {
+        this(solarMain, null);
+    }
+
+    public MainMenuScreen(SolarMain solarMain, Runnable onInitRunnable) {
         this.game = solarMain;
         backgroundViewport = new ExtendViewport(UI.VIRTUAL_WIDTH,UI.VIRTUAL_HEIGHT);
+        this.onInitRunnable = onInitRunnable;
     }
 
     @Override
     public void enter() {
-        UI.getUIManager().addComponent("debug", debug);
+        UI.getUIManager().addComponent("debug", new DebugToolTip());
+        UI.getUIManager().showComponent("debug");
+
         UI.getUIManager().addComponent("main_menu", mainMenu);
+        UI.getUIManager().showComponent("main_menu");
+
         UI.getUIManager().addComponent("options_menu", optionsMenu);
         UI.getUIManager().hideComponent("options_menu");
+
+        UI.getUIManager().addComponent("multiplayer_menu", new MultiplayerMenu());
+        UI.getUIManager().hideComponent("multiplayer_menu");
+
         Gdx.input.setInputProcessor(UI.getUIManager().getStage());
 
         SolarMain.getInstance().getSettingsManager().setFpsOverride(30);
@@ -48,7 +63,10 @@ public class MainMenuScreen implements GameState {
     @Override
     public void exit() {
         SolarMain.getInstance().getSettingsManager().clearFpsOverride();
-        UI.getUIManager().getStage().clear();
+        UI.getUIManager().removeComponent("main_menu");
+        UI.getUIManager().removeComponent("multiplayer_menu");
+
+        UI.getUIManager().hideAll();
     }
 
     float time = 0;
@@ -57,6 +75,7 @@ public class MainMenuScreen implements GameState {
         ScreenUtils.clear(0, 0, 0, 1, true);
 
         backgroundViewport.apply();
+        game.getBatch().setColor(1f,1f,1f,1f);
         game.getBatch().begin();
         game.getBatch().setProjectionMatrix(backgroundViewport.getCamera().combined);
         game.getBatch().draw(StarField.starFieldBuffer.getColorBufferTexture(), 0, 0);
@@ -67,6 +86,11 @@ public class MainMenuScreen implements GameState {
 
         UI.getUIManager().act(delta);
         UI.getUIManager().draw();
+
+        if(onInitRunnable != null) {
+            onInitRunnable.run();
+            onInitRunnable = null;
+        }
     }
 
     @Override

@@ -1,7 +1,12 @@
 package karnickeldev.solar.simulation.execution;
 
+import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.network.packets.Packet;
+import karnickeldev.solar.network.packets.PacketFactory;
+import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
@@ -41,7 +46,7 @@ public class SimulationManager implements Runnable {
     private long schedulerNanosPerTick;
     private byte tickRate;
 
-    public static float simSpeed = 1f;
+    public static float simSpeed = 1;
 
     private final BitMask errno = new BitMask();
 
@@ -53,11 +58,16 @@ public class SimulationManager implements Runnable {
 
         scheduledTasks = new PriorityQueue<>(simulationThreadCount);
 
-        tickRate = 100;
+        tickRate = 20;
         schedulerNanosPerTick = 1_000_000_000L / tickRate;
 
         // TODO: initialize from save-file
         globalSimTimeMicros = 0;
+    }
+
+
+    public void mulSimSpeed(float v) {
+        simSpeed *= v;
     }
 
     public void registerWorld(ServerWorld world) {
@@ -106,8 +116,6 @@ public class SimulationManager implements Runnable {
 
         long simulationStartTime = System.nanoTime();
 
-        globalSimTimeMicros = 10000;
-
         while(running.get()) {
             /*
             Simulate one "simulation time tick" (actual world ticks executed depend on sim speed and world TickRate)
@@ -150,10 +158,25 @@ public class SimulationManager implements Runnable {
                 break;
             }
 
+            for(SimulationTask t: tasks) {
+                ServerContext.get().getServer().getServerNetwork().broadcast(new ServerPerformanceMetricsPacket(
+                    t.getWorld().getID(),
+                    t.getWorld().getWorldTime().getSimTimeMicros(),
+                    t.tpsTracker.getTPS(),
+                    t.tpsTracker.getTPS()
+                ));
+            }
+
+            Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(globalSimTimeMicros, SimulationManager.simSpeed, worldManager.getActiveWorld());
+            ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
+            ServerContext.get().getServer().getServerNetwork().flush();
+
             tickEnd = System.nanoTime();
 
 
-            globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
+            //globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
+            globalSimTimeMicros += Math.round((schedulerNanosPerTick / 1000d) * simSpeed);
+
 
 //            tmp = (tmp + 1) % 100;
 //            if(tmp == 0) {
@@ -177,6 +200,7 @@ public class SimulationManager implements Runnable {
 
             long nextTick = tickStart + schedulerNanosPerTick;
             if(nextTick > tickEnd) LockSupport.parkNanos(nextTick - tickEnd);
+            //while(System.nanoTime() < nextTick) Thread.onSpinWait();
         }
 
         // shutdown logic

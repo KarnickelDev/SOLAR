@@ -3,6 +3,8 @@ package karnickeldev.solar.network.sync;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.handlers.PacketHandler;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
+import karnickeldev.solar.network.packets.ECSUpdatePacket;
+import karnickeldev.solar.network.packets.FullSnapshotPacket;
 import karnickeldev.solar.network.packets.GameStatePacket;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.util.Logger;
@@ -18,16 +20,17 @@ import java.util.TreeMap;
  **/
 public class PacketSyncLayer {
 
-    public static final long syncDelayMicros = 20 * 1_000;
+    public static final long syncDelayMicros = 100 * 1_000;
 
     private final Queue<GameStatePacket> buffer = new PriorityQueue<>(Comparator.comparingLong(GameStatePacket::getSimTimeMicros));
 
-    private long currentTimeMicros;
+    private long currentTimeMicros = 0;
 
     private int nextExpectedSequence = 0;
 
-    public PacketSyncLayer() {
-    }
+    public PacketSyncLayer() {}
+
+
 
     public synchronized void receivePacket(GameStatePacket packet) {
         buffer.add(packet);
@@ -40,7 +43,6 @@ public class PacketSyncLayer {
             GameStatePacket next = buffer.peek();
             if (next.getSimTimeMicros() < currentTimeMicros - syncDelayMicros) {
                 buffer.poll();
-                //listener.onPacketReceived(next);
                 PacketHandler<Packet> handler = HandlerRegistry.getHandler(next);
                 handler.handle(0, next);
             } else {

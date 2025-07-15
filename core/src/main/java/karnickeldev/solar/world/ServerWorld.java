@@ -7,23 +7,20 @@ import java.util.Objects;
 
 public class ServerWorld extends World {
 
-    public static int IDS = 0;
-
     private ServerECS serverECS;
     private final int id;
 
     private final ServerNetwork serverNetwork;
 
-    public static ServerWorld create(ServerNetwork serverNetwork) {
+    public static ServerWorld create(int id, ServerNetwork serverNetwork) {
         if(serverNetwork == null) return null;
-        ServerWorld world = new ServerWorld(serverNetwork);
+        ServerWorld world = new ServerWorld(id, serverNetwork);
         world.serverECS = new ServerECS(world);
         return world;
     }
 
-    private ServerWorld(ServerNetwork serverNetwork) {
-        this.id = IDS;
-        IDS++;
+    private ServerWorld(int id, ServerNetwork serverNetwork) {
+        this.id = id;
 
         this.serverNetwork = Objects.requireNonNull(serverNetwork);
     }

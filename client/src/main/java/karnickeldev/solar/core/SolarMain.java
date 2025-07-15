@@ -25,17 +25,13 @@ import java.util.List;
  */
 public class SolarMain extends Game {
 
-    private final static Color normal = new Color(0.09f, 0.69f, 0.07f, 1f);
-    private final static Color mid = new Color(0.94f, 0.52f, 0.1f, 1f);
-    private final static Color bad = new Color(0.86f, 0.07f, 0.07f, 1f);
-
     private static boolean shuttingDown = false;
 
-    public static float tps;
-    public static float delay;
     private static SolarMain instance;
     private final SettingsManager settingsManager;
     private final InputManager inputManager;
+
+    public static float tps;
 
     SpriteBatch batch;
 
@@ -46,7 +42,15 @@ public class SolarMain extends Game {
 
         this.inputManager = new InputManager();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(SolarMain::shutdown));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutdown hook triggered");
+            try {
+                shutdown();
+            } catch (Exception e) {
+                //noinspection CallToPrintStackTrace
+                e.printStackTrace();
+            }
+        }));
     }
 
     public static SolarMain getInstance() {
@@ -97,7 +101,6 @@ public class SolarMain extends Game {
             list,
             Asset.STARRY_SKY_BACKGROUND_TILES,
             Asset.MAIN_MENU_BACKGROUND_SCENERY,
-            Asset.STARS_ATLAS,
             Asset.TREE_LINE
         ));
 
@@ -116,10 +119,12 @@ public class SolarMain extends Game {
 
     @Override
     public void dispose() {
+        shutdown();
+
+        // disposing MUST be AFTER orderly shutdown
+        // (shutdown might use stuff disposed of here, causing error)
         batch.dispose();
         AssetWrapper.getInstance().dispose();
-
-        shutdown();
     }
 
     public static synchronized void shutdown() {
@@ -132,13 +137,13 @@ public class SolarMain extends Game {
             if(GameContext.isSet()) {
                 GameContextContainer ctx = GameContext.get();
 
-                if (ctx.getNetworkThread() != null) {
-                    ctx.getNetworkThread().stop(); // Custom safe stop method
-                }
-
                 if (ctx.getClientNetwork() != null) {
                     if(ctx.getClientNetwork().isConnected()) ctx.getClientNetwork().disconnect();
                 }
+
+                ctx.getDispatcher().shutdown();
+                ctx.getDispatcher().update(30_000);
+
             }
 
             if (ServerContext.isSet()) {
@@ -153,7 +158,7 @@ public class SolarMain extends Game {
             Logger.log(Logger.SHUTDOWN, "Shutdown complete, bye!");
 
         } catch (Exception e) {
-            Logger.error(Logger.SHUTDOWN, "Error during shutdown: " + e.getMessage());
+            Logger.error(Logger.SHUTDOWN, "Error during shutdown: " + e.getMessage(), e);
         }
     }
 

@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -19,7 +18,7 @@ import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.network.net.dispatcher.DefaultDispatcher;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.render.StarField;
-import karnickeldev.solar.ui.core.FontManager;
+import karnickeldev.solar.ui.core.SkinManager;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.MathUtil;
 
@@ -46,10 +45,10 @@ public class LoadingScreen implements Screen {
     private final GlyphLayout versionGlyphLayout;
 
     private float angle0 = 1.57f, angle1 = 1.57f;
-    private final float planet0Radius = 4, planet1Radius = 6, sunRadius = 11;
-    private final float orbit0Radius = 40, orbit1Radius = 70;
-    private final int centerX = Math.round(1920 - orbit1Radius - 20);
-    private final int centerY = Math.round(orbit1Radius + 20);
+    private final static float planet0Radius = 4, planet1Radius = 6, sunRadius = 11;
+    private final static float orbit0Radius = 40, orbit1Radius = 70;
+    private final static int centerX = Math.round(1920 - orbit1Radius - 20);
+    private final static int centerY = Math.round(orbit1Radius + 20);
 
     private static final Color DARK_ORANGE = new Color(0x9D5E2AFF);
     private static final Color BEIGE = new Color(0xD1A46BFF);
@@ -67,7 +66,6 @@ public class LoadingScreen implements Screen {
         this.loadAssets = loadAssets;
 
         versionGlyphLayout = new GlyphLayout();
-
     }
 
     @Override
@@ -99,8 +97,15 @@ public class LoadingScreen implements Screen {
 
         backgroundViewport.apply();
         SolarMain.getInstance().getBatch().setProjectionMatrix(backgroundViewport.getCamera().combined);
+        SolarMain.getInstance().getBatch().setColor(1f,1f,1f,1f);
         SolarMain.getInstance().getBatch().begin();
         SolarMain.getInstance().getBatch().draw(StarField.starFieldBuffer.getColorBufferTexture(),0,0);
+
+        if(SkinManager.isInit()) {
+            BitmapFont font = UI.getFontManager().getFont(14, false);
+            versionGlyphLayout.setText(font, Metadata.APP_NAME + " v" + Metadata.VERSION);
+            font.draw(SolarMain.getInstance().getBatch(), versionGlyphLayout,5,versionGlyphLayout.height + 5);
+        }
         SolarMain.getInstance().getBatch().end();
 
         angle0 = (angle0 + (10 * delta)) % 6.283185f;
@@ -166,12 +171,6 @@ public class LoadingScreen implements Screen {
             done = true;
             time_done = 0;
         }
-
-        BitmapFont font = UI.getFontManager().getFont(14, false);
-        versionGlyphLayout.setText(font, Metadata.APP_NAME + " v" + Metadata.VERSION);
-        SolarMain.getInstance().getBatch().begin();
-        font.draw(SolarMain.getInstance().getBatch(), versionGlyphLayout,5,versionGlyphLayout.height + 5);
-        SolarMain.getInstance().getBatch().end();
 
         // delay onComplete a bit for smooth transition
         if(done) time_done += delta;

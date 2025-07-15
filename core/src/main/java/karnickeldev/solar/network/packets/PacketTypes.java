@@ -5,7 +5,7 @@ import karnickeldev.solar.network.net.handlers.*;
 public enum PacketTypes {
 
     PING(PingPacket.class, PingPacket::create, new PingHandler()),
-    PONG(PingPongPacket.class, PingPongPacket::create, new PingPongHandler()),
+    PONG(PingPongPacket.class, PingPongPacket::create),
     HANDSHAKE(HandshakePacket.class, HandshakePacket::create),
     HANDSHAKE_RESPONSE(HandshakeResponsePacket.class, HandshakeResponsePacket::create),
     DISCONNECT(DisconnectPacket.class, DisconnectPacket::create),
@@ -16,6 +16,7 @@ public enum PacketTypes {
     FULL_SNAPSHOT_REQUEST(FullSnapshotRequestPacket.class, FullSnapshotRequestPacket::create, new FullSnapshotRequestHandler()),
     FULL_SNAPSHOT(FullSnapshotPacket.class, FullSnapshotPacket::create),
     TEST_CAM(TestCamPacket.class, TestCamPacket::create, new TestCamHandler()),
+    SIM_TIME_UPDATE_REQUEST(SimTimeUpdateRequestPacket.class, SimTimeUpdateRequestPacket::create, new SimTimeUpdateRequestHandler()),
     ;
 
     private final short type;

@@ -26,6 +26,10 @@ public class SkinManager implements Disposable {
         }
     }
 
+    public static boolean isInit() {
+        return  instance != null;
+    }
+
     public static SkinManager get() {
         if(instance == null) throw new IllegalStateException("SkinManager not initialized");
         return instance;
@@ -116,7 +120,13 @@ public class SkinManager implements Disposable {
         List.ListStyle listStyle = new List.ListStyle(regular, UI.DARK_RED, UI.WHITE, selection);
         skin.add("default", listStyle);
 
-        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
+        ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle(
+            null,
+            new NinePatchDrawable(new NinePatch(skinAtlas.findRegion("default-scroll"))),
+            new NinePatchDrawable(new NinePatch(skinAtlas.findRegion("default-round-large"))),
+            new NinePatchDrawable(new NinePatch(skinAtlas.findRegion("default-scroll"))),
+            new NinePatchDrawable(new NinePatch(skinAtlas.findRegion("default-round-large")))
+        );
         skin.add("default", scrollPaneStyle);
 
         SelectBox.SelectBoxStyle selectBoxStyle = new SelectBox.SelectBoxStyle(regular, UI.WHITE, up, scrollPaneStyle,listStyle);
@@ -125,7 +135,7 @@ public class SkinManager implements Disposable {
         TextField.TextFieldStyle textFieldStyle = new TextField.TextFieldStyle();
         textFieldStyle.font = regular;
         textFieldStyle.fontColor = UI.WHITE;
-        textFieldStyle.disabledFontColor = Color.RED;
+        textFieldStyle.disabledFontColor = UI.WHITE;
         textFieldStyle.selection = selection;
         textFieldStyle.cursor = new NinePatchDrawable(new NinePatch(skinAtlas.findRegion("cursor")));
         textFieldStyle.background = up;

@@ -1,12 +1,15 @@
 package karnickeldev.solar.render.camera;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.util.MathUtil;
 
 public class FloatingOriginCamera {
+
+    private static final float DEG_TO_RAD = 0.01745329252f;
 
     public static final byte NO_MOVE = 0b0000;
     public static final byte UP = 0b0001;
@@ -103,9 +106,9 @@ public class FloatingOriginCamera {
         double localY = worldPos.getY() - renderOrigin.getY();
 
         // Apply rotation
-        float radians = (float) Math.toRadians(rotationDegrees);
-        double cos = Math.cos(radians);
-        double sin = Math.sin(radians);
+        float radians = rotationDegrees * DEG_TO_RAD;
+        float cos = MathUtils.cos(radians);
+        float sin = MathUtils.sin(radians);
 
         double rotatedX = localX * cos - localY * sin;
         double rotatedY = localX * sin + localY * cos;

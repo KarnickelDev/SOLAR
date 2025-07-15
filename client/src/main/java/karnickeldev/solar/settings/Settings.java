@@ -11,8 +11,8 @@ import java.util.Properties;
  */
 public class Settings {
 
-    private static final int FPS_MAX = 1200;
-    private static final int FPS_MIN = 10;
+    public static final int FPS_MAX = 2000;
+    public static final int FPS_MIN = 30;
 
     private static final String SCREEN_WIDTH_KEY = "Screen-Width";
     private static final String SCREEN_HEIGHT_KEY = "Screen-Height";
@@ -142,6 +142,6 @@ public class Settings {
     }
 
     public void setFpsLimit(int fps_limit) {
-        this.fps_limit = fps_limit;
+        this.fps_limit = clampFpsLimit(fps_limit);
     }
 }

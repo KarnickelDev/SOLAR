@@ -28,9 +28,10 @@ public class ClientECS extends ECSContext {
         while(current != EntityManager.NO_ENTITY) {
             vec.add(hcs.getInterpolatedX(current, alpha), hcs.getInterpolatedY(current, alpha));
 
-            if(current == hcs.getCurrent().getParent(current)) break;
+            int parent = hcs.getCurrent().getParent(current);
+            if(current == parent) break;
 
-            current = hcs.getCurrent().getParent(current);
+            current = parent;
         }
 
         return vec;

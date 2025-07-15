@@ -6,6 +6,9 @@ import java.util.Map;
 
 public class WorldManager<T extends World> {
 
+    // start with 1; 0 is reserved for an "empty world" as a fallback
+    private int freeWorldId = 1;
+
     private final Map<Integer, T> worlds = new HashMap<>();
     private T activeWorld;
     private final T emptyWorld;
@@ -13,6 +16,10 @@ public class WorldManager<T extends World> {
     public WorldManager(T emptyWorld) {
         this.emptyWorld = emptyWorld;
         activeWorld = emptyWorld;
+    }
+
+    public int generateWorldId() {
+        return freeWorldId++;
     }
 
     public T getActiveWorld() {

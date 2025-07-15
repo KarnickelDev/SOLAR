@@ -11,7 +11,6 @@ public class ServerPerformanceMetricsHandler implements PacketHandler<ServerPerf
     @Override
     public void handle(int clientId, ServerPerformanceMetricsPacket packet) {
         SolarMain.tps = packet.tps;
-        SolarMain.delay = packet.delay;
     }
 
     @Override

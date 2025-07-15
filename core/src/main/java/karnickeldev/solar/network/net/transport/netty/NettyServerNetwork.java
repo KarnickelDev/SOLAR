@@ -5,7 +5,6 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -13,6 +12,8 @@ import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
+import karnickeldev.solar.network.net.transport.PacketDecoder;
+import karnickeldev.solar.network.net.transport.PacketEncoder;
 import karnickeldev.solar.network.packets.HandshakePacket;
 import karnickeldev.solar.network.packets.HandshakeResponsePacket;
 import karnickeldev.solar.network.packets.Packet;
@@ -23,7 +24,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -40,7 +40,6 @@ public class NettyServerNetwork implements ServerNetwork {
     private final AtomicInteger clientIdCounter = new AtomicInteger(1);
 
     private final Queue<PacketContext> outgoing = new ConcurrentLinkedQueue<>();
-    private final Queue<PacketContext> incoming = new ConcurrentLinkedQueue<>();
 
     private final ServerNetworkListener listener;
     private final Dispatcher dispatcher;
@@ -119,25 +118,13 @@ public class NettyServerNetwork implements ServerNetwork {
     }
 
     @Override
-    public boolean updateNetwork() {
+    public void flush() {
         PacketContext pkt;
 
         while((pkt = outgoing.poll()) != null) {
             ClientSession session = clientIdMap.get(pkt.clientId);
             if(session != null) session.send(pkt.packet);
         }
-
-        while ((pkt = incoming.poll()) != null) {
-            if(pkt.packet.isFastHandled()) {
-                //listener.onPacketReceived(pkt.clientId, pkt.packet);
-                HandlerRegistry.getHandler(pkt.packet).handle(pkt.clientId, pkt.packet);
-            } else {
-                PacketContext p = pkt;
-                //dispatcher.dispatch(() -> listener.onPacketReceived(p.clientId, p.packet));
-                dispatcher.dispatch(() -> HandlerRegistry.getHandler(p.packet).handle(p.clientId, p.packet));
-            }
-        }
-        return true;
     }
 
     private static class PacketContext {
@@ -176,7 +163,7 @@ public class NettyServerNetwork implements ServerNetwork {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, Packet msg) {
             ClientSession session = sessions.get(ctx.channel().id());
-            if (session != null) {
+            if (session != null && msg != null) {
 
                 if(msg.getType() == PacketTypes.HANDSHAKE.getType()) {
                     HandshakePacket pkt = (HandshakePacket) msg;
@@ -193,12 +180,16 @@ public class NettyServerNetwork implements ServerNetwork {
                 }
 
                 if(session.isHandshake()) {
-                    if(!incoming.offer(new PacketContext(session.getClientId(), msg))) {
-                        Logger.error(Logger.NETWORK + "Packet dropped: " + msg);
+                    if(msg.isFastHandled()) {
+                        HandlerRegistry.getHandler(msg).handle(session.getClientId(), msg);
+                    } else {
+                        dispatcher.dispatch(() -> HandlerRegistry.getHandler(msg).handle(session.getClientId(), msg));
                     }
                 } else {
                     Logger.error(Logger.NETWORK, "Packet dropped: incomplete handshake" + msg);
                 }
+            } else {
+                Logger.error(Logger.NETWORK, "channelRead0 with null ChannelHandlerContext or Packet");
             }
         }
 

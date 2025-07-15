@@ -4,10 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.utils.TimeUtils;
+import karnickeldev.solar.context.GameContext;
+import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
+import karnickeldev.solar.network.packets.SimTimeUpdateRequestPacket;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
+import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
@@ -41,6 +45,10 @@ public class CameraInput extends InputAdapter {
     }
 
     public void processInputs() {
+//        // there has to be a better way xD
+//        if(UI.getUIManager().getComponent("escape_menu").getGroup().isVisible()) return;
+//        if(UI.getUIManager().getComponent("options_menu").getGroup().isVisible()) return;
+
         setWorld(worldManager.getActiveWorld());
 
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
@@ -69,6 +77,45 @@ public class CameraInput extends InputAdapter {
 
         if (keycode == Input.Keys.R) {
             camera.setPosition(0, 0);
+            return true;
+        }
+
+        if(keycode == Input.Keys.NUMPAD_ADD) {
+            GameContext.get().getClientNetwork().send(
+                new SimTimeUpdateRequestPacket(
+                    5f, false
+                )
+            );
+            return true;
+        }
+
+        if(keycode == Input.Keys.NUMPAD_SUBTRACT) {
+            GameContext.get().getClientNetwork().send(
+                new SimTimeUpdateRequestPacket(
+                    1f/5f, false
+                )
+            );
+            return true;
+        }
+
+        if(keycode == Input.Keys.ESCAPE) {
+            if(UI.getUIManager().getComponent("escape_menu") != null) {
+                boolean escVis = UI.getUIManager().getComponent("escape_menu").getGroup().isVisible();
+                boolean optVis = UI.getUIManager().getComponent("options_menu").getGroup().isVisible();
+
+                if(!escVis && !optVis) {
+                    // open escape menu
+                    UI.getUIManager().showComponent("escape_menu");
+                } else if(escVis && !optVis) {
+                    UI.getUIManager().hideComponent("escape_menu");
+                } else {
+                    // either both open or only options open
+                    // close options, then escape
+                    UI.getUIManager().hideComponent("options_menu");
+                    UI.getUIManager().hideComponent("escape_menu");
+                }
+
+            }
             return true;
         }
 

@@ -21,6 +21,10 @@ public class WorldTime implements SimulationTimeProvider {
         simTimeMicros += tickDurationMicros;
     }
 
+    public void set(long simTimeMicros) {
+        this.simTimeMicros = simTimeMicros;
+    }
+
     public long getTickCount() {
         return tickCount;
     }

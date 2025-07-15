@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.util.MathUtil;
@@ -31,7 +30,6 @@ public class StarField {
     private static TextureRegion[] starTextures;
 
     public static FrameBuffer starFieldBuffer;
-    private static TextureRegion starFieldRegion;
 
     public static class Container {
 
@@ -52,7 +50,7 @@ public class StarField {
         if (starFieldBuffer != null) starFieldBuffer.dispose();
 
         starFieldBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, WIDTH, HEIGHT, false);
-        starFieldRegion = new TextureRegion(starFieldBuffer.getColorBufferTexture());
+        TextureRegion starFieldRegion = new TextureRegion(starFieldBuffer.getColorBufferTexture());
         starFieldRegion.flip(false, true); // Important: Flip Y for correct orientation
 
         SpriteBatch fboBatch = new SpriteBatch();

@@ -2,23 +2,23 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.*;
-import karnickeldev.solar.network.packets.PacketFactory;
-import karnickeldev.solar.network.packets.TestCamPacket;
+import karnickeldev.solar.network.packets.*;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.ui.components.DebugToolTip;
+import karnickeldev.solar.ui.components.escapemenu.EscapeMenu;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
 public class SimTestScreen implements Screen {
-
-    private final DebugToolTip debug;
 
     private final CameraInput cameraInput;
 
@@ -30,24 +30,26 @@ public class SimTestScreen implements Screen {
         screenViewport = new ScreenViewport();
 
         cameraInput = GameContext.get().getCameraInput();
-
-        debug = new DebugToolTip();
-        UI.getUIManager().addComponent("debug",debug);
     }
 
 
     @Override
     public void show() {
-        GameContextContainer gameContext = GameContext.get();
 
-        Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager().getInputMultiplexer());
+        UI.getUIManager().addComponent("debug", new DebugToolTip());
+        UI.getUIManager().showComponent("debug");
 
+        UI.getUIManager().addComponent("escape_menu", new EscapeMenu());
+        UI.getUIManager().hideComponent("escape_menu");
+
+        // ORDER HERE IMPORTANT! (Inputs processed in order of registration)
+        SolarMain.getInstance().getInputManager().addInput(UI.stage());
         SolarMain.getInstance().getInputManager().addInput(cameraInput);
+        Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager().getInputMultiplexer());
     }
 
     double tmp = 0;
     TestCamPacket camPacket = new TestCamPacket();
-
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0,0,0,1,true);
@@ -61,7 +63,9 @@ public class SimTestScreen implements Screen {
         camPacket.y = clientWorldManager.getActiveWorld().getCamera().getRenderOrigin().getY();
         if(tmp > 0.3) {
             tmp = 0;
-            gameContext.getClientNetwork().send(PacketFactory.createPingPacket(System.nanoTime()));
+            if(gameContext.isMultiplayer()) {
+                gameContext.getClientNetwork().send(PacketFactory.createPingPacket(System.nanoTime()));
+            }
             gameContext.getClientNetwork().send(camPacket);
         }
 
@@ -69,10 +73,10 @@ public class SimTestScreen implements Screen {
         gameContext.getCameraInput().processInputs();
         clientWorldManager.getActiveWorld().getCamera().update();
 
-        long simTimeEstimate = GameContext.get().getTime().getSimTimeEstimate();
-        gameContext.getSyncLayer().update(simTimeEstimate);
+        // do not use current here, we manually subtract PacketSyncDelay
+        gameContext.getSyncLayer().update(gameContext.getTimeSyncManager().getSimTimeEstimate());
 
-        // probably better to process before sending
+        // probably better to do after processing input
         gameContext.getDispatcher().update();
 
         backgroundViewport.apply();
@@ -94,7 +98,8 @@ public class SimTestScreen implements Screen {
     public void resize(int width, int height) {
         backgroundViewport.update(width, height, true);
         screenViewport.update(width, height);
-        debug.resize(width, height);
+
+        UI.getUIManager().resize(width, height);
     }
 
     @Override
@@ -110,6 +115,8 @@ public class SimTestScreen implements Screen {
     @Override
     public void hide() {
         UI.getUIManager().hideComponent("debug");
+        UI.getUIManager().removeComponent("escape_menu");
+        SolarMain.getInstance().getInputManager().removeInput(UI.stage());
         SolarMain.getInstance().getInputManager().removeInput(cameraInput);
     }
 

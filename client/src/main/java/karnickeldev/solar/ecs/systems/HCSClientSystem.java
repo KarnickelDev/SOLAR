@@ -1,13 +1,16 @@
 package karnickeldev.solar.ecs.systems;
 
+import com.badlogic.gdx.Gdx;
+import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
 import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
+import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.simulation.execution.SimulationManager;
-import karnickeldev.solar.simulation.execution.SimulationManagerThread;
-import karnickeldev.solar.simulation.execution.SimulationTask;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
+
+import java.util.*;
 
 public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSnapshot> {
 
@@ -15,11 +18,7 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
     private int prev = 0;
     private int curr = 1;
 
-    public static float simSpeed = 3600f;
-
-    private long previousUpdate, currentUpdate;
-
-    private HCSPositionSnapshot lastSnapshot, previousSnapshot;
+    private HCSPositionSnapshot latestSnapshot, previousSnapshot;
 
     public HCSClientSystem() {
         for (int i = 0; i < componentBuffer.length; i++) {
@@ -36,35 +35,31 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
     }
 
     public void update(HCSPositionSnapshot snapshot) {
-        // make sure snapshot is new
-        if (lastSnapshot != null && snapshot.simTimeMicros <= lastSnapshot.simTimeMicros) return;
-
         curr = (curr + 1) % 2;
         prev = (prev + 1) % 2;
         componentBuffer[curr].applySnapshot(snapshot);
-
-        if(lastSnapshot == null) {
+        if(previousSnapshot == null) {
             componentBuffer[prev].applySnapshot(snapshot);
         }
 
-
-        previousSnapshot = lastSnapshot;
-        lastSnapshot = snapshot;
-        previousUpdate = currentUpdate;
-        currentUpdate = System.nanoTime();
+        previousSnapshot = latestSnapshot;
+        latestSnapshot = snapshot;
     }
 
     public double getAlpha() {
-        if(lastSnapshot == null || previousSnapshot == null) return 0;
+        HCSPositionSnapshot a = previousSnapshot;
+        HCSPositionSnapshot b = latestSnapshot;
+        if (a == null || b == null) return 0;
 
-        long now = System.nanoTime();
-        long elapsedMicros = (now - currentUpdate) / 1000;
+        long simA = a.simTimeMicros;
+        long simB = b.simTimeMicros;
 
-        long simDelta = (lastSnapshot.simTimeMicros - previousSnapshot.simTimeMicros);
-        if (simDelta <= 0) return 0; // Avoid divide by zero or bad data
+        if (simB == simA) return 0;
 
-        double alpha = (double)(elapsedMicros) / (simDelta / (SimulationManager.simSpeed));
-        return MathUtil.clamp(alpha, 0, 1);
+        long curr = GameContext.get().getTimeSyncManager().getCurrentTimeMicros();
+
+        double alpha = (double)(curr - simB) / ((double)(simB - simA));
+        return MathUtil.clamp(alpha, 0.0, 3); // slightly allow extrapolation
     }
 
     public double getInterpolatedX(int entityID, double alpha) {

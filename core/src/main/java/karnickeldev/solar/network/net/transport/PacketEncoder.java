@@ -1,4 +1,4 @@
-package karnickeldev.solar.network.net.transport.netty;
+package karnickeldev.solar.network.net.transport;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;

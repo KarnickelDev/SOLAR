@@ -41,8 +41,7 @@ dependencies {
   api "org.apache.groovy:groovy-all:$groovyVersion"
 
   // Netty core
-  //TODO: only use required packages, not all
-  implementation 'io.netty:netty-all:4.2.2.Final'
+  api 'io.netty:netty-all:4.2.2.Final'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api:4.13.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:4.13.2'

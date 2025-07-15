@@ -1,4 +1,4 @@
-package karnickeldev.solar.network.util;
+package karnickeldev.solar.network.net.core;
 
 import karnickeldev.solar.util.Logger;
 

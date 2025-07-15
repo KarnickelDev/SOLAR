@@ -1,11 +1,13 @@
 package karnickeldev.solar.network.net.dispatcher;
 
 import karnickeldev.solar.util.MathUtil;
+import org.junit.runner.notification.RunListener;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+@RunListener.ThreadSafe
 public class DefaultDispatcher implements Dispatcher {
 
     private final ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
@@ -51,12 +53,12 @@ public class DefaultDispatcher implements Dispatcher {
     }
 
     @Override
-    public void shutdownGracefully() {
+    public void shutdown() {
         alive = false;
     }
 
     @Override
-    public List<Runnable> shutdown() {
+    public List<Runnable> shutdownNow() {
         alive = false;
         List<Runnable> pendingTasks = new ArrayList<>(taskQueue.size());
         while(!taskQueue.isEmpty()) pendingTasks.add(taskQueue.poll());

@@ -12,6 +12,14 @@ public interface UIComponent {
     @NotNull
     Group getGroup();
 
+    default void show() {
+        getGroup().setVisible(true);
+    }
+
+    default void hide() {
+        getGroup().setVisible(false);
+    }
+
     void update(float delta);
 
     void resize(int width, int height);

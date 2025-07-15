@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui.components.optionsmenu;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
@@ -8,6 +9,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
+import com.badlogic.gdx.utils.Align;
+import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.ui.components.UIComponent;
 import karnickeldev.solar.ui.core.UI;
 
@@ -21,6 +25,8 @@ public class OptionsMenu implements UIComponent {
 
     private final VideoOptionsMenu videoOptionsMenu;
 
+    private Runnable onClose;
+
     private static final String[] subMenuNames = {"General", "Video", "Audio"};
     private int checked = 0;
 
@@ -28,6 +34,24 @@ public class OptionsMenu implements UIComponent {
         table = new Table();
         videoOptionsMenu = new VideoOptionsMenu();
         //table.debugAll();
+    }
+
+    public void setOnCloseRunnable(Runnable onClose) {
+        this.onClose = onClose;
+    }
+
+    @Override
+    public void show() {
+        table.setVisible(true);
+        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    @Override
+    public void hide() {
+        table.setVisible(false);
+
+        if(onClose != null) onClose.run();
+        onClose = null;
     }
 
     @Override
@@ -47,7 +71,7 @@ public class OptionsMenu implements UIComponent {
         table.setBackground(UI.skin().get("up", NinePatchDrawable.class));
         table.top().left();
 
-        table.setSize(0.65f * UI.VIRTUAL_WIDTH, 0.65f * UI.VIRTUAL_HEIGHT);
+        table.setSize(1250, 700);
         table.setPosition(140 + (UI.VIRTUAL_WIDTH - table.getWidth()) / 2f, (UI.VIRTUAL_HEIGHT - table.getHeight()) / 2f);
         table.pad(0);
 
@@ -88,7 +112,7 @@ public class OptionsMenu implements UIComponent {
         back.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 back.setChecked(false);
-                UI.getUIManager().hideComponent("options_menu");
+                UI.getUIManager().getComponent("options_menu").hide();
             }
         });
 
@@ -117,13 +141,30 @@ public class OptionsMenu implements UIComponent {
         categories.add(audio).height(catButtonHeight).fill().pad(0).row();
         categories.add().height(catButtonHeight).fill().pad(0).row();
         categories.add().expandY().fill().row();
-        categories.add(back).height(catButtonHeight).fill().pad(0);
         categories.layout();
 
-        table.add(categories).height(table.getHeight());
+        table.add(categories).height(table.getHeight() - catButtonHeight);
 
-        videoOptionsMenu.resize((int)(table.getWidth() - categories.getWidth()), (int)table.getHeight());
+        videoOptionsMenu.resize(100,100);
         table.add(videoOptionsMenu.getGroup()).expandX().fill();
+        table.row();
+
+        TextButton apply = new TextButton("Apply", UI.skin());
+        apply.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                Settings newSettings = new Settings(SolarMain.getInstance().getSettings());
+                videoOptionsMenu.applyChanges(newSettings);
+
+                if(!newSettings.equals(SolarMain.getInstance().getSettings())) {
+                    SolarMain.getInstance().getSettingsManager().updateSettings(newSettings);
+                    SolarMain.getInstance().getSettingsManager().saveToFile();
+                }
+                resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+            }
+        });
+
+        table.add(back).height(catButtonHeight).fill();
+        table.add(apply).height(catButtonHeight).align(Align.right).width(100);
 
         table.layout();
     }

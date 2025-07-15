@@ -8,6 +8,8 @@ import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.net.listener.DefaultServerNetworkListener;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
+import karnickeldev.solar.network.net.transport.local.LocalClientNetwork;
+import karnickeldev.solar.network.net.transport.local.LocalServerNetwork;
 import karnickeldev.solar.network.net.transport.netty.NettyClientNetwork;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.server.LocalServer;
@@ -16,9 +18,8 @@ import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.world.ClientWorld;
-import karnickeldev.solar.world.TimeEstimator;
+import karnickeldev.solar.world.TimeSyncManager;
 import karnickeldev.solar.world.WorldManager;
-import karnickeldev.solar.world.WorldTime;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -35,15 +36,11 @@ public class GameContextBuilder {
         ClientNetworkListener clientListener = new DefaultClientNetworkListener(worldManager);
         Dispatcher dispatcher = new DefaultDispatcher();
 
-        TimeEstimator time = new TimeEstimator();
+        TimeSyncManager timeSyncManager = new TimeSyncManager();
 
         PacketSyncLayer syncLayer = new PacketSyncLayer();
 
-        ClientNetwork clientNetwork;
-        NetworkThread networkThread;
-
-        clientNetwork = new NettyClientNetwork(host, port, clientListener, dispatcher, syncLayer);
-        networkThread = new NetworkThread(clientNetwork, "ClientNetworkThread");
+        ClientNetwork clientNetwork = new NettyClientNetwork(host, port, clientListener, dispatcher, syncLayer, timeSyncManager);
 
         PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch());
 
@@ -53,10 +50,9 @@ public class GameContextBuilder {
             true,
             worldManager,
             dispatcher,
-            networkThread,
             clientNetwork,
             clientListener,
-            time,
+            timeSyncManager,
             rs,
             cameraInput,
             syncLayer
@@ -72,14 +68,12 @@ public class GameContextBuilder {
         PacketSyncLayer syncLayer = new PacketSyncLayer();
 
         ClientNetwork clientNetwork;
-        NetworkThread networkThread;
-
 
         ServerNetworkListener serverListener = new DefaultServerNetworkListener();
 
         Dispatcher serverDispatcher = new DefaultDispatcher();
 
-        TimeEstimator time = new TimeEstimator();
+        TimeSyncManager time = new TimeSyncManager();
 
         BlockingQueue<Packet> toServer = new LinkedBlockingQueue<>(128);
         BlockingQueue<Packet> fromServer = new LinkedBlockingQueue<>(128);
@@ -87,9 +81,7 @@ public class GameContextBuilder {
         clientNetwork = new LocalClientNetwork(toServer, fromServer, clientListener, dispatcher);
         ServerNetwork serverNetwork = new LocalServerNetwork(toServer, fromServer, serverListener, serverDispatcher);
 
-        networkThread = new NetworkThread("SharedNetworkThread", clientNetwork, serverNetwork);
-
-        Server server = LocalServer.create(serverNetwork, networkThread, serverDispatcher);
+        Server server = LocalServer.create(serverNetwork, serverDispatcher);
         ServerContext.setContext(ServerContextBuilder.buildServerContext(server));
 
 
@@ -101,7 +93,6 @@ public class GameContextBuilder {
             false,
             worldManager,
             dispatcher,
-            networkThread,
             clientNetwork,
             clientListener,
             time,

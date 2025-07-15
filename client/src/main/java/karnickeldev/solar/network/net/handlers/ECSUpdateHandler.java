@@ -2,7 +2,6 @@ package karnickeldev.solar.network.net.handlers;
 
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
-import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.network.packets.ECSUpdatePacket;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientWorld;
@@ -27,7 +26,9 @@ public class ECSUpdateHandler implements PacketHandler<ECSUpdatePacket> {
             Logger.error("Received ECS Update for unknown World " + worldId);
             return;
         }
-        HCSClientSystem.simSpeed = packet.getSimSpeed();
+
+        //GameContext.get().getTimeSyncManager().setSimSpeed(packet.getSimSpeed());
+
         worldManager.getWorld(worldId).getECS().getComponentRegistry().applyAllSnapshots(snapshots);
     }
 

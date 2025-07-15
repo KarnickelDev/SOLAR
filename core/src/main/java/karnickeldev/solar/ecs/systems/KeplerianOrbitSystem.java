@@ -76,7 +76,7 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
         }
         hcs.swapBuffers();
 
-        final Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(world.getWorldTime().getSimTimeMicros(), SimulationManager.simSpeed, world);
+        //final Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(world.getWorldTime().getSimTimeMicros(), SimulationManager.simSpeed, world);
 
 //        Packet worldPacket = PacketFactory.createWorldUpdatePacket(world.getID(), world.getWorldTime().getSimTimeMicros());
 //        serverNetwork.broadcast(worldPacket);
@@ -84,7 +84,7 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
 //        Packet lifecyclePacket = PacketFactory.createFullEntityLifecyclePacket(world.getWorldTime().getSimTimeMicros(), world);
 //        serverNetwork.broadcast(lifecyclePacket);
 
-        if(ecsUpdatePacket != null && time != 0) serverNetwork.broadcast(ecsUpdatePacket);
+        //if(ecsUpdatePacket != null && time != 0) serverNetwork.broadcast(ecsUpdatePacket);
     }
 
 

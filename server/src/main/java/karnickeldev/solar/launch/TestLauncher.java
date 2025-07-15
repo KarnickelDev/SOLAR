@@ -5,7 +5,6 @@ import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.context.ServerContextBuilder;
 import karnickeldev.solar.network.net.dispatcher.DefaultDispatcher;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
-import karnickeldev.solar.network.net.core.NetworkThread;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.net.listener.DefaultServerNetworkListener;
 import karnickeldev.solar.network.net.transport.netty.NettyServerNetwork;
@@ -25,9 +24,7 @@ public class TestLauncher {
 
         ServerNetwork serverNetwork = new NettyServerNetwork(25566, new DefaultServerNetworkListener(), dispatcher);
 
-        NetworkThread networkThread = new NetworkThread(serverNetwork, "ServerNetwork");
-
-        Server server = DedicatedServer.create(serverNetwork, networkThread, dispatcher);
+        Server server = DedicatedServer.create(serverNetwork, dispatcher);
 
         ServerContext.setContext(ServerContextBuilder.buildServerContext(server));
 

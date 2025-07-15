@@ -10,7 +10,7 @@ import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateID;
 import karnickeldev.solar.core.gamestates.GameStateManager;
-import karnickeldev.solar.network.util.PingTracker;
+import karnickeldev.solar.network.net.core.PingTracker;
 import karnickeldev.solar.ui.core.UI;
 
 /**
@@ -27,35 +27,37 @@ public class DebugToolTip implements UIComponent {
 
     public DebugToolTip() {
         table = new Table();
-
-        table.setFillParent(false);
-        table.top().left();
     }
 
+    private long lastUpdate = 0;
+
     public void update(float delta) {
+        long now = System.nanoTime();
+        if(now - lastUpdate <= 300_000_000) return;
+        lastUpdate = now;
+
         fps.setVisible(true);
         tps.setVisible(false);
         ping.setVisible(false);
 
+        fps.setColor(Color.GREEN);
         fps.setText("FPS: " + Gdx.graphics.getFramesPerSecond());
-        ping.setColor(PingTracker.getPing() > 2 * PingTracker.getStdDev() ? Color.ORANGE : Color.GREEN);
 
         if(GameStateManager.get().getState().getID() == GameStateID.GAMEPLAY) {
             tps.setVisible(true);
             tps.setText("TPS: " + SolarMain.tps);
+            tps.setColor(Color.GREEN);
 
             if(GameContext.get().isMultiplayer()) {
                 ping.setText("Ping: " + PingTracker.getPing() + "ms");
                 ping.setVisible(true);
+                ping.setColor(PingTracker.getStdDev() > 10 ? Color.ORANGE : Color.GREEN);
             }
         }
-
-
-        table.layout();
     }
 
     public void resize(int width, int height) {
-        Label.LabelStyle labelStyle = new Label.LabelStyle(UI.getFontManager().getFont(14, false), Color.GREEN);
+        Label.LabelStyle labelStyle = new Label.LabelStyle(UI.getFontManager().getFont(11, false), Color.WHITE);
         fps = new Label("FPS: 9999", labelStyle);
         tps = new Label("TPS: 999", labelStyle);
         ping = new Label("Ping: 999ms", labelStyle);
@@ -65,9 +67,10 @@ public class DebugToolTip implements UIComponent {
         ping.setAlignment(Align.left);
 
         table.clear();
-        table.add(fps).pad(5).padRight(1).row();
-        table.add(tps).pad(5).padRight(1).row();
-        table.add(ping).pad(5).padRight(1).row();
+        table.top().left().pad(2);
+        table.add(fps).fill().row();
+        table.add(tps).fill().row();
+        table.add(ping).fill().row();
 
         table.setSize(table.getPrefWidth(),table.getPrefHeight());
         table.setPosition(UI.VIRTUAL_WIDTH - table.getWidth(), UI.VIRTUAL_HEIGHT - table.getHeight());

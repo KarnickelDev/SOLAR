@@ -2,12 +2,10 @@ package karnickeldev.solar.network.server;
 
 import karnickeldev.solar.ecs.EntityFactory;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
-import karnickeldev.solar.network.net.core.NetworkThread;
 import karnickeldev.solar.network.net.core.ServerNetwork;
-import karnickeldev.solar.network.net.handlers.*;
-import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.simulation.execution.SimulationTask;
+import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.WorldManager;
 
@@ -15,13 +13,13 @@ import java.util.Objects;
 
 public class LocalServer extends Server implements GameServer {
 
-    public static LocalServer create(ServerNetwork serverNetwork, NetworkThread networkThread, Dispatcher dispatcher) {
-        WorldManager<ServerWorld> worldManager = new WorldManager<>(ServerWorld.create(serverNetwork));
-        return new LocalServer(serverNetwork, networkThread, worldManager, dispatcher);
+    public static LocalServer create(ServerNetwork serverNetwork, Dispatcher dispatcher) {
+        WorldManager<ServerWorld> worldManager = new WorldManager<>(ServerWorld.create(0, serverNetwork));
+        return new LocalServer(serverNetwork, worldManager, dispatcher);
     }
 
-    private LocalServer(ServerNetwork serverNetwork, NetworkThread networkThread, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
-        super(serverNetwork, networkThread, worldManager, dispatcher);
+    private LocalServer(ServerNetwork serverNetwork, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
+        super(serverNetwork, worldManager, dispatcher);
 
         Objects.requireNonNull(this.serverNetwork);
 
@@ -37,7 +35,7 @@ public class LocalServer extends Server implements GameServer {
 
 
     private void createWorld() {
-        ServerWorld world1 = ServerWorld.create(serverNetwork);
+        ServerWorld world1 = ServerWorld.create(worldManager.generateWorldId(), serverNetwork);
         worldManager.addWorld(world1);
         simulationManagerThread.getSimulationManager().registerWorld(world1);
 
@@ -91,21 +89,15 @@ public class LocalServer extends Server implements GameServer {
             (float) Units.convert(7000, Units.Length.KILOMETER, Units.Length.AU),
             0.01f, 0, 2, earth);
 
-//        ServerWorld world2 = ServerWorld.create(serverNetwork);
-//        worldManager.addWorld(world2);
-//        simulationManagerThread.getSimulationManager().registerWorld(world2);
-//        simulationManagerThread.getSimulationManager().setPriority(world2, SimulationTask.Priority.NORMAL);
         simulationManagerThread.getSimulationManager().setPriority(world1, SimulationTask.Priority.LOW);
-//
-//        int sun2 = EntityFactory.createStar(world2.getECS(), "sun2", 0, 0,
-//            Units.toSU(1, Units.Mass.SOLAR_MASS), Units.toSU(600000, Units.Length.KILOMETER));
-//        for (int i = 0; i < (64 * 1024) - 1; i++) {
-//            EntityFactory.createStaticPlanetoidHCS(world2.getECS(), "",
-//                Units.toSU(MathUtil.random(1, 1e10f), Units.Mass.TON),
-//                1, 1,
-//                (float) Units.convert(MathUtil.random(1e-2f, 100f), Units.Length.AU, Units.Length.AU),
-//                MathUtil.random(0, 0.9f), MathUtil.random(0, (float) (2 * Math.PI)), 0, sun2);
-//        }
+
+        for (int i = 0; i < (16 * 1024) - 16; i++) {
+            EntityFactory.createStaticPlanetoidHCS(world1.getECS(), "",
+                Units.toSU(MathUtil.random(1, 1e10f), Units.Mass.TON),
+                1, 1,
+                (float) Units.convert(MathUtil.random(1e-2f, 100f), Units.Length.AU, Units.Length.AU),
+                MathUtil.random(0, 0.9f), MathUtil.random(0, (float) (2 * Math.PI)), 0, sun);
+        }
     }
 
 }
