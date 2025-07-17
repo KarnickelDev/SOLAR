@@ -168,13 +168,24 @@ public class SimulationManager implements Runnable {
                 ));
             }
 
-            Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(globalSimTimeMicros, SimulationManager.simSpeed, worldManager.getActiveWorld());
-            ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
-            ServerContext.get().getServer().getServerNetwork().flush();
+            float nextSimSpeed = (float) MathUtil.lerp(simSpeed, targetSimSpeed, 0.2);
+
+            if(simSpeed == targetSimSpeed) {
+                Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(globalSimTimeMicros, SimulationManager.simSpeed, -1, -1, worldManager.getActiveWorld());
+                ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
+                ServerContext.get().getServer().getServerNetwork().flush();
+            } else {
+                Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(globalSimTimeMicros, SimulationManager.simSpeed,
+                    nextSimSpeed,
+                    globalSimTimeMicros + Math.round((schedulerNanosPerTick / 1000d) * nextSimSpeed),
+                    worldManager.getActiveWorld());
+                ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
+                ServerContext.get().getServer().getServerNetwork().flush();
+            }
 
             tickEnd = System.nanoTime();
 
-            simSpeed = (float) MathUtil.lerp(simSpeed, targetSimSpeed, 0.2);
+            simSpeed = nextSimSpeed;
 
             //globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
             globalSimTimeMicros += Math.round((schedulerNanosPerTick / 1000d) * simSpeed);
@@ -201,8 +212,8 @@ public class SimulationManager implements Runnable {
             }
 
             long nextTick = tickStart + schedulerNanosPerTick;
-            //if(nextTick > tickEnd) LockSupport.parkNanos(nextTick - tickEnd);
-            while(System.nanoTime() < nextTick) Thread.onSpinWait();
+            if(nextTick > tickEnd) LockSupport.parkNanos(nextTick - tickEnd);
+            //while(System.nanoTime() < nextTick) Thread.onSpinWait();
         }
 
         // shutdown logic

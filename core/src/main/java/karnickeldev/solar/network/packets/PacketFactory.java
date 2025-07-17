@@ -48,12 +48,12 @@ public class PacketFactory {
         return new ECSUpdatePacket(worldId, simTime, simSpeed, snapshots);
     }
 
-    public static ECSUpdatePacket createECSUpdatePacket(long simTime, float simSpeed, ServerWorld world) {
+    public static ECSUpdatePacket createECSUpdatePacket(long simTime, float simSpeed, float nextSimSpeed, long activationTime, ServerWorld world) {
         List<ComponentSnapshot> snaps = world.getECS().getComponentRegistry().createAllSnapshots(simTime);
         snaps.add(world.getECS().hcs.getCurrent().createSnapshot(simTime));
         snaps.removeAll(Collections.singleton(null));
         if(snaps.isEmpty()) return null;
-        return new ECSUpdatePacket(world.getID(), simTime, simSpeed, snaps.toArray(ComponentSnapshot[]::new));
+        return new ECSUpdatePacket(world.getID(), simTime, simSpeed, nextSimSpeed, activationTime, snaps.toArray(ComponentSnapshot[]::new));
     }
 
     public static ECSUpdatePacket createFullECSUpdatePacket(long simTime, float simSpeed, ServerWorld world) {

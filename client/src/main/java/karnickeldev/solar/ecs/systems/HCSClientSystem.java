@@ -56,7 +56,7 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
         if (simB == simA) return 0;
 
-        long curr = GameContext.get().getTimeSyncManager().estimateSimTime((System.nanoTime() / 1000));
+        long curr = GameContext.get().getTimeSyncManager().getRenderSimTime(0);
 
         double alpha = (double)(curr - simB) / ((double)(simB - simA));
         return MathUtil.clamp(alpha, 0, 1.1); // slightly allow extrapolation
