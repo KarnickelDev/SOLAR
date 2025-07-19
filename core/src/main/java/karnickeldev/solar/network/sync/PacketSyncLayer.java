@@ -22,7 +22,17 @@ public class PacketSyncLayer {
 
     public static final long syncDelayMicros = 100 * 1_000;
 
-    private final Queue<GameStatePacket> buffer = new PriorityQueue<>(Comparator.comparingLong(GameStatePacket::getSimTimeMicros));
+    private static class BufferEntry {
+        public final GameStatePacket pkt;
+        public final long arrivalMicros;
+
+        public BufferEntry(GameStatePacket pkt, long arrivalMicros) {
+            this.arrivalMicros = arrivalMicros;
+            this.pkt = pkt;
+        }
+    }
+
+    private final Queue<BufferEntry> buffer = new PriorityQueue<>(Comparator.comparingLong(p -> p.pkt.getSimTimeMicros()));
 
     private long currentTimeMicros = 0;
 
@@ -33,18 +43,21 @@ public class PacketSyncLayer {
 
 
     public synchronized void receivePacket(GameStatePacket packet) {
-        buffer.add(packet);
+        buffer.add(new BufferEntry(packet, System.nanoTime() / 1000L));
     }
 
     public synchronized void update(long currentSimTimeMicros) {
         this.currentTimeMicros = currentSimTimeMicros;
 
         while (!buffer.isEmpty()) {
-            GameStatePacket next = buffer.peek();
-            if (next.getSimTimeMicros() < currentTimeMicros) {
+            BufferEntry next = buffer.peek();
+            if (next.pkt.getSimTimeMicros() < currentTimeMicros) {
                 buffer.poll();
-                PacketHandler<Packet> handler = HandlerRegistry.getHandler(next);
-                handler.handle(0, next);
+
+                Logger.log("delay=" + ((System.nanoTime() / 1000) - next.arrivalMicros));
+
+                PacketHandler<Packet> handler = HandlerRegistry.getHandler(next.pkt);
+                handler.handle(0, next.pkt);
             } else {
                 break;
             }

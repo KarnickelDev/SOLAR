@@ -16,23 +16,14 @@ public class ECSUpdatePacket extends GameStatePacket {
     private long simTimeMicros;
     private int worldId;
     private float simSpeed;
-
-    private float simSpeedChange;
-    private long changeActivationTime;
+    public long activationTime;
 
     protected ECSUpdatePacket(int worldId, long simTimeMicros, float simSpeed, ComponentSnapshot[] snapshots) {
-        this(worldId, simTimeMicros, simSpeed, -1, -1, snapshots);
-    }
-
-    protected ECSUpdatePacket(int worldId, long simTimeMicros, float simSpeed, float nextSimSpeed, long activationTime, ComponentSnapshot[] snapshots) {
         super(PacketTypes.ECS_UPDATE.getType(), (short)0);
         this.worldId = worldId;
         this.simTimeMicros = simTimeMicros;
         this.simSpeed = simSpeed;
         this.snapshots = Arrays.copyOf(snapshots, snapshots.length);
-
-        this.simSpeedChange = nextSimSpeed;
-        this.changeActivationTime = activationTime;
     }
 
 
@@ -48,14 +39,6 @@ public class ECSUpdatePacket extends GameStatePacket {
         return simSpeed;
     }
 
-    public float getSimSpeedChange() {
-        return simSpeedChange;
-    }
-
-    public long getChangeActivationTime() {
-        return changeActivationTime;
-    }
-
     public ComponentSnapshot[] getSnapshots() {
         return snapshots;
     }
@@ -65,8 +48,7 @@ public class ECSUpdatePacket extends GameStatePacket {
         out.writeInt(worldId);
         out.writeLong(simTimeMicros);
         out.writeFloat(simSpeed);
-        out.writeFloat(simSpeedChange);
-        out.writeLong(changeActivationTime);
+        out.writeLong(activationTime);
         out.writeInt(snapshots.length);
         for (ComponentSnapshot snap : snapshots) {
             short type = SnapshotRegistry.getTypeId(snap.getClass());
@@ -80,8 +62,7 @@ public class ECSUpdatePacket extends GameStatePacket {
         worldId = in.readInt();
         simTimeMicros = in.readLong();
         simSpeed = in.readFloat();
-        simSpeedChange = in.readFloat();
-        changeActivationTime = in.readLong();
+        activationTime = in.readLong();
         int length = in.readInt();
         snapshots = new ComponentSnapshot[length];
         for (int i = 0; i < length; i++) {

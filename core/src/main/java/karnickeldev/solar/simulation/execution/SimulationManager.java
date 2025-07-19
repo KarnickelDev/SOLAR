@@ -168,28 +168,16 @@ public class SimulationManager implements Runnable {
                 ));
             }
 
-            float nextSimSpeed = (float) MathUtil.lerp(simSpeed, targetSimSpeed, 0.2);
-
-            if(simSpeed == targetSimSpeed) {
-                Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(globalSimTimeMicros, SimulationManager.simSpeed, -1, -1, worldManager.getActiveWorld());
-                ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
-                ServerContext.get().getServer().getServerNetwork().flush();
-            } else {
-                Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(globalSimTimeMicros, SimulationManager.simSpeed,
-                    nextSimSpeed,
-                    globalSimTimeMicros + Math.round((schedulerNanosPerTick / 1000d) * nextSimSpeed),
-                    worldManager.getActiveWorld());
-                ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
-                ServerContext.get().getServer().getServerNetwork().flush();
-            }
+            Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(globalSimTimeMicros, SimulationManager.simSpeed, worldManager.getActiveWorld());
+            ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
+            ServerContext.get().getServer().getServerNetwork().flush();
 
             tickEnd = System.nanoTime();
 
-            simSpeed = nextSimSpeed;
+            simSpeed = (float) MathUtil.lerp(simSpeed, targetSimSpeed, 0.1);
 
             //globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
             globalSimTimeMicros += Math.round((schedulerNanosPerTick / 1000d) * simSpeed);
-
 
 //            tmp = (tmp + 1) % 100;
 //            if(tmp == 0) {
@@ -212,8 +200,20 @@ public class SimulationManager implements Runnable {
             }
 
             long nextTick = tickStart + schedulerNanosPerTick;
-            if(nextTick > tickEnd) LockSupport.parkNanos(nextTick - tickEnd);
-            //while(System.nanoTime() < nextTick) Thread.onSpinWait();
+            long sleepMS = (nextTick - tickEnd) / 1_000_000;
+            sleepMS -= 2;
+
+            if(sleepMS > 0) {
+                try {
+                    //noinspection BusyWait
+                    Thread.sleep(sleepMS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    Logger.log(Logger.SERVER, "Interrupted while passive waiting, going to active wait!");
+                }
+            }
+
+            while(System.nanoTime() < nextTick) Thread.onSpinWait();
         }
 
         // shutdown logic

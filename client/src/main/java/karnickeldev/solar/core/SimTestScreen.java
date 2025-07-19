@@ -2,12 +2,12 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.*;
+import karnickeldev.solar.network.net.core.PingTracker;
 import karnickeldev.solar.network.packets.*;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.StarField;
@@ -15,7 +15,6 @@ import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.ui.components.DebugToolTip;
 import karnickeldev.solar.ui.components.escapemenu.EscapeMenu;
 import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
@@ -75,7 +74,9 @@ public class SimTestScreen implements Screen {
         clientWorldManager.getActiveWorld().getCamera().update();
 
         // do not use current here, we manually subtract PacketSyncDelay
-        gameContext.getSyncLayer().update(gameContext.getTimeSyncManager().getRenderSimTime(-PacketSyncLayer.syncDelayMicros));
+        gameContext.getSyncLayer().update(gameContext.getTimeSyncManager().estimateSimTimeAt(
+            (System.nanoTime() / 1000L) - PacketSyncLayer.syncDelayMicros
+        ));
 
         // probably better to do after processing input
         gameContext.getDispatcher().update();

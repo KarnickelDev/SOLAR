@@ -9,6 +9,7 @@ import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
+import karnickeldev.solar.world.TimeSyncManager;
 
 import java.util.*;
 
@@ -44,7 +45,11 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
         previousSnapshot = latestSnapshot;
         latestSnapshot = snapshot;
+
+        Logger.log("update");
     }
+
+    long last = 0;
 
     public double getAlpha() {
         HCSPositionSnapshot a = previousSnapshot;
@@ -56,9 +61,14 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
         if (simB == simA) return 0;
 
-        long curr = GameContext.get().getTimeSyncManager().getRenderSimTime(0);
+        long curr = GameContext.get().getTimeSyncManager().estimateSimTimeAt((System.nanoTime() / 1000L) - PacketSyncLayer.syncDelayMicros);
 
         double alpha = (double)(curr - simB) / ((double)(simB - simA));
+
+        Logger.log("alpha=" + alpha + ", simA: " + simA + ", simB: " + simB + ", diff: " + (curr - last));
+
+        last = curr;
+
         return MathUtil.clamp(alpha, 0, 1.1); // slightly allow extrapolation
     }
 

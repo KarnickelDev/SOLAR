@@ -27,15 +27,6 @@ public class ECSUpdateHandler implements PacketHandler<ECSUpdatePacket> {
             return;
         }
 
-        GameContext.get().getTimeSyncManager().recordSyncSample(packet.getSimTimeMicros(), (System.nanoTime() / 1000), packet.getSimSpeed());
-
-        if(packet.getChangeActivationTime() > 0) {
-            GameContext.get().getTimeSyncManager().addSimSpeedChange(
-                packet.getChangeActivationTime(),
-                packet.getSimSpeedChange()
-            );
-        }
-
         worldManager.getWorld(worldId).getECS().getComponentRegistry().applyAllSnapshots(snapshots);
     }
 

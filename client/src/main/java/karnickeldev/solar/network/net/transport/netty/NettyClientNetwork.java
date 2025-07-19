@@ -9,6 +9,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
+import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
@@ -160,8 +161,11 @@ public class NettyClientNetwork implements ClientNetwork {
         if(pkt.isFastHandled()) {
             HandlerRegistry.getHandler(pkt).handle(0, pkt);
         } else {
-            if(pkt instanceof GameStatePacket) {
-                GameStatePacket p = (GameStatePacket) pkt;
+            if(pkt instanceof ECSUpdatePacket) {
+                ECSUpdatePacket p = (ECSUpdatePacket) pkt;
+                GameContext.get().getTimeSyncManager().updateFromSnapshot(
+                    p.getSimTimeMicros(), System.nanoTime() / 1000L, p.getSimSpeed(), p.activationTime
+                );
                 syncLayer.receivePacket(p);
             } else {
                 dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));
