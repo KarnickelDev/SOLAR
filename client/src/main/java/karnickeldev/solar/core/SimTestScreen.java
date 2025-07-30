@@ -7,13 +7,14 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.*;
-import karnickeldev.solar.network.net.core.PingTracker;
 import karnickeldev.solar.network.packets.*;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.ui.components.DebugToolTip;
 import karnickeldev.solar.ui.components.escapemenu.EscapeMenu;
+import karnickeldev.solar.ui.components.game.DateDisplay;
+import karnickeldev.solar.ui.components.game.TimeControl;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
@@ -41,6 +42,10 @@ public class SimTestScreen implements Screen {
 
         UI.getUIManager().addComponent("escape_menu", new EscapeMenu());
         UI.getUIManager().hideComponent("escape_menu");
+
+        UI.getUIManager().addComponent("time_control", new TimeControl());
+
+        UI.getUIManager().addComponent("date_display", new DateDisplay());
 
         // ORDER HERE IMPORTANT! (Inputs processed in order of registration)
         SolarMain.getInstance().getInputManager().addInput(UI.stage());
@@ -74,7 +79,7 @@ public class SimTestScreen implements Screen {
         clientWorldManager.getActiveWorld().getCamera().update();
 
         // do not use current here, we manually subtract PacketSyncDelay
-        gameContext.getSyncLayer().update(gameContext.getTimeSyncManager().estimateSimTimeAt(
+        gameContext.getSyncLayer().update(gameContext.getClock().estimateSimTimeAt(
             (System.nanoTime() / 1000L) - PacketSyncLayer.syncDelayMicros
         ));
 
@@ -118,6 +123,8 @@ public class SimTestScreen implements Screen {
     public void hide() {
         UI.getUIManager().hideComponent("debug");
         UI.getUIManager().removeComponent("escape_menu");
+        UI.getUIManager().removeComponent("time_control");
+        UI.getUIManager().removeComponent("date_display");
         SolarMain.getInstance().getInputManager().removeInput(UI.stage());
         SolarMain.getInstance().getInputManager().removeInput(cameraInput);
     }

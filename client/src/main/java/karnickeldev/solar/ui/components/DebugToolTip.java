@@ -57,7 +57,7 @@ public class DebugToolTip implements UIComponent {
     }
 
     public void resize(int width, int height) {
-        Label.LabelStyle labelStyle = new Label.LabelStyle(UI.getFontManager().getFont(11, false), Color.WHITE);
+        Label.LabelStyle labelStyle = new Label.LabelStyle(UI.getFontManager().getFont(9, false), Color.WHITE);
         fps = new Label("FPS: 9999", labelStyle);
         tps = new Label("TPS: 999", labelStyle);
         ping = new Label("Ping: 999ms", labelStyle);
@@ -73,9 +73,10 @@ public class DebugToolTip implements UIComponent {
         table.add(ping).fill().row();
 
         table.setSize(table.getPrefWidth(),table.getPrefHeight());
-        table.setPosition(UI.VIRTUAL_WIDTH - table.getWidth(), UI.VIRTUAL_HEIGHT - table.getHeight());
+        table.setPosition(UI.VIRTUAL_WIDTH - table.getWidth(), UI.VIRTUAL_HEIGHT - table.getHeight() - 60);
 
         table.layout();
+        table.setZIndex(64);
     }
 
     public Group getGroup() {

@@ -18,8 +18,10 @@ import karnickeldev.solar.network.net.transport.PacketDecoder;
 import karnickeldev.solar.network.net.transport.PacketEncoder;
 import karnickeldev.solar.network.packets.*;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
+import karnickeldev.solar.ui.components.game.TimeControl;
+import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.Logger;
-import karnickeldev.solar.world.TimeSyncManager;
+import karnickeldev.solar.world.ClientClock;
 
 /**
  * @author : KarnickelDev
@@ -41,16 +43,16 @@ public class NettyClientNetwork implements ClientNetwork {
 
     private final PacketSyncLayer syncLayer;
 
-    private final TimeSyncManager timeSyncManager;
+    private final ClientClock clientClock;
 
     public NettyClientNetwork(String host, int port, ClientNetworkListener listener, Dispatcher dispatcher,
-                              PacketSyncLayer syncLayer, TimeSyncManager timeSyncManager) {
+                              PacketSyncLayer syncLayer, ClientClock clientClock) {
         this.host = host;
         this.port = port;
         this.listener = listener;
         this.dispatcher = dispatcher;
         this.syncLayer = syncLayer;
-        this.timeSyncManager = timeSyncManager;
+        this.clientClock = clientClock;
     }
 
     @Override
@@ -163,10 +165,11 @@ public class NettyClientNetwork implements ClientNetwork {
         } else {
             if(pkt instanceof ECSUpdatePacket) {
                 ECSUpdatePacket p = (ECSUpdatePacket) pkt;
-                GameContext.get().getTimeSyncManager().updateFromSnapshot(
-                    p.getSimTimeMicros(), System.nanoTime() / 1000L, p.getSimSpeed(), p.activationTime
-                );
+                GameContext.get().getClock().updateFromSnapshot(p.getSimTimeMicros(), System.nanoTime() / 1000L, p.getCurrentSimSpeed());
                 syncLayer.receivePacket(p);
+
+                dispatcher.dispatch(() -> ((TimeControl) UI.getUIManager().getComponent("time_control")).setTargetSpeedIndex(p.getTargetSimSpeedIndex()));
+
             } else {
                 dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));
             }

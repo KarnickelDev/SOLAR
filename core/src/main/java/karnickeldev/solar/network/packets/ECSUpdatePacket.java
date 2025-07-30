@@ -4,10 +4,6 @@ import io.netty.buffer.ByteBuf;
 import karnickeldev.solar.ecs.registries.SnapshotRegistry;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ECSUpdatePacket extends GameStatePacket {
@@ -15,14 +11,16 @@ public class ECSUpdatePacket extends GameStatePacket {
     private ComponentSnapshot[] snapshots;
     private long simTimeMicros;
     private int worldId;
-    private float simSpeed;
-    public long activationTime;
 
-    protected ECSUpdatePacket(int worldId, long simTimeMicros, float simSpeed, ComponentSnapshot[] snapshots) {
+    private float currentSimSpeed;
+    public byte targetSimSpeedIndex;
+
+    protected ECSUpdatePacket(int worldId, long simTimeMicros, float currentSimSpeed, byte targetSimSpeedIndex, ComponentSnapshot[] snapshots) {
         super(PacketTypes.ECS_UPDATE.getType(), (short)0);
         this.worldId = worldId;
         this.simTimeMicros = simTimeMicros;
-        this.simSpeed = simSpeed;
+        this.currentSimSpeed = currentSimSpeed;
+        this.targetSimSpeedIndex = targetSimSpeedIndex;
         this.snapshots = Arrays.copyOf(snapshots, snapshots.length);
     }
 
@@ -35,8 +33,12 @@ public class ECSUpdatePacket extends GameStatePacket {
         return simTimeMicros;
     }
 
-    public float getSimSpeed() {
-        return simSpeed;
+    public float getCurrentSimSpeed() {
+        return currentSimSpeed;
+    }
+
+    public byte getTargetSimSpeedIndex() {
+        return targetSimSpeedIndex;
     }
 
     public ComponentSnapshot[] getSnapshots() {
@@ -47,8 +49,8 @@ public class ECSUpdatePacket extends GameStatePacket {
     public void writeBody(ByteBuf out) {
         out.writeInt(worldId);
         out.writeLong(simTimeMicros);
-        out.writeFloat(simSpeed);
-        out.writeLong(activationTime);
+        out.writeFloat(currentSimSpeed);
+        out.writeByte(targetSimSpeedIndex);
         out.writeInt(snapshots.length);
         for (ComponentSnapshot snap : snapshots) {
             short type = SnapshotRegistry.getTypeId(snap.getClass());
@@ -61,8 +63,8 @@ public class ECSUpdatePacket extends GameStatePacket {
     public void readBody(ByteBuf in) {
         worldId = in.readInt();
         simTimeMicros = in.readLong();
-        simSpeed = in.readFloat();
-        activationTime = in.readLong();
+        currentSimSpeed = in.readFloat();
+        targetSimSpeedIndex = in.readByte();
         int length = in.readInt();
         snapshots = new ComponentSnapshot[length];
         for (int i = 0; i < length; i++) {
@@ -72,7 +74,7 @@ public class ECSUpdatePacket extends GameStatePacket {
     }
 
     public static ECSUpdatePacket create(ByteBuf in) {
-        ECSUpdatePacket p = new ECSUpdatePacket(0,0,0,new ComponentSnapshot[0]);
+        ECSUpdatePacket p = new ECSUpdatePacket(0,0,0, (byte)0, new ComponentSnapshot[0]);
         p.readBody(in);
         return p;
     }

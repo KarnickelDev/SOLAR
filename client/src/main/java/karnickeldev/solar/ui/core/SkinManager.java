@@ -108,11 +108,10 @@ public class SkinManager implements Disposable {
 
         TextButton.TextButtonStyle buttonStyleToggle = new TextButton.TextButtonStyle();
         buttonStyleToggle.up = up;
-        buttonStyleToggle.down = down;
+        buttonStyleToggle.down = up;
         buttonStyleToggle.font = bold;
         buttonStyleToggle.fontColor = UI.WHITE;
-        buttonStyleToggle.overFontColor = UI.WHITE;
-        buttonStyleToggle.checkedFontColor = buttonStyleBold.overFontColor;
+        buttonStyleToggle.overFontColor = UI.WHITE.cpy().mul(1.25f);
         buttonStyleToggle.checked = border;
         skin.add("toggle", buttonStyleToggle);
 

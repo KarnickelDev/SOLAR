@@ -8,18 +8,18 @@ import io.netty.buffer.ByteBuf;
  **/
 public class SimTimeUpdateRequestPacket extends Packet {
 
-    private float simSpeed;
+    private byte simSpeedIndex;
     private boolean pause;
 
-    public SimTimeUpdateRequestPacket(float simSpeed, boolean pause) {
+    public SimTimeUpdateRequestPacket(byte simSpeedIndex, boolean pause) {
         super(PacketTypes.SIM_TIME_UPDATE_REQUEST.getType(), (short) 0);
 
-        this.simSpeed = simSpeed;
+        this.simSpeedIndex = simSpeedIndex;
         this.pause = pause;
     }
 
-    public float getSimSpeed() {
-        return simSpeed;
+    public byte getSimSpeedIndex() {
+        return simSpeedIndex;
     }
 
     public boolean isPause() {
@@ -28,18 +28,18 @@ public class SimTimeUpdateRequestPacket extends Packet {
 
     @Override
     protected void writeBody(ByteBuf out) {
-        out.writeFloat(simSpeed);
+        out.writeByte(simSpeedIndex);
         out.writeBoolean(pause);
     }
 
     @Override
     protected void readBody(ByteBuf in) {
-        simSpeed = in.readFloat();
+        simSpeedIndex = in.readByte();
         pause = in.readBoolean();
     }
 
     public static SimTimeUpdateRequestPacket create(ByteBuf in) {
-        SimTimeUpdateRequestPacket pkt = new SimTimeUpdateRequestPacket(0,false);
+        SimTimeUpdateRequestPacket pkt = new SimTimeUpdateRequestPacket((byte)0,false);
         pkt.readBody(in);
         return pkt;
     }

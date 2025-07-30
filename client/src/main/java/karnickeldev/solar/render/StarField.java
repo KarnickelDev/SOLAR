@@ -62,7 +62,13 @@ public class StarField {
 
         fboBatch.begin();
         for (int i = 0; i < container.starCount; i++) {
-            int size = 1 + (container.sizeAndColor[i] & 0b00000011);
+            int size = 1;
+            int sizeIndex = container.sizeAndColor[i] & 0b00000011;
+            if(sizeIndex == 1) {
+                size = 2;
+            } else if(sizeIndex > 1) {
+                size = 4;
+            }
 
             float x = container.pos[2 * i] * WIDTH;
             float y = container.pos[2 * i + 1] * HEIGHT;
@@ -100,7 +106,7 @@ public class StarField {
             // size and brightness
             int s = rnd.nextInt(100);
             if(s < 86) {
-                //sizeAndColor[i] = (byte)(sizeAndColor[i] | 1);
+                sizeAndColor[i] = (byte)(sizeAndColor[i]);
                 brightness[i] = (byte)(MathUtil.random(0.25f, 1) * Byte.MAX_VALUE);
             } else if (s < 97) {
                 sizeAndColor[i] = (byte)(sizeAndColor[i] | 1);

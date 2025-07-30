@@ -7,7 +7,7 @@ import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.world.ClientWorld;
-import karnickeldev.solar.world.TimeSyncManager;
+import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.WorldManager;
 
 /**
@@ -22,7 +22,7 @@ public class GameContextContainer {
     private final ClientNetwork clientNetwork;
     private final ClientNetworkListener clientListener;
 
-    private final TimeSyncManager timeSyncManager;
+    private final ClientClock clientClock;
     private final PlanetoidRenderSystem rs;
     private final CameraInput cameraInput;
 
@@ -32,13 +32,13 @@ public class GameContextContainer {
 
     public GameContextContainer(boolean multiplayer, WorldManager<ClientWorld> worldManager, Dispatcher dispatcher,
                                 ClientNetwork clientNetwork, ClientNetworkListener clientListener,
-                                TimeSyncManager timeSyncManager, PlanetoidRenderSystem rs, CameraInput cameraInput, PacketSyncLayer syncLayer) {
+                                ClientClock clientClock, PlanetoidRenderSystem rs, CameraInput cameraInput, PacketSyncLayer syncLayer) {
         this.multiplayer = multiplayer;
         this.worldManager = worldManager;
         this.dispatcher = dispatcher;
         this.clientNetwork = clientNetwork;
         this.clientListener = clientListener;
-        this.timeSyncManager = timeSyncManager;
+        this.clientClock = clientClock;
         this.rs = rs;
         this.cameraInput = cameraInput;
         this.syncLayer = syncLayer;
@@ -68,8 +68,8 @@ public class GameContextContainer {
         return clientListener;
     }
 
-    public TimeSyncManager getTimeSyncManager() {
-        return timeSyncManager;
+    public ClientClock getClock() {
+        return clientClock;
     }
 
     public CameraInput getCameraInput() {

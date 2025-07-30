@@ -44,36 +44,36 @@ public class PacketFactory {
         return new WorldUpdatePacket(worldId, simTime);
     }
 
-    public static ECSUpdatePacket createECSUpdatePacket(long simTime, int worldId, float simSpeed, ComponentSnapshot... snapshots) {
-        return new ECSUpdatePacket(worldId, simTime, simSpeed, snapshots);
+    public static ECSUpdatePacket createECSUpdatePacket(long simTime, int worldId, float simSpeed, byte targetSimSpeedIndex, ComponentSnapshot... snapshots) {
+        return new ECSUpdatePacket(worldId, simTime, simSpeed, targetSimSpeedIndex, snapshots);
     }
 
-    public static ECSUpdatePacket createECSUpdatePacket(long simTime, float simSpeed, ServerWorld world) {
+    public static ECSUpdatePacket createECSUpdatePacket(long simTime, float simSpeed, byte targetSimSpeedIndex, ServerWorld world) {
         List<ComponentSnapshot> snaps = world.getECS().getComponentRegistry().createAllSnapshots(simTime);
         snaps.add(world.getECS().hcs.getCurrent().createSnapshot(simTime));
         snaps.removeAll(Collections.singleton(null));
         if(snaps.isEmpty()) return null;
 
-        ECSUpdatePacket pkt = new ECSUpdatePacket(world.getID(), simTime, simSpeed, snaps.toArray(ComponentSnapshot[]::new));
-        pkt.activationTime = simTime + 50_000;
+        ECSUpdatePacket pkt = new ECSUpdatePacket(world.getID(), simTime, simSpeed, targetSimSpeedIndex, snaps.toArray(ComponentSnapshot[]::new));
         return pkt;
     }
 
-    public static ECSUpdatePacket createFullECSUpdatePacket(long simTime, float simSpeed, ServerWorld world) {
+    public static ECSUpdatePacket createFullECSUpdatePacket(long simTime, float simSpeed, byte targetSimSpeedIndex, ServerWorld world) {
         List<ComponentSnapshot> snaps = world.getECS().getComponentRegistry().createFullSnapshot(simTime);
         snaps.add(world.getECS().hcs.getCurrent().createFullSnapshot(simTime));
         snaps.removeAll(Collections.singleton(null));
         if(snaps.isEmpty()) return null;
 
 
-        return new ECSUpdatePacket(world.getID(), simTime, simSpeed, snaps.toArray(ComponentSnapshot[]::new));
+        return new ECSUpdatePacket(world.getID(), simTime, simSpeed, targetSimSpeedIndex, snaps.toArray(ComponentSnapshot[]::new));
     }
 
     public static FullSnapshotPacket createFullSnapshotPacket(ServerWorld world) {
         Packet[] packets = new Packet[] {
             createWorldUpdatePacket(world.getID(), world.getWorldTime().getSimTimeMicros()),
             createFullEntityLifecyclePacket(world.getWorldTime().getSimTimeMicros(), world),
-            createFullECSUpdatePacket(world.getWorldTime().getSimTimeMicros(), SimulationManager.simSpeed, world)
+            createFullECSUpdatePacket(world.getWorldTime().getSimTimeMicros(),
+                SimulationManager.simSpeedController.getCurrentSimSpeed(), SimulationManager.simSpeedController.getPresetIndex(), world)
         };
         return new FullSnapshotPacket(world.getID(), world.getWorldTime().getSimTimeMicros(), packets);
     }

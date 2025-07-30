@@ -2,7 +2,6 @@ package karnickeldev.solar.network.net.handlers;
 
 import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.network.packets.SimTimeUpdateRequestPacket;
-import karnickeldev.solar.simulation.execution.SimulationManager;
 
 /**
  * @author : KarnickelDev
@@ -11,7 +10,9 @@ import karnickeldev.solar.simulation.execution.SimulationManager;
 public class SimTimeUpdateRequestHandler implements PacketHandler<SimTimeUpdateRequestPacket> {
     @Override
     public void handle(int clientId, SimTimeUpdateRequestPacket packet) {
-        ServerContext.get().getServer().getDispatcher().dispatch(() -> ServerContext.get().getServer().getSimulationManagerThread().getSimulationManager().mulSimSpeed(packet.getSimSpeed()));
+        ServerContext.get().getServer().getDispatcher().dispatch(
+            () -> ServerContext.get().getServer().getSimulationManagerThread().getSimulationManager().setSimSpeed(packet.getSimSpeedIndex())
+        );
     }
 
     @Override

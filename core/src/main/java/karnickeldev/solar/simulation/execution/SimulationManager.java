@@ -6,7 +6,6 @@ import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.util.Logger;
-import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
@@ -15,13 +14,14 @@ import karnickeldev.solar.world.WorldManager;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.LockSupport;
 
 /**
  * @author : KarnickelDev
  * @since : 01.06.2025
  **/
 public class SimulationManager implements Runnable {
+
+    public static final float[] SPEEDS = {0.2f, 1f, 2f, 5f, 10f, 20f, 100f, 1000f, 10_000f, 100_000f, 1_000_000f};
 
     private static final byte INTERRUPT = 1;
     private static final byte TIMEOUT = 2;
@@ -46,8 +46,7 @@ public class SimulationManager implements Runnable {
     private long schedulerNanosPerTick;
     private byte tickRate;
 
-    public static float simSpeed = 1;
-    public static float targetSimSpeed = simSpeed;
+    public static SimSpeedController simSpeedController = new SimSpeedController();
 
     private final BitMask errno = new BitMask();
 
@@ -64,11 +63,13 @@ public class SimulationManager implements Runnable {
 
         // TODO: initialize from save-file
         globalSimTimeMicros = 0;
+
+        simSpeedController.setSpeedPreset(1);
     }
 
 
-    public void mulSimSpeed(float v) {
-        targetSimSpeed *= v;
+    public void setSimSpeed(byte v) {
+        simSpeedController.setSpeedPreset(v);
     }
 
     public void registerWorld(ServerWorld world) {
@@ -168,16 +169,20 @@ public class SimulationManager implements Runnable {
                 ));
             }
 
-            Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(globalSimTimeMicros, SimulationManager.simSpeed, worldManager.getActiveWorld());
+            Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(
+                globalSimTimeMicros, simSpeedController.getCurrentSimSpeed(), simSpeedController.getPresetIndex(), worldManager.getActiveWorld()
+            );
             ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
             ServerContext.get().getServer().getServerNetwork().flush();
 
             tickEnd = System.nanoTime();
 
-            simSpeed = (float) MathUtil.lerp(simSpeed, targetSimSpeed, 0.1);
+            System.out.println(simSpeedController.getCurrentSimSpeed());
+
+            simSpeedController.update(1f / tickRate);
 
             //globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
-            globalSimTimeMicros += Math.round((schedulerNanosPerTick / 1000d) * simSpeed);
+            globalSimTimeMicros += Math.round((schedulerNanosPerTick / 1000d) * simSpeedController.getCurrentSimSpeed());
 
 //            tmp = (tmp + 1) % 100;
 //            if(tmp == 0) {

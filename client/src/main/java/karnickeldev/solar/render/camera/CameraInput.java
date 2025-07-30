@@ -11,6 +11,8 @@ import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.network.packets.SimTimeUpdateRequestPacket;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
+import karnickeldev.solar.simulation.execution.SimSpeedController;
+import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.world.ClientWorld;
@@ -83,7 +85,7 @@ public class CameraInput extends InputAdapter {
         if(keycode == Input.Keys.NUMPAD_ADD) {
             GameContext.get().getClientNetwork().send(
                 new SimTimeUpdateRequestPacket(
-                    5f, false
+                    (byte)3, false
                 )
             );
             return true;
@@ -92,7 +94,7 @@ public class CameraInput extends InputAdapter {
         if(keycode == Input.Keys.NUMPAD_SUBTRACT) {
             GameContext.get().getClientNetwork().send(
                 new SimTimeUpdateRequestPacket(
-                    1f/5f, false
+                    (byte)1, false
                 )
             );
             return true;

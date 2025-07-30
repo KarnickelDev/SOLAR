@@ -54,7 +54,7 @@ public class PacketSyncLayer {
             if (next.pkt.getSimTimeMicros() < currentTimeMicros) {
                 buffer.poll();
 
-                Logger.log("delay=" + ((System.nanoTime() / 1000) - next.arrivalMicros));
+                //Logger.log("delay=" + ((System.nanoTime() / 1000) - next.arrivalMicros));
 
                 PacketHandler<Packet> handler = HandlerRegistry.getHandler(next.pkt);
                 handler.handle(0, next.pkt);

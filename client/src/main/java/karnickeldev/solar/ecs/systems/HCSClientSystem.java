@@ -1,17 +1,11 @@
 package karnickeldev.solar.ecs.systems;
 
-import com.badlogic.gdx.Gdx;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
 import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
-import karnickeldev.solar.simulation.execution.SimulationManager;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
-import karnickeldev.solar.world.TimeSyncManager;
-
-import java.util.*;
 
 public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSnapshot> {
 
@@ -46,7 +40,7 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
         previousSnapshot = latestSnapshot;
         latestSnapshot = snapshot;
 
-        Logger.log("update");
+        //Logger.log("update");
     }
 
     long last = 0;
@@ -61,15 +55,15 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
         if (simB == simA) return 0;
 
-        long curr = GameContext.get().getTimeSyncManager().estimateSimTimeAt((System.nanoTime() / 1000L) - PacketSyncLayer.syncDelayMicros);
+        long curr = GameContext.get().getClock().estimateSimTimeAt((System.nanoTime() / 1000L) - PacketSyncLayer.syncDelayMicros);
 
         double alpha = (double)(curr - simB) / ((double)(simB - simA));
 
-        Logger.log("alpha=" + alpha + ", simA: " + simA + ", simB: " + simB + ", diff: " + (curr - last));
+        //Logger.log("alpha=" + alpha + ", simA: " + simA + ", simB: " + simB + ", diff: " + (curr - last));
 
         last = curr;
 
-        return MathUtil.clamp(alpha, 0, 1.1); // slightly allow extrapolation
+        return MathUtil.clamp(alpha, 0, 1.15); // slightly allow extrapolation
     }
 
     public double getInterpolatedX(int entityID, double alpha) {

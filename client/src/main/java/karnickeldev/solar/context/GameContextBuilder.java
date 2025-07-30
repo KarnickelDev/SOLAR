@@ -18,7 +18,7 @@ import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.world.ClientWorld;
-import karnickeldev.solar.world.TimeSyncManager;
+import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.WorldManager;
 
 import java.util.concurrent.BlockingQueue;
@@ -36,11 +36,11 @@ public class GameContextBuilder {
         ClientNetworkListener clientListener = new DefaultClientNetworkListener(worldManager);
         Dispatcher dispatcher = new DefaultDispatcher();
 
-        TimeSyncManager timeSyncManager = new TimeSyncManager();
+        ClientClock clientClock = new ClientClock();
 
         PacketSyncLayer syncLayer = new PacketSyncLayer();
 
-        ClientNetwork clientNetwork = new NettyClientNetwork(host, port, clientListener, dispatcher, syncLayer, timeSyncManager);
+        ClientNetwork clientNetwork = new NettyClientNetwork(host, port, clientListener, dispatcher, syncLayer, clientClock);
 
         PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch());
 
@@ -52,7 +52,7 @@ public class GameContextBuilder {
             dispatcher,
             clientNetwork,
             clientListener,
-            timeSyncManager,
+            clientClock,
             rs,
             cameraInput,
             syncLayer
@@ -73,7 +73,7 @@ public class GameContextBuilder {
 
         Dispatcher serverDispatcher = new DefaultDispatcher();
 
-        TimeSyncManager time = new TimeSyncManager();
+        ClientClock time = new ClientClock();
 
         BlockingQueue<Packet> toServer = new LinkedBlockingQueue<>(128);
         BlockingQueue<Packet> fromServer = new LinkedBlockingQueue<>(128);

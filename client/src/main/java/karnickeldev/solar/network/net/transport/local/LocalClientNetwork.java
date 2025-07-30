@@ -3,14 +3,13 @@ package karnickeldev.solar.network.net.transport.local;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
-import karnickeldev.solar.network.net.handlers.ECSUpdateHandler;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.packets.ECSUpdatePacket;
-import karnickeldev.solar.network.packets.GameStatePacket;
 import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.network.packets.PacketTypes;
-import karnickeldev.solar.network.sync.PacketSyncLayer;
+import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.ui.components.game.TimeControl;
+import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.Logger;
 
 import java.util.concurrent.*;
@@ -78,8 +77,13 @@ public class LocalClientNetwork implements ClientNetwork {
         } else {
             if(pkt instanceof ECSUpdatePacket) {
                 ECSUpdatePacket p = (ECSUpdatePacket) pkt;
-                GameContext.get().getTimeSyncManager().updateFromSnapshot(p.getSimTimeMicros(), System.nanoTime() / 1000L, p.getSimSpeed(), p.activationTime);
+                GameContext.get().getClock().updateFromSnapshot(p.getSimTimeMicros(), System.nanoTime() / 1000L, p.getCurrentSimSpeed());
                 GameContext.get().getSyncLayer().receivePacket(p);
+
+                dispatcher.dispatch(() -> {
+                    UIComponent cmp = UI.getUIManager().getComponent("time_control");
+                    if(cmp != null) ((TimeControl) cmp).setTargetSpeedIndex(p.getTargetSimSpeedIndex());
+                });
             } else {
                 dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));
             }

@@ -148,7 +148,7 @@ public class SimulationTask implements Comparable<SimulationTask> {
 
     public void runUntil(long targetSimTimeMicros) {
         long timeAccumulatorMicros = targetSimTimeMicros - world.getWorldTime().getSimTimeMicros();
-        long tickIntervalMicros = Math.round(1_000_000L / (double)priority.getTickRate() * SimulationManager.simSpeed);
+        long tickIntervalMicros = Math.round(1_000_000L / (double)priority.getTickRate() * SimulationManager.simSpeedController.getCurrentSimSpeed());
 
         while (timeAccumulatorMicros >= tickIntervalMicros) {
             long start = System.nanoTime();
