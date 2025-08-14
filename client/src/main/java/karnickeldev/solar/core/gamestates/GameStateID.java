@@ -7,7 +7,6 @@ package karnickeldev.solar.core.gamestates;
 public enum GameStateID {
     BOOT,
     MAIN_MENU,
-    LOADING_SCREEN,
     GAMEPLAY,
     ;
 }

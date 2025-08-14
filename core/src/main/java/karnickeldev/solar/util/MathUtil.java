@@ -16,6 +16,10 @@ public class MathUtil {
         return Math.min(Math.max(min, value), max);
     }
 
+    public static int clamp(int value, int min, int max) {
+        return Math.min(Math.max(min, value), max);
+    }
+
     public static float getStandardNormalDistribution(float x) {
         return (float) ((1f / 2 * Math.sqrt(2f * Math.PI)) * Math.pow(Math.E, -0.5f * (x * x)));
     }
@@ -43,12 +47,6 @@ public class MathUtil {
     public static Color lerpColor(float r1, float g1, float b1, float r2, float g2, float b2, float alpha) {
         float a = clamp(alpha, 0, 1f);
         return new Color((float) lerp(r1, r2, a), (float) lerp(g1, g2, a), (float) lerp(b1, b2, a), 1f);
-    }
-
-    public static float remapClamped(float inMin, float inMax, float outMin, float outMax, float value) {
-        if (inMin == inMax) return outMin;
-        float t = clamp((value - inMin) / (inMax - inMin), 0f, 1f);
-        return outMin + t * (outMax - outMin);
     }
 
     public static float normalizeRotationDeg(float degrees) {

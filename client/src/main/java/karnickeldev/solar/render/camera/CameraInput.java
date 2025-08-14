@@ -83,20 +83,17 @@ public class CameraInput extends InputAdapter {
         }
 
         if(keycode == Input.Keys.NUMPAD_ADD) {
-            GameContext.get().getClientNetwork().send(
-                new SimTimeUpdateRequestPacket(
-                    (byte)3, false
-                )
-            );
+            GameContext.get().getClock().getSimSpeedController().changeSpeed(+1);
             return true;
         }
 
         if(keycode == Input.Keys.NUMPAD_SUBTRACT) {
-            GameContext.get().getClientNetwork().send(
-                new SimTimeUpdateRequestPacket(
-                    (byte)1, false
-                )
-            );
+            GameContext.get().getClock().getSimSpeedController().changeSpeed(-1);
+            return true;
+        }
+
+        if(keycode == Input.Keys.SPACE) {
+            GameContext.get().getClock().getSimSpeedController().togglePause();
             return true;
         }
 
@@ -161,11 +158,20 @@ public class CameraInput extends InputAdapter {
             int dx = screenX - lastMouseX;
             int dy = screenY - lastMouseY;
 
-            camera.move(new Vector2D(-dx * camera.getZoom(), dy * camera.getZoom()));
+            // Convert mouse delta to world-space direction
+            double cos = Math.cos(Math.toRadians(camera.getRotation()));
+            double sin = Math.sin(Math.toRadians(camera.getRotation()));
+
+            double worldDX = -dx * cos + dy * sin; // x axis mirrored, so formula is -(dx * cos - dy * sin)
+            double worldDY = dx * sin + dy * cos;
+
+            // Apply zoom scaling
+            Vector2D moveVec = new Vector2D(worldDX * camera.getZoom(), worldDY * camera.getZoom());
+
+            camera.move(moveVec);
 
             lastMouseX = screenX;
             lastMouseY = screenY;
-
             return true;
         }
         return false;

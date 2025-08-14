@@ -72,6 +72,9 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
             double rotatedX = cosW * orbitX - sinW * orbitY;
             double rotatedY = sinW * orbitX + cosW * orbitY;
 
+            rotatedX += hcs.getNext().getLocalX(centralBodyId);
+            rotatedY += hcs.getNext().getLocalY(centralBodyId);
+
             hcs.add(entity, centralBodyId, rotatedX, rotatedY);
         }
         hcs.swapBuffers();

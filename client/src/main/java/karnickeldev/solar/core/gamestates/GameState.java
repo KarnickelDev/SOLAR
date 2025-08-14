@@ -10,9 +10,5 @@ public interface GameState {
 
     void exit();
 
-    void render(float delta);
-
-    void resize(int width, int height);
-
     GameStateID getID();
 }

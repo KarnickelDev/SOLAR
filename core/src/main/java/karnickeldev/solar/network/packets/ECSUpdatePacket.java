@@ -14,13 +14,15 @@ public class ECSUpdatePacket extends GameStatePacket {
 
     private float currentSimSpeed;
     public byte targetSimSpeedIndex;
+    private boolean paused;
 
-    protected ECSUpdatePacket(int worldId, long simTimeMicros, float currentSimSpeed, byte targetSimSpeedIndex, ComponentSnapshot[] snapshots) {
+    protected ECSUpdatePacket(int worldId, long simTimeMicros, float currentSimSpeed, byte targetSimSpeedIndex, boolean paused, ComponentSnapshot[] snapshots) {
         super(PacketTypes.ECS_UPDATE.getType(), (short)0);
         this.worldId = worldId;
         this.simTimeMicros = simTimeMicros;
         this.currentSimSpeed = currentSimSpeed;
         this.targetSimSpeedIndex = targetSimSpeedIndex;
+        this.paused = paused;
         this.snapshots = Arrays.copyOf(snapshots, snapshots.length);
     }
 
@@ -41,6 +43,10 @@ public class ECSUpdatePacket extends GameStatePacket {
         return targetSimSpeedIndex;
     }
 
+    public boolean isPaused() {
+        return paused;
+    }
+
     public ComponentSnapshot[] getSnapshots() {
         return snapshots;
     }
@@ -51,6 +57,7 @@ public class ECSUpdatePacket extends GameStatePacket {
         out.writeLong(simTimeMicros);
         out.writeFloat(currentSimSpeed);
         out.writeByte(targetSimSpeedIndex);
+        out.writeBoolean(paused);
         out.writeInt(snapshots.length);
         for (ComponentSnapshot snap : snapshots) {
             short type = SnapshotRegistry.getTypeId(snap.getClass());
@@ -65,6 +72,7 @@ public class ECSUpdatePacket extends GameStatePacket {
         simTimeMicros = in.readLong();
         currentSimSpeed = in.readFloat();
         targetSimSpeedIndex = in.readByte();
+        paused = in.readBoolean();
         int length = in.readInt();
         snapshots = new ComponentSnapshot[length];
         for (int i = 0; i < length; i++) {
@@ -74,7 +82,7 @@ public class ECSUpdatePacket extends GameStatePacket {
     }
 
     public static ECSUpdatePacket create(ByteBuf in) {
-        ECSUpdatePacket p = new ECSUpdatePacket(0,0,0, (byte)0, new ComponentSnapshot[0]);
+        ECSUpdatePacket p = new ECSUpdatePacket(0,0,0, (byte)0, true, new ComponentSnapshot[0]);
         p.readBody(in);
         return p;
     }

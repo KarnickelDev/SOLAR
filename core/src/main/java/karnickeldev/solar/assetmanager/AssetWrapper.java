@@ -6,7 +6,7 @@ import com.badlogic.gdx.utils.Disposable;
 public class AssetWrapper implements Disposable {
 
     public static final String TEXTURES = "textures/";
-    public static final String ICON = "icon/";
+    public static final String ICONS = "icons/";
 
     private static final AssetWrapper INSTANCE = new AssetWrapper();
     private final AssetManager assetManager;

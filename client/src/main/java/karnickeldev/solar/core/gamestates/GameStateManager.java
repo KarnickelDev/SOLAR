@@ -31,7 +31,7 @@ public class GameStateManager {
         if(current != null) current.exit();
 
         current = to;
-        SolarMain.getInstance().setScreen(new GameStateScreen(current));
+        //SolarMain.getInstance().setScreen(new GameStateScreen(current));
         current.enter();
     }
 

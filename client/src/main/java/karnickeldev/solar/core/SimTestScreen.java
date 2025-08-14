@@ -36,8 +36,7 @@ public class SimTestScreen implements Screen {
 
     @Override
     public void show() {
-
-        UI.getUIManager().addComponent("debug", new DebugToolTip());
+        UI.getUIManager().addForceComponent("debug", new DebugToolTip(false));
         UI.getUIManager().showComponent("debug");
 
         UI.getUIManager().addComponent("escape_menu", new EscapeMenu());

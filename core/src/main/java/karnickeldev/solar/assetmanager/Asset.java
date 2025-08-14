@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
 public enum Asset {
 
-    GAME_ICON(AssetWrapper.ICON + "solar_icon_512.png", Texture.class, true),
+    GAME_ICON(AssetWrapper.ICONS + "solar_icon_512.png", Texture.class, true),
     STARRY_SKY_BACKGROUND_TILES(AssetWrapper.TEXTURES + "starry_sky_tiles.png", Texture.class, true),
     MAIN_MENU_BACKGROUND_SCENERY(AssetWrapper.TEXTURES + "landscape.png", Texture.class, true),
     TREE_LINE(AssetWrapper.TEXTURES + "treeline.png", Texture.class, true),

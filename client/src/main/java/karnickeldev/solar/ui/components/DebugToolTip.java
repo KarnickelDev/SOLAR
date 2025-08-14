@@ -25,8 +25,12 @@ public class DebugToolTip implements UIComponent {
     private Label tps;
     private Label ping;
 
-    public DebugToolTip() {
+    private final short yOffset;
+
+    public DebugToolTip(boolean mainMenu) {
         table = new Table();
+
+        yOffset = (short) (mainMenu ? 2 : 80);
     }
 
     private long lastUpdate = 0;
@@ -73,7 +77,7 @@ public class DebugToolTip implements UIComponent {
         table.add(ping).fill().row();
 
         table.setSize(table.getPrefWidth(),table.getPrefHeight());
-        table.setPosition(UI.VIRTUAL_WIDTH - table.getWidth(), UI.VIRTUAL_HEIGHT - table.getHeight() - 60);
+        table.setPosition(UI.VIRTUAL_WIDTH - table.getWidth(), UI.VIRTUAL_HEIGHT - table.getHeight() - yOffset);
 
         table.layout();
         table.setZIndex(64);

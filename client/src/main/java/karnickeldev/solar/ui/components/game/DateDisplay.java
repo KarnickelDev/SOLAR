@@ -1,12 +1,14 @@
 package karnickeldev.solar.ui.components.game;
 
 import com.badlogic.gdx.scenes.scene2d.Group;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.ui.core.FontManager;
 import karnickeldev.solar.ui.core.UI;
 
 /**
@@ -15,7 +17,7 @@ import karnickeldev.solar.ui.core.UI;
  **/
 public class DateDisplay implements UIComponent {
 
-    private static final float UPDATE_RATE_SECONDS = 1 / 60f;
+    private static final float UPDATE_RATE_SECONDS = 1 / 50f;
     private static final short START_YEAR = 2250;
 
     private static final int SECONDS_PER_MINUTE = 60;
@@ -26,11 +28,15 @@ public class DateDisplay implements UIComponent {
 
     private float accumulator = 0;
 
-    private Table group;
+    private final Table group;
 
     private Label dateLabel;
-    private Label timeLabel;
-    private Label secondsLabel;
+    private Label hourLabel;
+    private Label minuteLabel;
+
+    private Label speedLabel;
+
+    private TextButton pauseButton;
 
     private int year;
     private byte month;
@@ -38,7 +44,6 @@ public class DateDisplay implements UIComponent {
 
     private byte hour;
     private byte minute;
-    private byte second;
 
     public DateDisplay() {
         group = new Table();
@@ -61,8 +66,15 @@ public class DateDisplay implements UIComponent {
         updateDate();
 
         dateLabel.setText(getDateText());
-        timeLabel.setText(getTimeText());
-        secondsLabel.setText(getSecondsText());
+        hourLabel.setText(getHourText());
+        minuteLabel.setText(getMinuteText());
+
+        // update pause button
+        pauseButton.setText(GameContext.get().getClock().isPaused() ? "\uf04b" : "\uf04c");
+
+        // update speed
+        String[] speedLabels = {"slow", "normal", "fast", "fastest"};
+        speedLabel.setText(speedLabels[Math.min(GameContext.get().getClock().getTargetSimSpeedIndex(), speedLabels.length-1)]);
     }
 
     @Override
@@ -70,48 +82,91 @@ public class DateDisplay implements UIComponent {
         group.clear();
         group.setSkin(UI.skin());
         group.setBackground(UI.skin().get("up", NinePatchDrawable.class));
-        group.setSize(120,60);
+        group.setSize(200,70);
         group.setPosition(UI.VIRTUAL_WIDTH - group.getWidth(), UI.VIRTUAL_HEIGHT - group.getHeight());
-        group.center().bottom().pad(10);
+        group.center().pad(10).padBottom(2).padTop(2);
 
-        Label.LabelStyle style = new Label.LabelStyle(UI.getFontManager().getFont(12, false), UI.WHITE);
-        Label.LabelStyle styleSeconds = new Label.LabelStyle(UI.getFontManager().getFont(8, false), UI.WHITE);
+        TextButton.TextButtonStyle toggleStyle = new TextButton.TextButtonStyle(UI.skin().get("default", TextButton.TextButtonStyle.class));
+        toggleStyle.font = UI.getFontManager().getFont(FontManager.Fonts.FONT_AWESOME, 22, false);
+        toggleStyle.checked = null;
+        toggleStyle.up = null;
+        toggleStyle.down = null;
+
+        pauseButton = new TextButton("\uf04b", toggleStyle);
+        pauseButton.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                GameContext.get().getClock().getSimSpeedController().togglePause();
+            }
+        });
+
+        group.add(pauseButton).expand().fill().width(40).height(40);
+
+        Label.LabelStyle style = new Label.LabelStyle(UI.getFontManager().getFont(10, false), UI.WHITE);
 
         dateLabel = new Label(getDateText(), style);
-        dateLabel.setAlignment(Align.left);
+        dateLabel.setAlignment(Align.center);
         dateLabel.setEllipsis(true);
 
-        timeLabel = new Label(getTimeText(), style);
-        timeLabel.setAlignment(Align.bottomLeft);
-        timeLabel.setEllipsis(true);
+        hourLabel = new Label(getHourText(), style);
+        hourLabel.setAlignment(Align.left);
+        hourLabel.setEllipsis(true);
 
-        secondsLabel = new Label(getSecondsText(), styleSeconds);
-        secondsLabel.setAlignment(Align.bottomLeft);
-        secondsLabel.setEllipsis(true);
+        minuteLabel = new Label(getMinuteText(), style);
+        minuteLabel.setAlignment(Align.left);
+        minuteLabel.setEllipsis(true);
 
-        group.add(dateLabel).fill().expand();
-        group.row();
+        Table timeSubGroup = new Table();
+        timeSubGroup.pad(0).center();
+        float timeWidth = 1.2f * minuteLabel.getMinWidth();
+        timeSubGroup.add(hourLabel).width(timeWidth);
+        timeSubGroup.add(new Label(":", style)).padLeft(4).padRight(4);
+        timeSubGroup.add(minuteLabel).width(timeWidth);
 
-        Table timeGroup = new Table();
-        timeGroup.pad(0);
-        timeGroup.bottom().left();
-        timeGroup.add(timeLabel).width(55).fill().left();
-        timeGroup.add();
-        timeGroup.add(secondsLabel).height(20).right();
+        speedLabel = new Label("normal", new Label.LabelStyle(UI.getFontManager().getFont(10), UI.WHITE));
+        speedLabel.setAlignment(Align.center);
 
-        group.add(timeGroup).expand().fill();
+        VerticalGroup timeDateGroup = new VerticalGroup();
+        timeDateGroup.pad(2).center();
+        timeDateGroup.addActor(dateLabel);
+        timeDateGroup.addActor(timeSubGroup);
+        timeDateGroup.addActor(speedLabel);
+
+        group.add(timeDateGroup).expand();
+
+        TextButton plusSpeed = new TextButton("+", UI.skin());
+        plusSpeed.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                GameContext.get().getClock().getSimSpeedController().changeSpeed(+1);
+            }
+        });
+
+        TextButton minusSpeed = new TextButton("-", UI.skin());
+        minusSpeed.addListener(new ClickListener() {
+            public void clicked(InputEvent event, float x, float y) {
+                GameContext.get().getClock().getSimSpeedController().changeSpeed(-1);
+            }
+        });
+
+        Table speedMod = new Table();
+        speedMod.add(plusSpeed).height(24).width(24).pad(4);
+        speedMod.row();
+        speedMod.add(minusSpeed).height(24).width(24).pad(4);
+
+        group.add(speedMod).expand();
+
+        group.layout();
     }
 
     private String getDateText() {
         return String.format("%02d.%02d.%04d", day, month, year);
     }
 
-    private String getTimeText() {
-        return String.format("%02d:%02d", hour, minute);
+    private String getHourText() {
+        return String.format("%02d", hour);
     }
 
-    private String getSecondsText() {
-        return String.format("%02d", second);
+    private String getMinuteText() {
+        return String.format("%02d", minute);
     }
 
     private void updateDate() {
@@ -128,7 +183,5 @@ public class DateDisplay implements UIComponent {
 
         hour = (byte) (remainingSeconds / SECONDS_PER_HOUR);
         minute = (byte) (seconds / SECONDS_PER_MINUTE);
-        second = (byte) (seconds % SECONDS_PER_MINUTE);
     }
-
 }

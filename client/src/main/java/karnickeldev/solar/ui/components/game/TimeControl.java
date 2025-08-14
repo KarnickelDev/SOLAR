@@ -7,13 +7,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import karnickeldev.solar.context.GameContext;
-import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.network.packets.SimTimeUpdateRequestPacket;
 import karnickeldev.solar.simulation.execution.SimSpeedController;
-import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.ui.components.UIComponent;
 import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 
 /**
  * @author : KarnickelDev
@@ -24,8 +21,6 @@ public class TimeControl implements UIComponent {
     private final Table table;
 
     private int selectedSpeed = 1;
-
-    private long lastUpdate = 0;
 
     public void setTargetSpeedIndex(byte index) {
         selectedSpeed = index;
@@ -56,8 +51,8 @@ public class TimeControl implements UIComponent {
         table.clear();
         table.setSkin(UI.skin());
 
-        table.setSize(300, 25);
-        table.setPosition(0, UI.VIRTUAL_HEIGHT - 25);
+        table.setSize(300, 30);
+        table.setPosition(0, UI.VIRTUAL_HEIGHT - table.getHeight());
         table.top().left().pad(0);
 
         speedButtons = new ButtonGroup<>();
@@ -66,12 +61,11 @@ public class TimeControl implements UIComponent {
         speedButtons.setUncheckLast(true);
 
         TextButton.TextButtonStyle style = new TextButton.TextButtonStyle(UI.skin().get("toggle", TextButton.TextButtonStyle.class));
-        style.font = UI.getFontManager().getFont(11, false);
+        style.font = UI.getFontManager().getFont(8, false);
 
-        for(byte i = 0; i < SimulationManager.SPEEDS.length; i++) {
+        for(byte i = 0; i < SimSpeedController.SPEED_PRESETS.length; i++) {
             byte speedIndex = i;
-            TextButton button = new TextButton("" + i, style);
-            button.pad(2);
+            TextButton button = new TextButton(getText(SimSpeedController.SPEED_PRESETS[i]), style);
             button.addListener(new ClickListener() {
                 public void clicked(InputEvent event, float x, float y) {
                     GameContext.get().getClientNetwork().send(new SimTimeUpdateRequestPacket(speedIndex, false));
@@ -79,11 +73,23 @@ public class TimeControl implements UIComponent {
             });
 
             speedButtons.add(button);
-            table.add(button).fill().expand();
+            table.add(button).width(button.getMinWidth()).height(button.getMinHeight());
         }
 
         speedButtons.uncheckAll();
-        speedButtons.setChecked("" + selectedSpeed);
+        speedButtons.setChecked(getText(SimSpeedController.SPEED_PRESETS[selectedSpeed]));
 
+    }
+
+    private String getText(float speed) {
+        if(speed < 1) {
+            return String.format("%.01f", speed);
+        }
+
+        if(speed < 1000) {
+            return "" + (int) speed;
+        }
+
+        return (int) (speed * 1e-3f) + "K";
     }
 }

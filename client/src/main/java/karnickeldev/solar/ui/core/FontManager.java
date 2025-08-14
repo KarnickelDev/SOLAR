@@ -15,8 +15,8 @@ import java.util.Map;
 public class FontManager {
 
     public enum Fonts {
-        JETBRAINS_MONO("JetBrainsMono", "JetBrainsMono-Regular","JetBrainsMono-Bold"),
-        COURIER_PRIME("CourierPrime", "CourierPrime-Regular","CourierPrime-Regular"),
+        JETBRAINS_MONO("JetBrainsMono", "JetBrainsMono-Regular.ttf","JetBrainsMono-Bold.ttf"),
+        FONT_AWESOME("FontAwesome", "FontAwesome7-Free-Solid-900.otf","FontAwesome7-Free-Solid-900.otf"),
         ;
 
         private final String name;
@@ -24,8 +24,8 @@ public class FontManager {
         private final FreeTypeFontGenerator fontGenBold;
         Fonts(String name, String fileName, String boldFileName) {
             this.name = name;
-            this.fontGenRegular = new FreeTypeFontGenerator(Gdx.files.internal("fonts/" + fileName + ".ttf"));
-            this.fontGenBold = new FreeTypeFontGenerator(Gdx.files.internal("fonts/" + boldFileName + ".ttf"));
+            this.fontGenRegular = new FreeTypeFontGenerator(Gdx.files.internal("fonts/" + fileName));
+            this.fontGenBold = new FreeTypeFontGenerator(Gdx.files.internal("fonts/" + boldFileName));
         }
     }
 
@@ -66,6 +66,11 @@ public class FontManager {
         param.minFilter = Texture.TextureFilter.Linear;
         param.magFilter = Texture.TextureFilter.Linear;
         param.incremental = false;
+        StringBuilder customCharacters = new StringBuilder(param.characters);
+        for(char unicode = 0xF000; unicode < 0xF2FF; unicode++) {
+            customCharacters.append(unicode);
+        }
+        param.characters = customCharacters.toString();
         return (bold ? font.fontGenBold : font.fontGenRegular).generateFont(param);
     }
 

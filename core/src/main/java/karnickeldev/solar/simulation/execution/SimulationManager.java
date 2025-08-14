@@ -21,8 +21,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  **/
 public class SimulationManager implements Runnable {
 
-    public static final float[] SPEEDS = {0.2f, 1f, 2f, 5f, 10f, 20f, 100f, 1000f, 10_000f, 100_000f, 1_000_000f};
-
     private static final byte INTERRUPT = 1;
     private static final byte TIMEOUT = 2;
     private static final byte EXCEPTION_IN_TICK = 3;
@@ -49,6 +47,8 @@ public class SimulationManager implements Runnable {
     public static SimSpeedController simSpeedController = new SimSpeedController();
 
     private final BitMask errno = new BitMask();
+
+    public boolean paused = false;
 
     public SimulationManager(int simulationThreadCount, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
         this.worldManager = worldManager;
@@ -111,6 +111,8 @@ public class SimulationManager implements Runnable {
 
     int tmp = 0;
 
+    boolean init = false;
+
     @Override
     public void run() {
         long tickEnd;
@@ -132,32 +134,34 @@ public class SimulationManager implements Runnable {
                  scheduledTasks.clear();
             }
 
-            CountDownLatch latch = new CountDownLatch(tasks.size());
+            if(!paused || !init) {
+                CountDownLatch latch = new CountDownLatch(tasks.size());
 
-            for(SimulationTask task: tasks) {
-                simulationThreadPool.submit(() -> {
-                    try {
-                        task.runUntil(globalSimTimeMicros);
-                    } catch (Exception e) {
-                        Logger.error("Simulation error: " + e.getMessage());
-                        errno.set(EXCEPTION_IN_TICK);
-                        running.set(false);
-                    } finally {
-                        latch.countDown();
-                    }
+                for(SimulationTask task: tasks) {
+                    simulationThreadPool.submit(() -> {
+                        try {
+                            task.runUntil(globalSimTimeMicros);
+                        } catch (Exception e) {
+                            Logger.error("Simulation error: " + e.getMessage());
+                            errno.set(EXCEPTION_IN_TICK);
+                            running.set(false);
+                        } finally {
+                            latch.countDown();
+                        }
                     });
-            }
+                }
 
-            try {
-                // Synchronize wall-clock
-                if(!latch.await(60, TimeUnit.SECONDS)) {
-                    errno.set(TIMEOUT);
+                try {
+                    // Synchronize wall-clock
+                    if(!latch.await(60, TimeUnit.SECONDS)) {
+                        errno.set(TIMEOUT);
+                        break;
+                    }
+                } catch (InterruptedException e) {
+                    errno.set(INTERRUPT);
+                    Thread.currentThread().interrupt();
                     break;
                 }
-            } catch (InterruptedException e) {
-                errno.set(INTERRUPT);
-                Thread.currentThread().interrupt();
-                break;
             }
 
             for(SimulationTask t: tasks) {
@@ -170,19 +174,21 @@ public class SimulationManager implements Runnable {
             }
 
             Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(
-                globalSimTimeMicros, simSpeedController.getCurrentSimSpeed(), simSpeedController.getPresetIndex(), worldManager.getActiveWorld()
+                globalSimTimeMicros, simSpeedController.getCurrentSimSpeed(), simSpeedController.getPresetIndex(),
+                paused, worldManager.getActiveWorld()
             );
             ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
             ServerContext.get().getServer().getServerNetwork().flush();
 
             tickEnd = System.nanoTime();
 
-            System.out.println(simSpeedController.getCurrentSimSpeed());
+            //System.out.println(simSpeedController.getCurrentSimSp
+            // eed());
 
             simSpeedController.update(1f / tickRate);
 
             //globalSimTimeMicros = Math.round(((System.nanoTime() - simulationStartTime) / 1000d) * simSpeed);
-            globalSimTimeMicros += Math.round((schedulerNanosPerTick / 1000d) * simSpeedController.getCurrentSimSpeed());
+            if(!paused) globalSimTimeMicros += Math.round((schedulerNanosPerTick / 1000d) * simSpeedController.getCurrentSimSpeed());
 
 //            tmp = (tmp + 1) % 100;
 //            if(tmp == 0) {
@@ -219,6 +225,7 @@ public class SimulationManager implements Runnable {
             }
 
             while(System.nanoTime() < nextTick) Thread.onSpinWait();
+            init = true;
         }
 
         // shutdown logic

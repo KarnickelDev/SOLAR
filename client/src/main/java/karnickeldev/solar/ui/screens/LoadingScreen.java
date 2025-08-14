@@ -34,6 +34,8 @@ public class LoadingScreen implements Screen {
 
     private static final int FRAME_MS = 20;
 
+    public static final StarField.Container background = StarField.generateRandom((short) (1024 * 4), 0.3f, 0.3f);
+
     private final Runnable onComplete;
     private final List<Runnable> loadTasks;
 
@@ -87,8 +89,6 @@ public class LoadingScreen implements Screen {
             AssetWrapper.getInstance().loadGlobal(asset);
         }
     }
-
-    public static final StarField.Container background = StarField.generateRandom((short) 1024, 0.3f, 0.3f);
 
     @Override
     public void render(float delta) {

@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.Tags;
 import karnickeldev.solar.ecs.components.RadiusComponent;
@@ -77,35 +76,43 @@ public class PlanetoidRenderSystem {
         batch.setProjectionMatrix(camera.getCombinedMatrix());
         //batch.begin();
 
+        Vector2D camOrigin = camera.getRenderOrigin();
+
+        Vector2D trackPos = new Vector2D(hcs.getInterpolatedX(track, alpha), hcs.getInterpolatedY(track, alpha));
+
+
+
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity)) continue;
 
             reuseVec0.zero();
             reuseVec1.zero();
 
-            Vector2D ePos = ecs.toWorldSpace(reuseVec0, entity, alpha);
-            ePos.subtract(ecs.toWorldSpace(reuseVec1, track, alpha));
+            Vector2D ePos = reuseVec0;
+            ePos.set(hcs.getInterpolatedX(entity, alpha), hcs.getInterpolatedY(entity, alpha));
 
-            Vector2D screenPos = camera.project(ePos);
-            double screenX = screenPos.getX();
-            double screenY = screenPos.getY();
+            ePos.subtract(trackPos);
 
-            double size = (float) Math.max(16 * renderZoom, radius.getRadius(entity));
-            float sizePixels = (float) (size / renderZoom);
+            reuseVec1.set(ePos);
 
-            if (screenX < -sizePixels || screenX > width + sizePixels || screenY < -sizePixels || screenY > height + sizePixels) {
-                continue;
-            }
-
-            ePos.subtract(camera.getRenderOrigin());
+            ePos.subtract(camOrigin);
 
             double localX = ePos.getX();
             double localY = ePos.getY();
 
-
+            double size = (float) Math.max(16 * renderZoom, radius.getRadius(entity));
+            float sizePixels = (float) (size / renderZoom);
 
             // Cull if completely offscreen
             if (!isNearFrustum(localX, localY, size)) {
+                continue;
+            }
+
+            Vector2D screenPos = camera.project(reuseVec1);
+            double screenX = screenPos.getX();
+            double screenY = screenPos.getY();
+
+            if (screenX < -sizePixels || screenX > width + sizePixels || screenY < -sizePixels || screenY > height + sizePixels) {
                 continue;
             }
 

@@ -16,7 +16,6 @@ import karnickeldev.solar.render.BackgroundStarRenderer;
 import karnickeldev.solar.ui.core.UIManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -104,16 +103,6 @@ public class GameplayLoadScreen implements GameState {
 
 
         GameContext.clear();
-    }
-
-    @Override
-    public void render(float delta) {
-
-    }
-
-    @Override
-    public void resize(int width, int height) {
-
     }
 
     @Override

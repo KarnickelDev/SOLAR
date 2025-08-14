@@ -81,6 +81,8 @@ public class LocalClientNetwork implements ClientNetwork {
                 GameContext.get().getSyncLayer().receivePacket(p);
 
                 dispatcher.dispatch(() -> {
+                    GameContext.get().getClock().updateTargetSimSpeedIndex(p.getTargetSimSpeedIndex());
+                    GameContext.get().getClock().setPaused(p.isPaused());
                     UIComponent cmp = UI.getUIManager().getComponent("time_control");
                     if(cmp != null) ((TimeControl) cmp).setTargetSpeedIndex(p.getTargetSimSpeedIndex());
                 });

@@ -136,9 +136,9 @@ public class FloatingOriginCamera {
         double dy = -(screenPos.getY() - viewportHeight / 2.0) * zoom;
 
         // Inverse rotation
-        float radians = (float) Math.toRadians(rotationDegrees);
-        double cos = Math.cos(radians);
-        double sin = Math.sin(radians);
+        float radians = rotationDegrees * DEG_TO_RAD;
+        double cos = MathUtils.cos(radians);
+        double sin = MathUtils.sin(radians);
 
         double unrotatedX = dx * cos + dy * sin;
         double unrotatedY = -dx * sin + dy * cos;
@@ -174,6 +174,11 @@ public class FloatingOriginCamera {
 
     public double getTargetZoom() {
         return targetZoom;
+    }
+
+    /** Rotation in Degree */
+    public double getRotation() {
+        return rotationDegrees;
     }
 
     /**
@@ -216,12 +221,12 @@ public class FloatingOriginCamera {
     }
 
     public void move(Vector2D direction) {
-        double cos = Math.cos(Math.toRadians(rotationDegrees));
-        double sin = Math.sin(Math.toRadians(rotationDegrees));
+        double cos = Math.cos(Math.toRadians(0));
+        double sin = Math.sin(Math.toRadians(0));
 
         origin.add(
-            direction.getX() * cos + direction.getY() * sin,
-            -direction.getX() * sin + direction.getY() * cos
+            direction.getX() * cos - direction.getY() * sin,
+            direction.getX() * sin + direction.getY() * cos
         );
     }
 

@@ -1,6 +1,7 @@
 package karnickeldev.solar.ui.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
@@ -8,6 +9,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameState;
 import karnickeldev.solar.core.gamestates.GameStateID;
+import karnickeldev.solar.core.gamestates.GameStateScreen;
+import karnickeldev.solar.render.GasGiantTest;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.ui.components.DebugToolTip;
 import karnickeldev.solar.ui.components.mainmenu.MainMenu;
@@ -19,7 +22,7 @@ import karnickeldev.solar.ui.core.UI;
  * @author : KarnickelDev
  * @since : 04.07.2025
  **/
-public class MainMenuScreen implements GameState {
+public class MainMenuScreen implements GameStateScreen {
 
     private final SolarMain game;
     private final Viewport backgroundViewport;
@@ -43,7 +46,9 @@ public class MainMenuScreen implements GameState {
 
     @Override
     public void enter() {
-        UI.getUIManager().addComponent("debug", new DebugToolTip());
+        SolarMain.getInstance().setScreen(this);
+
+        UI.getUIManager().addForceComponent("debug", new DebugToolTip(true));
         UI.getUIManager().showComponent("debug");
 
         UI.getUIManager().addComponent("main_menu", mainMenu);
@@ -70,6 +75,12 @@ public class MainMenuScreen implements GameState {
     }
 
     float time = 0;
+
+    @Override
+    public void show() {
+
+    }
+
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1, true);
@@ -102,7 +113,32 @@ public class MainMenuScreen implements GameState {
     }
 
     @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
+    }
+
+    @Override
+    public void hide() {
+
+    }
+
+    @Override
+    public void dispose() {
+
+    }
+
+    @Override
     public GameStateID getID() {
+        return GameStateID.MAIN_MENU;
+    }
+
+    @Override
+    public GameStateID getGameStateID() {
         return GameStateID.MAIN_MENU;
     }
 }

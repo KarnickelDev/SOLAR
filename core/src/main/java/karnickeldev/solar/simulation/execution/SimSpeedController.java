@@ -9,7 +9,7 @@ public class SimSpeedController {
     private static final float TRANSITION_DURATION_SECONDS = 1;
 
     public static final float[] SPEED_PRESETS = {
-        0.2f, 1f, 2f, 5f, 10f, 20f, 100f, 1000f, 10_000f, 100_000f, 1_000_000f
+        100f, 1000f, 5_000f, 10_000f,
     };
 
     private float currentSimSpeed = 1.0f;
