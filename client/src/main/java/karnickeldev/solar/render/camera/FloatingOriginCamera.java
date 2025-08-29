@@ -97,13 +97,15 @@ public class FloatingOriginCamera {
     /**
      * Converts World-Coordinates to Screen-Coordinates
      *
-     * @param worldPos World Coordinates
+     * @param worldX World X Coordinate
+     * @param worldY World Y Coordinate
+     * @param vec Vector to store and return result
      * @return A Vector of Screen-Coordinates
      */
-    public Vector2D project(Vector2D worldPos, double zoom) {
+    public Vector2D project(double worldX, double worldY, Vector2D vec, double zoom) {
         // Compute camera-local coordinates
-        double localX = worldPos.getX() - renderOrigin.getX();
-        double localY = worldPos.getY() - renderOrigin.getY();
+        double localX = worldX - renderOrigin.getX();
+        double localY = worldY - renderOrigin.getY();
 
         // Apply rotation
         float radians = rotationDegrees * DEG_TO_RAD;
@@ -114,26 +116,42 @@ public class FloatingOriginCamera {
         double rotatedY = localX * sin + localY * cos;
 
         // Apply zoom and move to screen center
-        return new Vector2D(
+        return vec.set(
             rotatedX / zoom + viewportWidth / 2.0,
             -rotatedY / zoom + viewportHeight / 2.0
         );
     }
 
+    /**
+     * Converts World-Coordinates to Screen-Coordinates
+     * @param worldPos World Position
+     * @return A new Vector with the transformed Coordinate
+     */
     public Vector2D project(Vector2D worldPos) {
-        return project(worldPos, renderZoom);
+        return project(worldPos.getX(), worldPos.getY(), new Vector2D(), renderZoom);
     }
 
     /**
      * Converts World-Coordinates to Screen-Coordinates
-     *
-     * @param screenPos World Coordinates
-     * @return A Vector of Screen-Coordinates
+     * @param worldPos World Position
+     * @return The transformed position stored in the previous worldPos vector
      */
-    public Vector2D unproject(Vector2D screenPos, double zoom) {
+    public Vector2D projectReuse(Vector2D worldPos) {
+        return project(worldPos.getX(), worldPos.getY(), worldPos, renderZoom);
+    }
+
+    /**
+     * Converts Screen-Coordinates to World-Coordinates
+     *
+     * @param screenX Screen X Coordinate
+     * @param screenY Screen Y Coordinate
+     * @param vec Vector to store and return result
+     * @return A Vector of World-Coordinates
+     */
+    public Vector2D unproject(double screenX, double screenY, Vector2D vec, double zoom) {
         // Convert from screen space to local, zoomed space
-        double dx = (screenPos.getX() - viewportWidth / 2.0) * zoom;
-        double dy = -(screenPos.getY() - viewportHeight / 2.0) * zoom;
+        double dx = (screenX - viewportWidth / 2.0) * zoom;
+        double dy = -(screenY - viewportHeight / 2.0) * zoom;
 
         // Inverse rotation
         float radians = rotationDegrees * DEG_TO_RAD;
@@ -143,14 +161,28 @@ public class FloatingOriginCamera {
         double unrotatedX = dx * cos + dy * sin;
         double unrotatedY = -dx * sin + dy * cos;
 
-        return new Vector2D(
+        return vec.set(
             renderOrigin.getX() + unrotatedX,
             renderOrigin.getY() + unrotatedY
         );
     }
 
+    /**
+     * Converts Screen-Coordinates to World-Coordinates
+     * @param screenPos Screen Position
+     * @return A new Vector with the transformed Coordinate
+     */
     public Vector2D unproject(Vector2D screenPos) {
-        return unproject(screenPos, renderZoom);
+        return unproject(screenPos.getX(), screenPos.getY(), new Vector2D(), renderZoom);
+    }
+
+    /**
+     * Converts Screen-Coordinates to World-Coordinates
+     * @param screenPos Screen Position
+     * @return The transformed position stored in the previous screenPos vector
+     */
+    public Vector2D unprojectReuse(Vector2D screenPos) {
+        return unproject(screenPos.getX(), screenPos.getY(), screenPos, renderZoom);
     }
 
     /**
@@ -307,11 +339,11 @@ public class FloatingOriginCamera {
 
             prevZoom = zoom;
             Vector2D zoomPos = zoomTargetPos.copy();
-            Vector2D before = unproject(zoomPos, zoom);
+            Vector2D before = unproject(zoomPos.getX(), zoomPos.getY(), new Vector2D(), zoom);
 
             zoom = MathUtil.lerp(zoom, targetZoom, 0.3f);
 
-            Vector2D after = unproject(zoomPos, zoom);
+            Vector2D after = unproject(zoomPos.getX(), zoomPos.getY(), new Vector2D(), zoom);
 
             float radians = (float) Math.toRadians(MathUtil.normalizeRotationDeg(-rotationDegrees));
             double cos = Math.cos(radians);

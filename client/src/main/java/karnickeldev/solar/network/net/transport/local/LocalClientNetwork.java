@@ -77,12 +77,11 @@ public class LocalClientNetwork implements ClientNetwork {
         } else {
             if(pkt instanceof ECSUpdatePacket) {
                 ECSUpdatePacket p = (ECSUpdatePacket) pkt;
-                GameContext.get().getClock().updateFromSnapshot(p.getSimTimeMicros(), System.nanoTime() / 1000L, p.getCurrentSimSpeed());
+                GameContext.get().getClock().addSegment(p.getSimTimeMicros(), System.nanoTime() / 1000L,
+                    p.getCurrentSimSpeed(), p.getTargetSimSpeedIndex());
                 GameContext.get().getSyncLayer().receivePacket(p);
 
                 dispatcher.dispatch(() -> {
-                    GameContext.get().getClock().updateTargetSimSpeedIndex(p.getTargetSimSpeedIndex());
-                    GameContext.get().getClock().setPaused(p.isPaused());
                     UIComponent cmp = UI.getUIManager().getComponent("time_control");
                     if(cmp != null) ((TimeControl) cmp).setTargetSpeedIndex(p.getTargetSimSpeedIndex());
                 });

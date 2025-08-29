@@ -91,7 +91,7 @@ public class LocalServer extends Server implements GameServer {
 
         simulationManagerThread.getSimulationManager().setPriority(world1, SimulationTask.Priority.LOW);
 
-        for (int i = 0; i < (200 * 1024) - 16; i++) {
+        for (int i = 0; i < (100_000); i++) {
             EntityFactory.createStaticPlanetoidHCS(world1.getECS(), "",
                 Units.toSU(MathUtil.random(1, 1e10f), Units.Mass.TON),
                 1, 1,

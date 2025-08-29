@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import io.netty.buffer.ByteBuf;
+import karnickeldev.solar.util.Logger;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

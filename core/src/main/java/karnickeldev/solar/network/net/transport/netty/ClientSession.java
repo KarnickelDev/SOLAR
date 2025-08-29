@@ -2,6 +2,7 @@ package karnickeldev.solar.network.net.transport.netty;
 
 import io.netty.channel.Channel;
 import karnickeldev.solar.network.packets.Packet;
+import karnickeldev.solar.util.Logger;
 
 /**
  * @author : KarnickelDev
@@ -10,7 +11,7 @@ import karnickeldev.solar.network.packets.Packet;
 public class ClientSession {
 
     private final int clientId;
-    private final Channel channel;
+    public final Channel channel;
     private boolean handshake = false;
 
     public ClientSession(int clientId, Channel channel) {
@@ -32,6 +33,7 @@ public class ClientSession {
 
     public void send(Packet packet) {
         channel.eventLoop().execute(() -> {
+            //Logger.log("bytes: " + channel.unsafe().outboundBuffer().totalPendingWriteBytes());
             if(channel.isActive()) channel.writeAndFlush(packet);
         });
     }

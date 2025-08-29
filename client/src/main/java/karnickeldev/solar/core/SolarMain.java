@@ -75,6 +75,9 @@ public class SolarMain extends Game {
 
     @Override
     public void create() {
+        Thread.currentThread().setName("Solar-Main-Thread");
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+
         getSettingsManager().applySettings();
 
         batch = new SpriteBatch();

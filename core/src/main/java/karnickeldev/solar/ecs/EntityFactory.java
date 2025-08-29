@@ -7,7 +7,7 @@ public class EntityFactory {
 
     public static int createGhostObject(ServerECS ecs, String name, double x, double y) {
         int entity = ecs.getEntityManager().create();
-        ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tags.GHOST_OBJECT);
+        ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tag.GHOST_OBJECT);
         ecs.getComponentRegistry().get(NameComponent.class).add(entity, name);
         ecs.hcs.add(entity, EntityManager.NO_ENTITY, x, y);
         return entity;
@@ -17,7 +17,7 @@ public class EntityFactory {
     public static int createStar(ServerECS ecs, String name, double x, double y, double mass, float radius,
                                  long sphereOfInfluence) {
         int entity = ecs.getEntityManager().create();
-        ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tags.STAR);
+        ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tag.STAR);
         ecs.getComponentRegistry().get(NameComponent.class).add(entity, name);
         ecs.getComponentRegistry().get(MassComponent.class).add(entity, mass);
         ecs.getComponentRegistry().get(RadiusComponent.class).add(entity, radius);
@@ -34,7 +34,7 @@ public class EntityFactory {
                                                long sphereOfInfluence, float semiMajorAxis, float eccentricity, float omega,
                                                float t0, int centralBody) {
         int entity = ecs.getEntityManager().create();
-        ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tags.PLANET);
+        ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tag.PLANET);
         ecs.getComponentRegistry().get(NameComponent.class).add(entity, name);
         ecs.getComponentRegistry().get(MassComponent.class).add(entity, mass);
         ecs.getComponentRegistry().get(RadiusComponent.class).add(entity, radius);

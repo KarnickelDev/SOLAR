@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import karnickeldev.solar.ecs.ClientECS;
-import karnickeldev.solar.ecs.Tags;
+import karnickeldev.solar.ecs.Tag;
 import karnickeldev.solar.ecs.components.RadiusComponent;
 import karnickeldev.solar.ecs.components.TagComponent;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
@@ -19,7 +19,7 @@ import karnickeldev.solar.world.WorldManager;
 public class PlanetoidRenderSystem {
 
     public static int track = 3;
-    private static float frustumCullingRadiusSquared = 0f;
+    private static double frustumCullingRadiusSquared = 0;
     private final SpriteBatch batch;
     public static Texture testTex;
 
@@ -30,11 +30,15 @@ public class PlanetoidRenderSystem {
         this.batch = batch;
 
         int size = 256;
+        int r = (size / 2) - 1;
         Pixmap tmp = new Pixmap(size, size, Pixmap.Format.RGBA8888);
         tmp.setColor(1f, 1f, 1f, 0f);
         tmp.fill();
         tmp.setColor(1f, 1f, 1f, 1f);
-        tmp.fillCircle(size/2, size/2, size/2);
+        tmp.fillCircle(r, r, r);
+        tmp.fillCircle(r, r+1, r);
+        tmp.fillCircle(r+1, r, r);
+        tmp.fillCircle(r+1, r+1, r);
 
         testTex = new Texture(tmp);
         testTex.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
@@ -49,9 +53,10 @@ public class PlanetoidRenderSystem {
 
     private void updateFrustumCullingCircle() {
         FloatingOriginCamera cam = worldManager.getActiveWorld().getCamera();
-        double halfW = (cam.getViewportWidth() / 2.0) * cam.getZoom();
+        double halfW = (cam.getViewportWidth() / 2.0) * cam.getRenderZoom();
+        double halfH = (cam.getViewportHeight() / 2.0) * cam.getRenderZoom();
 
-        frustumCullingRadiusSquared = (float) (2 * halfW * halfW);
+        frustumCullingRadiusSquared = (halfW * halfW) + (halfH * halfH);
     }
 
     public void renderPlanetoids() {
@@ -78,51 +83,57 @@ public class PlanetoidRenderSystem {
 
         Vector2D camOrigin = camera.getRenderOrigin();
 
-        Vector2D trackPos = new Vector2D(hcs.getInterpolatedX(track, alpha), hcs.getInterpolatedY(track, alpha));
+        Vector2D trackPos = ecs.toWorldSpace(track, alpha).add(camOrigin);
 
-
+        Color drawColor = Color.WHITE;
+        Color lastColor = batch.getColor();
 
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity)) continue;
 
             reuseVec0.zero();
-            reuseVec1.zero();
 
             Vector2D ePos = reuseVec0;
-            ePos.set(hcs.getInterpolatedX(entity, alpha), hcs.getInterpolatedY(entity, alpha));
+
+            ecs.toWorldSpace(ePos, entity, alpha);
 
             ePos.subtract(trackPos);
-
-            reuseVec1.set(ePos);
-
-            ePos.subtract(camOrigin);
 
             double localX = ePos.getX();
             double localY = ePos.getY();
 
-            double size = (float) Math.max(16 * renderZoom, radius.getRadius(entity));
-            float sizePixels = (float) (size / renderZoom);
+            double size = Math.max(16 * renderZoom, radius.getRadius(entity));
 
-            // Cull if completely offscreen
+            // fast reject culling with sphere check
             if (!isNearFrustum(localX, localY, size)) {
                 continue;
             }
 
-            Vector2D screenPos = camera.project(reuseVec1);
+            reuseVec1.set(ePos).add(camOrigin);
+            Vector2D screenPos = camera.projectReuse(reuseVec1);
             double screenX = screenPos.getX();
             double screenY = screenPos.getY();
 
+            double sizePixels = size / renderZoom;
             if (screenX < -sizePixels || screenX > width + sizePixels || screenY < -sizePixels || screenY > height + sizePixels) {
                 continue;
             }
 
-            if (tags.has(entity, Tags.STAR)) {
-                batch.setColor(Color.ORANGE);
+            // avoid color changes to not flush GPU unnecessarily
+            if (tags.has(entity, Tag.PLANET)) {
+                drawColor = Color.WHITE;
+            } else if(tags.has(entity, Tag.STAR)) {
+                drawColor = Color.ORANGE;
             } else {
-                batch.setColor(Color.WHITE);
+                drawColor = Color.GRAY;
             }
             if (entity == track) {
-                batch.setColor(Color.CYAN);
+                drawColor = Color.CYAN;
+            }
+
+            if(lastColor != drawColor) {
+                batch.setColor(drawColor);
+                lastColor = drawColor;
             }
 
             batch.draw(testTex, (float) (localX - 0.5 * size), (float) (localY - 0.5 * size), (float)size, (float)size);

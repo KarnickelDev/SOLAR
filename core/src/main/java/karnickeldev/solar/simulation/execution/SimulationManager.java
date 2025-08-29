@@ -174,7 +174,7 @@ public class SimulationManager implements Runnable {
             }
 
             Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(
-                globalSimTimeMicros, simSpeedController.getCurrentSimSpeed(), simSpeedController.getPresetIndex(),
+                globalSimTimeMicros, paused ? 0 : simSpeedController.getCurrentSimSpeed(), simSpeedController.getPresetIndex(),
                 paused, worldManager.getActiveWorld()
             );
             ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);

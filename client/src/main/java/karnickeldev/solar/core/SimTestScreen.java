@@ -77,10 +77,10 @@ public class SimTestScreen implements Screen {
         gameContext.getCameraInput().processInputs();
         clientWorldManager.getActiveWorld().getCamera().update();
 
+        gameContext.getClock().updateFrameClockTime();
+
         // do not use current here, we manually subtract PacketSyncDelay
-        gameContext.getSyncLayer().update(gameContext.getClock().estimateSimTimeAt(
-            (System.nanoTime() / 1000L) - PacketSyncLayer.syncDelayMicros
-        ));
+        gameContext.getSyncLayer().update(gameContext.getClock().getFrameClockTime());
 
         // probably better to do after processing input
         gameContext.getDispatcher().update();

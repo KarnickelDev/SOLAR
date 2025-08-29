@@ -6,11 +6,14 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.flush.FlushConsolidationHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.network.net.core.ClientNetwork;
+import karnickeldev.solar.network.net.core.PingTracker;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
@@ -18,6 +21,7 @@ import karnickeldev.solar.network.net.transport.PacketDecoder;
 import karnickeldev.solar.network.net.transport.PacketEncoder;
 import karnickeldev.solar.network.packets.*;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
+import karnickeldev.solar.ui.components.UIComponent;
 import karnickeldev.solar.ui.components.game.TimeControl;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.Logger;
@@ -66,6 +70,7 @@ public class NettyClientNetwork implements ClientNetwork {
                 @Override
                 protected void initChannel(SocketChannel ch) {
                     ChannelPipeline p = ch.pipeline();
+                    ch.config().setAllocator(PooledByteBufAllocator.DEFAULT);
                     p.addLast(new PacketDecoder());
                     p.addLast(new PacketEncoder());
                     p.addLast(new IdleStateHandler(5,0,0));
@@ -165,11 +170,14 @@ public class NettyClientNetwork implements ClientNetwork {
         } else {
             if(pkt instanceof ECSUpdatePacket) {
                 ECSUpdatePacket p = (ECSUpdatePacket) pkt;
-                GameContext.get().getClock().updateFromSnapshot(p.getSimTimeMicros(), System.nanoTime() / 1000L, p.getCurrentSimSpeed());
-                syncLayer.receivePacket(p);
+                GameContext.get().getClock().addSegment(p.getSimTimeMicros(), (System.nanoTime() / 1000L),
+                    p.getCurrentSimSpeed(), p.getTargetSimSpeedIndex());
+                GameContext.get().getSyncLayer().receivePacket(p);
 
-                dispatcher.dispatch(() -> ((TimeControl) UI.getUIManager().getComponent("time_control")).setTargetSpeedIndex(p.getTargetSimSpeedIndex()));
-
+                dispatcher.dispatch(() -> {
+                    UIComponent cmp = UI.getUIManager().getComponent("time_control");
+                    if(cmp != null) ((TimeControl) cmp).setTargetSpeedIndex(p.getTargetSimSpeedIndex());
+                });
             } else {
                 dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));
             }

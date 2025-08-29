@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.ecs.Tag;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
 
@@ -22,22 +23,47 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
         }
     }
 
-    public void add(int entityId, int tagMask) {
+    public void add(int entityId, Tag tag) {
         int index = EntityManager.extractIndex(entityId);
         ensureCapacity(index);
-        tagMasks[entityId & EntityManager.INDEX_MASK] |= tagMask;
+
+        boolean change = true;
+        if(tag.exclusive) {
+            for(Tag t: Tag.values()) {
+                if(has(entityId, t) && t.category.equals(tag.category)) {
+                    change =  false;
+                    Logger.error(Logger.ENTITY, "Tried to overwrite exclusive Tag");
+                    break;
+                }
+            }
+        }
+        if(change) tagMasks[index] |= tag.impliedMask();
+
         dirty.set(index);
     }
 
-    public void remove(int entityId, int tagMask) {
-        int index = entityId & EntityManager.INDEX_MASK;
-        if (index >= CAPACITY) return;
-        tagMasks[index] &= ~tagMask;
+    private void add(int entityId, int tagMask) {
+        int index = EntityManager.extractIndex(entityId);
+        ensureCapacity(index);
+
+        tagMasks[index] |= tagMask;
+        dirty.set(index);
     }
 
-    public boolean has(int entityId, int tagMask) {
+    public void remove(int entityId, Tag tag) {
         int index = entityId & EntityManager.INDEX_MASK;
-        return index < CAPACITY && (tagMasks[index] & tagMask) != 0;
+        if (index >= CAPACITY) return;
+        tagMasks[index] &= ~tag.bit;
+    }
+
+    public boolean has(int entityId, Tag tag) {
+        int index = entityId & EntityManager.INDEX_MASK;
+        return index < CAPACITY && (tagMasks[index] & tag.bit) != 0;
+    }
+
+    public boolean matches(int entityId, Tag.Group group) {
+        int index = entityId & EntityManager.INDEX_MASK;
+        return index < CAPACITY && group.matches(tagMasks[index]);
     }
 
     public int get(int entityId) {
@@ -49,6 +75,16 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
         int index = entityId & EntityManager.INDEX_MASK;
         if (index >= CAPACITY) return;
         tagMasks[entityId & EntityManager.INDEX_MASK] = 0;
+    }
+
+    public String toString(int entityId) {
+        StringBuilder builder = new StringBuilder(EntityManager.extractIndex(entityId));
+
+        for(Tag t : Tag.values()) {
+            if(has(entityId, t)) builder.append(t.name());
+        }
+
+        return builder.toString();
     }
 
     @Override

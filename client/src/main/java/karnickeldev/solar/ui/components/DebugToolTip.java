@@ -55,7 +55,7 @@ public class DebugToolTip implements UIComponent {
             if(GameContext.get().isMultiplayer()) {
                 ping.setText("Ping: " + PingTracker.getPing() + "ms");
                 ping.setVisible(true);
-                ping.setColor(PingTracker.getStdDev() > 10 ? Color.ORANGE : Color.GREEN);
+                ping.setColor(PingTracker.getStdDev() > 1.7f*PingTracker.getAvgRTT() ? Color.ORANGE : Color.GREEN);
             }
         }
     }

@@ -1,13 +1,17 @@
 package karnickeldev.solar.network.net.transport.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.*;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.flush.FlushConsolidationHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.ReferenceCountUtil;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
@@ -65,6 +69,7 @@ public class NettyServerNetwork implements ServerNetwork {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
+                        ch.config().setAllocator(PooledByteBufAllocator.DEFAULT);
                         ChannelPipeline p = ch.pipeline();
                         //p.addLast(new LengthFieldPrepender(4));
                         p.addLast(new PacketDecoder());
@@ -111,8 +116,11 @@ public class NettyServerNetwork implements ServerNetwork {
     @Override
     public void sendToClient(int clientId, Packet packet) {
         if(packet == null) return;
-
-        if(!outgoing.offer(new PacketContext(clientId, packet))) {
+        if(!clientIdMap.get(clientId).channel.isWritable()) {
+            return;
+        }
+        Logger.log("packet queue: " + outgoing.size());
+        if(!clientIdMap.get(clientId).isHandshake() || !outgoing.offer(new PacketContext(clientId, packet))) {
             Logger.error(Logger.NETWORK + "Packet dropped: " + packet);
         }
     }
