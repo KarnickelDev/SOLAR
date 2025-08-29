@@ -58,6 +58,15 @@ default-round
   orig: 12, 20
   offset: 0, 0
   index: -1
+  default-highlight
+    rotate: false
+    xy: 33, 64
+    size: 32, 32
+    split: 7, 7, 7, 7
+    pad: 4, 4, 4, 4
+    orig: 12, 20
+    offset: 0, 0
+    index: -1
 check-off
   rotate: false
   xy: 11, 5

@@ -1,7 +1,7 @@
 package karnickeldev.solar.physics;
 
-import karnickeldev.solar.ecs.EntityFactory;
-import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.ecs.ServerECS;
+import karnickeldev.solar.ecs.components.OrbitDataComponent;
 
 public class PhysicsUtil {
 
@@ -9,7 +9,7 @@ public class PhysicsUtil {
 
     public static long estimateSOIStar(double mass) {
         return (long) (Units.toSU(8e4, Units.Length.AU)
-            * Math.pow(mass / Units.toSU(1, Units.Mass.SOLAR_MASS), 2f/5f));
+            * Math.pow(mass / Units.toSU(1, Units.Mass.SOLAR_MASS), 2f / 5f));
     }
 
     public static long estimateSOIPlanet(double mass) {
@@ -19,45 +19,23 @@ public class PhysicsUtil {
         return (long) distanceMinForce;
     }
 
-    public static void initializePlanetoidAtPeriapsis(EntityManager em, int entityId) {
-        if(!em.isValid(entityId) || !EntityFactory.isStaticPlanetoid(em, entityId)) {
-            throw new RuntimeException("Cant initialize Entity as Planetoid");
-        }
+    public static void initializePlanetoidAtPeriapsisHCS(ServerECS ecs, int entityId) {
+//        if(!em.isValid(entityId) || !EntityFactory.isStaticPlanetoid(em, entityId)) {
+//            //throw new RuntimeException("Cant initialize Entity as Planetoid");
+//        }
 
-        float a = em.orbitData.getSemiMajorAxis(entityId);
-        float e = em.orbitData.getEccentricity(entityId);
-        float omega = em.orbitData.getOmega(entityId);
-
-        float r = a * (1 - e);
-
-        // Rotate point (r, 0) by omega
-        float x = (float)(Math.cos(omega) * r);
-        float y = (float)(Math.sin(omega) * r);
-
-        // Add central body's position
-        int centralId = em.orbitData.getCentralBody(entityId);
-        double cx = em.positions.getX(centralId);
-        double cy = em.positions.getY(centralId);
-
-        em.positions.add(entityId, cx + x, cy + y);
-    }
-
-    public static void initializePlanetoidAtPeriapsisHCS(EntityManager em, int entityId) {
-        if(!em.isValid(entityId) || !EntityFactory.isStaticPlanetoid(em, entityId)) {
-            //throw new RuntimeException("Cant initialize Entity as Planetoid");
-        }
-
-        float a = em.orbitData.getSemiMajorAxis(entityId);
-        float e = em.orbitData.getEccentricity(entityId);
-        float omega = em.orbitData.getOmega(entityId);
+        OrbitDataComponent orbitData = ecs.getComponentRegistry().get(OrbitDataComponent.class);
+        float a = orbitData.getSemiMajorAxis(entityId);
+        float e = orbitData.getEccentricity(entityId);
+        float omega = orbitData.getOmega(entityId);
 
         float r = a * (1 - e);
 
         // Rotate point (r, 0) by omega
-        float x = (float)(Math.cos(omega) * r);
-        float y = (float)(Math.sin(omega) * r);
+        float x = (float) (Math.cos(omega) * r);
+        float y = (float) (Math.sin(omega) * r);
 
-        em.hcs.add(entityId, em.orbitData.getCentralBody(entityId), x, y, x, y);
+        ecs.hcs.add(entityId, orbitData.getCentralBody(entityId), x, y);
     }
 
 }

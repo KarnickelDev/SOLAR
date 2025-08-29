@@ -8,18 +8,16 @@ import java.util.BitSet;
 
 public class PositionComponent implements Component {
 
-    private static int CAPACITY = 64;
-
+    private int CAPACITY = 64;
+    private final BitSet hasComponent = new BitSet(CAPACITY);
     private double[] x = new double[CAPACITY];
     private double[] y = new double[CAPACITY];
-    private final BitSet hasComponent = new BitSet(CAPACITY);
-
 
     @Override
     public void ensureCapacity(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) {
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index)+1));
+        if (index >= CAPACITY) {
+            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
             x = Arrays.copyOf(x, CAPACITY);
             y = Arrays.copyOf(y, CAPACITY);
         }
@@ -43,13 +41,13 @@ public class PositionComponent implements Component {
 
     public double getX(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return x[index];
     }
 
     public double getY(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return y[index];
     }
 }

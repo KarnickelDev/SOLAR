@@ -8,17 +8,15 @@ import java.util.BitSet;
 
 public class SphereOfInfluenceComponent implements Component {
 
-    private static int CAPACITY = 16;
-
-    private long[] spheresOfInfluence = new long[CAPACITY];
+    private int CAPACITY = 16;
     private final BitSet hasComponent = new BitSet(CAPACITY);
-
+    private long[] spheresOfInfluence = new long[CAPACITY];
 
     @Override
     public void ensureCapacity(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) {
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index)+1));
+        if (index >= CAPACITY) {
+            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
             spheresOfInfluence = Arrays.copyOf(spheresOfInfluence, CAPACITY);
         }
     }
@@ -40,7 +38,7 @@ public class SphereOfInfluenceComponent implements Component {
 
     public long getSphereOfInfluence(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return 0;
+        if (index >= CAPACITY) return 0;
         return spheresOfInfluence[index];
     }
 

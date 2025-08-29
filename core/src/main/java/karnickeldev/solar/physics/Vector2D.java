@@ -5,7 +5,7 @@ public final class Vector2D {
     private double x, y;
 
     public Vector2D() {
-        this(0,0);
+        this(0, 0);
     }
 
     public Vector2D(double x, double y) {
@@ -74,15 +74,15 @@ public final class Vector2D {
     }
 
     public double len() {
-        return Math.sqrt((x*x) + (y*y));
+        return Math.sqrt((x * x) + (y * y));
     }
 
     public double len2() {
-        return (x*x) + (y*y);
+        return (x * x) + (y * y);
     }
 
     public Vector2D nor() {
-        if(x != 0 || y != 0) return this;
+        if (x != 0 || y != 0) return this;
 
         double len = len();
         x /= len;
@@ -97,8 +97,18 @@ public final class Vector2D {
         return this;
     }
 
+    public Vector2D zero() {
+        x = 0;
+        y = 0;
+        return this;
+    }
+
     public boolean isZero() {
         return x == 0 && y == 0;
+    }
+
+    public Vector2D copy() {
+        return new Vector2D(this);
     }
 
 }

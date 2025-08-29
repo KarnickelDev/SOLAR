@@ -1,39 +1,28 @@
 # SOLAR
-**Strategic Orbital Logistics, Assault, Reconnaissance**
 
-*SOLAR is a futuristic space-themed strategy game where players take command of fleets, manage resources, 
-and engage in dynamic combat in a simulated Solar System with real Orbital Mechanics.*
+**Strategic Orbital Logistics and Astrophysical Realism**
+
+*SOLAR is a futuristic space-themed multiplayer strategy game where players take command of fleets, manage resources,
+and engage in dynamic combat across multiple Solar System, backed by realistic astronomic simulations,
+developed by and for myself as a learning project - [KarnickelDev](https://github.com/KarnickelDev)*
+---
+
+## Features
+This game combines grand strategy gameplay (inspired by Games like Kerbal Space Programm,
+Stellaris and Crusader Kings 3) with accurate astrophysical simulations.
+Grow your Economy, expand your territory and protect your borders, fight or cooperate with
+other players and AI-controlled actors - while also dealing with the challenges of 
+realistic orbit physics, space weather, logistics, communication networks and more.
+
+
+### Libraries
+- [libGDX](https://libgdx.com/) as a game engine (mainly for UI and simplified OpenGL access)
+
+- [Netty](https://netty.io/) for multiplayer networking
+
+### Gradle
+This project uses [Gradle](https://gradle.org/) to manage dependencies.
 
 ---
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
-
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
-
-## Platforms
-
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
-
-## Gradle
-
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
-
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
-
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+![Main Menu](/screenshots/MainMenu.png)

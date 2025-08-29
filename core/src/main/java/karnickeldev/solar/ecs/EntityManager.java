@@ -1,6 +1,6 @@
 package karnickeldev.solar.ecs;
 
-import karnickeldev.solar.ecs.components.*;
+import karnickeldev.solar.util.Logger;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -14,27 +14,21 @@ public class EntityManager {
 
     // Max supported concurrent entities in this EntityManager, ca. 16 million
     public static final int MAX_ENTITIES = (1 << ENTITY_BITS) - 1;
-    // Any Entity with this Index is invalid, used for error return values
-    public static int NO_ENTITY = -1;
-
     public static final int INDEX_MASK = (1 << ENTITY_BITS) - 1;
     public static final int GENERATION_MASK = ~INDEX_MASK;
-
-
+    // Any Entity with this Index is invalid, used for error return values
+    public static int NO_ENTITY = -1;
     private final byte[] generations = new byte[MAX_ENTITIES];
     private final Queue<Integer> freeIndices = new ArrayDeque<>();
-
     private int nextFree = 0;
 
-    public final TagComponent tags = new TagComponent();
-    public final NameComponent names = new NameComponent();
-    public final TripleBufferedPositionComponent positions = new TripleBufferedPositionComponent();
-    public final MassComponent masses = new MassComponent();
-    public final RadiusComponent radius = new RadiusComponent();
-    public final SphereOfInfluenceComponent sphereOfInfluence = new SphereOfInfluenceComponent();
-    public final OrbitDataComponent orbitData = new OrbitDataComponent();
+    public static int extractIndex(int entityId) {
+        return entityId & INDEX_MASK;
+    }
 
-    public final HCSComponent hcs = new HCSComponent();
+    public static int extractGeneration(int entityId) {
+        return entityId & GENERATION_MASK;
+    }
 
     public int create() {
         int index;
@@ -45,7 +39,30 @@ public class EntityManager {
             if (index >= MAX_ENTITIES) throw new RuntimeException("Entity limit reached");
         }
         int gen = generations[index];
-        return (gen << ENTITY_BITS) | index;
+
+        int entityId = (gen << ENTITY_BITS) | index;
+        if(entityId == NO_ENTITY) throw new RuntimeException("Tried using reserved entityId");
+        return entityId;
+    }
+
+    public void registerEntity(int entityId) {
+        if(entityId == NO_ENTITY) throw new RuntimeException("Tried using reserved entityId");
+        int index = extractIndex(entityId);
+        int generation = extractGeneration(entityId);
+
+        if(index < nextFree && !freeIndices.contains(index)) {
+            Logger.error("Double entity creation");
+            return;
+        }
+
+        if (generations[index] > generation) throw new RuntimeException("Probably ECS de-sync");
+        generations[index] = (byte) generation;
+
+        if (index >= nextFree) {
+            nextFree = index + 1;
+        }
+
+        // Don't add to freeIndices — it's a live entity now
     }
 
     public void destroy(int entityId) {
@@ -66,14 +83,6 @@ public class EntityManager {
 
     public int getAll() {
         return nextFree;
-    }
-
-    public static int extractIndex(int entityId) {
-        return entityId & INDEX_MASK;
-    }
-
-    public static int extractGeneration(int entityId) {
-        return entityId & GENERATION_MASK;
     }
 
 }

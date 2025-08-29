@@ -11,14 +11,14 @@ public class Star extends OrbitalObject {
 
     @Override
     public void update(double time) {
-        if(canMove) {
+        if (canMove) {
             super.update(time);
         }
     }
 
     @Override
     public Vector2D getPosition() {
-        if(canMove) {
+        if (canMove) {
             return super.getPosition();
         } else {
             return getOrbitData().getCentralBody().getPosition();

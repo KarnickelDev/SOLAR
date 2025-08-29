@@ -1,6 +1,6 @@
 package karnickeldev.solar.ecs.components;
 
-interface Component {
+public interface Component {
 
     void ensureCapacity(int entityId);
 
