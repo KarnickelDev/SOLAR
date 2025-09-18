@@ -2,60 +2,78 @@
 precision mediump float;
 #endif
 
-uniform sampler2D u_texture;  // The world map texture (rectangular)
-uniform float u_time;         // Time variable for rotation (controls how much the globe spins)
-uniform vec3 u_lightDir;      // Direction of the light (for shading)
+varying vec2 v_uv;
 
-varying vec2 v_texCoords;     // Texture coordinates from the vertex shader
+uniform sampler2D u_noiseTex; // optional surface noise texture
+uniform vec3 u_color;          // base star color
+uniform float u_edgeSoftness;  // soft edge for star outline
+uniform float u_coronaIntensity; // glow strength
+uniform float u_coronaRadius;   // radius multiplier for corona
+uniform float u_pixelSize;       // optional pixelart effect
+uniform float u_time;            // animated noise
+
+// Hash function for generating pseudo-random gradients
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+// Interpolation (fade curve)
+float fade(float t) {
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
+// 2D Value noise
+float valueNoise(vec2 uv) {
+    vec2 i = floor(uv);
+    vec2 f = fract(uv);
+
+    // Corners of the cell
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+
+    // Interpolation
+    vec2 u = vec2(fade(f.x), fade(f.y));
+
+    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+// Configurable noise wrapper
+float starNoise(vec2 uv, float scale, float time) {
+    return valueNoise(uv * scale + vec2(time * 0.05, 0.0));
+}
 
 void main() {
-    // Sphere radius
-    float radius = 0.5;
+    // Center UV at 0.5
+    vec2 uv = v_uv - vec2(0.5);
 
-    //float u = 0.5 + atan(y, x) / (2.0 * PI);  // Horizontal wrapping (longitude)
-    //float v = 0.5 - asin(z) / PI;  // Vertical wrapping (latitude)
+    // Pixelart quantization
+    uv = floor(uv / u_pixelSize) * u_pixelSize;
 
-    // Offset texture coordinates so (0.5, 0.5) is the center of the sphere
-    vec2 uv = v_texCoords - vec2(0.5, 0.5);
+    float r = length(uv) * 2.0; // normalized radius (0=center, 1=edge)
+    if (r > 1.0) discard;
 
-    // Calculate the distance from the center of the sphere
-    float dist = length(uv);
+    // Base outline brightness
+    float outline = 1.0 - smoothstep(1.0 - u_coronaRadius - u_edgeSoftness, 1.0 - u_coronaRadius, r);
 
-    // Discard fragments outside the sphere (makes the shape circular)
-    if (dist > radius) {
-        discard;
+    // Corona falloff
+    float corona = smoothstep(1.0, 1.0 - u_coronaRadius - u_edgeSoftness, r);
+    corona = pow(corona*0.95, 1.4);
+
+    // Surface noise
+    float noiseVal = 0.7 * starNoise(uv, 333.3, 0) + 0.3 * starNoise(uv, 100.0, 0);
+    noiseVal = clamp(noiseVal, 0.2, 1);
+
+    float s = 0.2;
+
+    // Combine outline, noise, and corona
+    float brightness = outline * ((1.0-s) + s*noiseVal) + corona;
+
+    float boost = mix(0.75, 2.5, noiseVal); // darker areas stay dark, bright areas glow
+    if(outline < 1 - u_coronaRadius) {
+        boost = 1f;
     }
 
-    // Map from the 2D plane to spherical coordinates (latitude and longitude)
-    // Latitude = vertical angle, Longitude = horizontal angle
-    float theta = asin(uv.y / radius);  // Latitude (-π/2 to π/2)
-    float phi = atan(uv.x, sqrt(radius * radius - uv.x * uv.x - uv.y * uv.y));  // Longitude (-π to π)
-
-    // Apply rotation to the globe around the vertical axis (y-axis)
-    float rotationSpeed = 0.5;  // Adjust rotation speed
-    float rotatedPhi = phi + u_time * rotationSpeed;  // Rotate longitude (phi) over time
-
-    // Convert spherical coordinates (theta, rotatedPhi) back to UV space for the 2D map texture
-    vec2 texCoords;
-    texCoords.x = (rotatedPhi / (2.0 * 3.14159265359)) + 0.5;  // Map [-π, π] to [0, 1] for texture lookup
-    texCoords.y = (theta / 3.14159265359) + 0.5;               // Map [-π/2, π/2] to [0, 1]
-
-    // Fetch the color from the world map texture
-    vec4 color = texture2D(u_texture, texCoords);
-
-    // Basic lighting using a simple Lambertian model (optional)
-    vec3 normal;
-    normal.xy = uv / radius;                       // Normalized x and y coordinates for the sphere
-    normal.z = sqrt(1.0 - dot(normal.xy, normal.xy));  // Calculate z-component of the normal
-    float lightIntensity = max(dot(normal, u_lightDir), 0);  // Lambertian lighting
-
-    // Apply lighting to the texture color
-    vec4 finalColor = color * lightIntensity;
-
-    // Ensure the final color is not too dark
-    finalColor.rgb = mix(vec3(0.1, 0.1, 0.1), finalColor.rgb, lightIntensity);
-    finalColor.a = 1;
-
-    // Output the final color
-    gl_FragColor = finalColor;
+    gl_FragColor = vec4(u_color * brightness * boost, brightness);
 }

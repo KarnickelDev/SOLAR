@@ -1,15 +1,11 @@
-#version 330 core
-
-// Input attributes
-attribute vec4 a_position;   // Position of the vertex
-attribute vec2 a_texCoord;   // Texture coordinate
-
-// Pass data to the fragment shader
-varying vec2 v_texCoord;     // Pass texture coordinate to fragment shader
+attribute vec4 a_position;
+attribute vec2 a_texCoord0;
 
 uniform mat4 u_projTrans;
 
+varying vec2 v_uv;
+
 void main() {
-    v_texCoord = a_texCoord;
+    v_uv = a_texCoord0; // 0..1
     gl_Position = u_projTrans * a_position;
 }

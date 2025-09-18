@@ -2,15 +2,20 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.*;
+import karnickeldev.solar.ecs.components.RadiusComponent;
 import karnickeldev.solar.network.packets.*;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
+import karnickeldev.solar.physics.Vector2D;
+import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.render.camera.CameraInput;
+import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.ui.components.DebugToolTip;
 import karnickeldev.solar.ui.components.escapemenu.EscapeMenu;
 import karnickeldev.solar.ui.components.game.DateDisplay;
@@ -33,6 +38,7 @@ public class SimTestScreen implements Screen {
         cameraInput = GameContext.get().getCameraInput();
     }
 
+    SimpleStarRenderer starRenderer;
 
     @Override
     public void show() {
@@ -50,6 +56,8 @@ public class SimTestScreen implements Screen {
         SolarMain.getInstance().getInputManager().addInput(UI.stage());
         SolarMain.getInstance().getInputManager().addInput(cameraInput);
         Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager().getInputMultiplexer());
+
+        starRenderer = new SimpleStarRenderer(SolarMain.getInstance().getBatch());
     }
 
     double tmp = 0;
@@ -95,6 +103,27 @@ public class SimTestScreen implements Screen {
         screenViewport.apply();
         gameContext.getPlanetoidRenderSystem().renderPlanetoids();
         SolarMain.getInstance().getBatch().end();
+
+        FloatingOriginCamera camera = clientWorldManager.getActiveWorld().getCamera();
+        Vector2D reuseVec0 = new Vector2D();
+        double alpha = clientWorldManager.getActiveWorld().getECS().hcs.getAlpha();
+
+        // render (each frame)
+        Vector2D camOrigin = camera.getRenderOrigin();
+
+        Vector2D trackPos = clientWorldManager.getActiveWorld().getECS().toWorldSpace(PlanetoidRenderSystem.track, alpha).add(camOrigin);
+        reuseVec0.zero();
+
+        Vector2D ePos = reuseVec0;
+
+        clientWorldManager.getActiveWorld().getECS().toWorldSpace(ePos, 0, alpha);
+
+        ePos.subtract(trackPos);
+
+
+        double starRadiusWorld = clientWorldManager.getActiveWorld().getECS().getComponentRegistry().get(RadiusComponent.class).getRadius(0);
+
+        starRenderer.renderStar(ePos.getX(), ePos.getY(), starRadiusWorld);
 
         UI.getUIManager().act(delta);
         UI.getUIManager().draw();
