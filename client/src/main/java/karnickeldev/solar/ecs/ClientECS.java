@@ -18,6 +18,11 @@ public class ClientECS extends ECSContext {
         registerComponent(SphereOfInfluenceComponent.class, new SphereOfInfluenceComponent());
         registerComponent(OrbitDataComponent.class, new OrbitDataComponent());
 
+        // textures
+        RenderComponent renderComponent = new RenderComponent();
+        registerComponent(RenderComponent.class, renderComponent);
+        registerHandler(AppearanceSnapshot.class, renderComponent);
+
         hcs = new HCSClientSystem();
         registerHandler(HCSPositionSnapshot.class, hcs);
     }

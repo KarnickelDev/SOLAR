@@ -5,9 +5,12 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import karnickeldev.solar.assetmanager.Asset;
+import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.Tag;
 import karnickeldev.solar.ecs.components.RadiusComponent;
+import karnickeldev.solar.ecs.components.RenderComponent;
 import karnickeldev.solar.ecs.components.TagComponent;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
@@ -18,7 +21,7 @@ import karnickeldev.solar.world.WorldManager;
 
 public class PlanetoidRenderSystem {
 
-    public static int track = 3;
+    public static int track = 0;
     private static double frustumCullingRadiusSquared = 0;
     private final SpriteBatch batch;
     public static Texture testTex;
@@ -69,6 +72,7 @@ public class PlanetoidRenderSystem {
         HCSClientSystem hcs = ecs.hcs;
         TagComponent tags = ecs.getComponentRegistry().get(TagComponent.class);
         RadiusComponent radius = ecs.getComponentRegistry().get(RadiusComponent.class);
+        RenderComponent renderComponent = ecs.getComponentRegistry().get(RenderComponent.class);
 
         FloatingOriginCamera camera = worldManager.getActiveWorld().getCamera();
         double renderZoom = camera.getRenderZoom();
@@ -88,8 +92,11 @@ public class PlanetoidRenderSystem {
         Color drawColor = Color.WHITE;
         Color lastColor = batch.getColor();
 
+        Texture texture = null;
+        short textureID = 0;
+
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
-            if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity)) continue;
+            if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity) || !renderComponent.has(entity)) continue;
 
             reuseVec0.zero();
 
@@ -136,7 +143,13 @@ public class PlanetoidRenderSystem {
                 lastColor = drawColor;
             }
 
-            batch.draw(testTex, (float) (localX - 0.5 * size), (float) (localY - 0.5 * size), (float)size, (float)size);
+            short tmp = renderComponent.getEntityType(entity);
+            if(tmp != textureID) {
+                textureID = tmp;
+                texture = AssetWrapper.getInstance().getAsset(Asset.values()[renderComponent.getEntityType(entity)]);
+            }
+
+            batch.draw(texture, (float) (localX - 0.5 * size), (float) (localY - 0.5 * size), (float)size, (float)size);
         }
         float tsize = (float) (16 * camera.getRenderZoom());
         batch.setColor(Color.GREEN);

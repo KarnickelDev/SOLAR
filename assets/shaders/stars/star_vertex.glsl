@@ -6,6 +6,6 @@ uniform mat4 u_projTrans;
 varying vec2 v_uv;
 
 void main() {
-    v_uv = a_texCoord0; // 0..1
+    v_uv = a_texCoord0; // [0;1]
     gl_Position = u_projTrans * a_position;
 }
