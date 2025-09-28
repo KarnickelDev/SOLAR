@@ -6,6 +6,7 @@ import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
+import karnickeldev.solar.render.shader.ShaderManager;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.WorldManager;
@@ -30,9 +31,11 @@ public class GameContextContainer {
 
     private final boolean multiplayer;
 
+    private final ShaderManager shaderManager;
+
     public GameContextContainer(boolean multiplayer, WorldManager<ClientWorld> worldManager, Dispatcher dispatcher,
                                 ClientNetwork clientNetwork, ClientNetworkListener clientListener,
-                                ClientClock clientClock, PlanetoidRenderSystem rs, CameraInput cameraInput, PacketSyncLayer syncLayer) {
+                                ClientClock clientClock, PlanetoidRenderSystem rs, CameraInput cameraInput, PacketSyncLayer syncLayer, ShaderManager shaderManager) {
         this.multiplayer = multiplayer;
         this.worldManager = worldManager;
         this.dispatcher = dispatcher;
@@ -42,6 +45,7 @@ public class GameContextContainer {
         this.rs = rs;
         this.cameraInput = cameraInput;
         this.syncLayer = syncLayer;
+        this.shaderManager = shaderManager;
     }
 
     public boolean isMultiplayer() {
@@ -82,5 +86,9 @@ public class GameContextContainer {
 
     public PacketSyncLayer getSyncLayer() {
         return syncLayer;
+    }
+
+    public ShaderManager getShaderManager() {
+        return shaderManager;
     }
 }

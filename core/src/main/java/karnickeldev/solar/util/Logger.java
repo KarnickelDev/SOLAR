@@ -18,6 +18,7 @@ public class Logger {
     public static final String SYNC = "[SYNC] ";
     public static final String NETWORK = "[NETWORK] ";
     public static final String UI = "[UI] ";
+    public static final String SHADER = "[SHADER] ";
 
     public static final char LOG_NONE = 0, LOG_INFO = 1, LOG_ERROR = 2, LOG_DEBUG = 3;
     private static final String RESET = "\u001B[0m";

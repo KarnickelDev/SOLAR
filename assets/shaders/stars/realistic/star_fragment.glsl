@@ -2,13 +2,13 @@
 precision mediump float;
 #endif
 
-#include "../webgl-noise/noise3D.glsl"
-#include "blackbody.glsl"
+#include "../../webgl-noise/noise3D.glsl"
+#include "../blackbody.glsl"
 
 varying vec2 v_uv;
+
 uniform float u_temperature;
 uniform float u_time;
-uniform float u_pixelation;
 
 vec3 starColor(float T, float totalNoise) {
     vec3 bb = blackBody(T);
@@ -30,8 +30,6 @@ vec3 starColor(float T, float totalNoise) {
 
 void main() {
     vec2 uv = (v_uv - vec2(0.5)) * 2;
-
-    if(u_pixelation != 0) uv = floor(uv / u_pixelation) * u_pixelation;
 
     float dist = length(uv);
     if (dist > 1.0) discard;

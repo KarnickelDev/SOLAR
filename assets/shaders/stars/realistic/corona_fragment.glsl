@@ -2,8 +2,8 @@
 precision mediump float;
 #endif
 
-#include "../webgl-noise/noise3D.glsl"
-#include "blackbody.glsl"
+#include "../../webgl-noise/noise3D.glsl"
+#include "../blackbody.glsl"
 
 varying vec2 v_uv;
 

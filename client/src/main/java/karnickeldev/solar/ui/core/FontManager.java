@@ -62,7 +62,7 @@ public class FontManager {
 
     public BitmapFont generateFont(Fonts font, int size, int appHeight, boolean bold) {
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        param.size = Math.max(2, Math.round(size * (appHeight / (float)UI.VIRTUAL_HEIGHT)));
+        param.size = Math.max(3, Math.round(size * (appHeight / (float)UI.VIRTUAL_HEIGHT)));
         param.minFilter = Texture.TextureFilter.Linear;
         param.magFilter = Texture.TextureFilter.Linear;
         param.incremental = false;

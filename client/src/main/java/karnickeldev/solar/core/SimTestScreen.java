@@ -2,7 +2,6 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -10,7 +9,6 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.*;
 import karnickeldev.solar.ecs.components.RadiusComponent;
 import karnickeldev.solar.network.packets.*;
-import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.StarField;
