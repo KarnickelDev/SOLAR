@@ -13,38 +13,38 @@ uniform float u_pixelation;
 uniform float u_zoom;
 
 float coronaFactor(float T) {
-    float shaped = pow(smoothstep(1000, 30000, T), 0.36);
+    float shaped = pow(smoothstep(1000.0, 30000.0, T), 0.36);
     return mix(0.4, 0.6, shaped);
 }
 
 float twinkleFactor(float T) {
-    float shaped = pow(smoothstep(1000, 30000, T), 0.4);
+    float shaped = pow(smoothstep(1000.0, 30000.0, T), 0.4);
     return mix(0.6, 2.0, shaped);
 }
 
 void main() {
     vec2 uv = v_uv;
 
-    if(u_pixelation != 0) uv = floor(uv / u_pixelation) * u_pixelation;
+    if(u_pixelation != 0.0) uv = floor(uv / u_pixelation) * u_pixelation;
 
-    float r = length(uv) * 4;
-    if (r > 4) discard;
+    float r = length(uv) * 4.0;
+    if (r > 4.0) discard;
 
     // Base exponential falloff
-    float falloff = exp(0.9-0.9*r);
+    float falloff = exp(0.9 - 0.9 * r);
 
     // Add geometric poster rays
     float angleGeo = atan(uv.y, uv.x);
     angleGeo = (angleGeo + 6.2831853) / 6.2831853; // 0..1
 
-    int nRays = 10;
+    float nRays = 10.0;
     float sector = floor(angleGeo * nRays);
 
     // Per-ray dynamic brightness
-    float rayStrength = 0.6 + twinkleFactor(u_temperature) * (snoise(vec3(sector, u_time*0.5, 0.0)) + 1);
+    float rayStrength = 0.6 + twinkleFactor(u_temperature) * (snoise(vec3(sector, u_time*0.5, 0.0)) + 1.0);
 
     // Ray mask (hard sunburst wedge)
-    float rayMask = step(0.5 + 0.2*snoise(vec3(angleGeo*4, u_time*0.1, 1)), fract(angleGeo * nRays));
+    float rayMask = step(0.5 + 0.2*snoise(vec3(angleGeo*4.0, u_time*0.1, 1.0)), fract(angleGeo * nRays));
 
     // Final ray intensity
     float rayGeo = rayMask * rayStrength;
@@ -61,7 +61,7 @@ void main() {
     float rayNoise = snoise(vec3(cos(angleN)*2.5, sin(angleN)*2.0, u_time*0.3));
     float rayN = (0.5 + 0.1 * rayNoise);
 
-    float intensity = noisyFalloff + (pow(falloff, 4) * 2 * rayN);
+    float intensity = noisyFalloff + (pow(falloff, 4.0) * 2.0 * rayN);
     intensity *= coronaFactor(u_temperature);
 
     // add geometric poster rays, fade in when zooming out

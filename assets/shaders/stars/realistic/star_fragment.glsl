@@ -29,26 +29,26 @@ vec3 starColor(float T, float totalNoise) {
 }
 
 void main() {
-    vec2 uv = (v_uv - vec2(0.5)) * 2;
+    vec2 uv = (v_uv - vec2(0.5)) * 2.0;
 
     float dist = length(uv);
     if (dist > 1.0) discard;
 
     // normal noise variation
     float detail = mix(10.0, 60.0, clamp((u_temperature - 2500.0) / 15000.0, 0.0, 1.0));
-    vec3 pos1 = vec3(uv * 0.15, 1);
+    vec3 pos1 = vec3(uv * 0.15, 1.0);
     vec3 pos2 = vec3(uv * detail, u_time * 0.2);
     vec3 pos3 = vec3(uv * detail * 2.0, u_time * 0.5);
 
-    float n = 0.5 * (snoise(pos1) + 1) * 0.5;
-    n += 0.3 * (snoise(pos2) + 1) * 0.5;
-    n += 0.2 * (snoise(pos3) + 1) * 0.5;
+    float n = 0.5 * (snoise(pos1) + 1.0) * 0.5;
+    n += 0.3 * (snoise(pos2) + 1.0) * 0.5;
+    n += 0.2 * (snoise(pos3) + 1.0) * 0.5;
 
     // Sunspots
     float s = 0.1;
     float frequency = 3.0;
-    float t1 = snoise(vec3(uv * frequency, 69)) - s;
-    float t2 = snoise(vec3((uv + 420.0) * frequency, 69)) - s;
+    float t1 = snoise(vec3(uv * frequency, 69.0)) - s;
+    float t2 = snoise(vec3((uv + 420.0) * frequency, 69.0)) - s;
     float ss = (max(t1, 0.0) * max(t2, 0.0)) * 0.9;
 
     // Accumulate total noise

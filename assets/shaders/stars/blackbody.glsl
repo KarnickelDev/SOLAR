@@ -2,7 +2,7 @@
 // T in Kelvin, range [1000, 40000]
 vec3 blackBody(float T) {
 
-    float t = clamp(T, 1000, 40000) / 100.0;
+    float t = clamp(T, 1000.0, 40000.0) / 100.0;
 
     float r, g, b;
 

@@ -11,19 +11,19 @@ uniform float u_temperature;
 uniform float u_time;
 
 float coronaFactor(float T) {
-    float shaped = pow(smoothstep(1000, 15000, T), 0.36);
+    float shaped = pow(smoothstep(1000.0, 15000.0, T), 0.36);
     return mix(0.65, 1.2, shaped);
 }
 
 void main() {
     vec2 uv = v_uv;
-    float r = length(uv) * 4;
-    if (r > 4) discard;
+    float r = length(uv) * 4.0;
+    if (r > 4.0) discard;
 
-    float closeness = 0;
+    float closeness = 0.0;
 
     // Base exponential falloff
-    float falloff = exp(0.9-0.9*r);
+    float falloff = exp(0.9 - 0.9 * r);
 
     // Add radial ray-like noise
     float angle = atan(uv.y, uv.x);

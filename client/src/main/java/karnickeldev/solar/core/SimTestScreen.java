@@ -2,6 +2,7 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -52,6 +53,7 @@ public class SimTestScreen implements Screen {
 
         // ORDER HERE IMPORTANT! (Inputs processed in order of registration)
         SolarMain.getInstance().getInputManager().addInput(UI.stage());
+        //SolarMain.getInstance().getInputManager().addInput(new GestureDetector(cameraInput));
         SolarMain.getInstance().getInputManager().addInput(cameraInput);
         Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager().getInputMultiplexer());
 

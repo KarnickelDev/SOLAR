@@ -3,6 +3,8 @@ package karnickeldev.solar.render.camera;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.input.GestureDetector;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.ClientECS;
@@ -29,6 +31,8 @@ public class CameraInput extends InputAdapter {
     private final WorldManager<ClientWorld> worldManager;
     private FloatingOriginCamera camera;
     private ClientECS ecs;
+
+    long lastKeyboardZoom = 0;
 
     public CameraInput(WorldManager<ClientWorld> worldManager) {
         this.worldManager = worldManager;
@@ -68,6 +72,34 @@ public class CameraInput extends InputAdapter {
         if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
             camera.rotate(+ROTATION_SPEED);
         }
+
+        Vector2D screenCenter = new Vector2D(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()).scale(0.5);
+        long now = System.nanoTime();
+
+        if(now - lastKeyboardZoom > 60_000_000) {
+            if(Gdx.input.isKeyPressed(Input.Keys.UP)) {
+                double currentZoom = camera.getTargetZoom();
+
+                float scrollDir = -1;
+                double factor = ZOOM_SPEED * currentZoom * Math.pow(ZOOM_ACCELERATION, 4);
+                double zoom = MathUtil.clamp(currentZoom + (scrollDir * factor), MIN_ZOOM, MAX_ZOOM);
+
+                camera.zoomToward(zoom, screenCenter);
+                lastKeyboardZoom = now;
+            }
+
+            if(Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+                double currentZoom = camera.getTargetZoom();
+
+                float scrollDir = +1;
+                double factor = ZOOM_SPEED * currentZoom * Math.pow(ZOOM_ACCELERATION, 4);
+                double zoom = MathUtil.clamp(currentZoom + (scrollDir * factor), MIN_ZOOM, MAX_ZOOM);
+
+                camera.zoomToward(zoom, screenCenter);
+                lastKeyboardZoom = now;
+            }
+        }
+
     }
 
     @Override
@@ -212,5 +244,4 @@ public class CameraInput extends InputAdapter {
 
         return processed;
     }
-
 }
