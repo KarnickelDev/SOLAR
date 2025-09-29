@@ -122,7 +122,7 @@ public class PlanetCylindricalProjection extends ApplicationAdapter {
     public void create() {
         batch = new SpriteBatch();
 
-        shader = new ShaderProgram(Gdx.files.internal("sphere_vertex.glsl"), Gdx.files.internal("test.glsl"));
+        shader = new ShaderProgram(Gdx.files.internal("star_vertex.glsl"), Gdx.files.internal("test.glsl"));
         if (!shader.isCompiled()) {
             System.out.println("Shader compile error: " + shader.getLog());
         }

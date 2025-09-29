@@ -104,7 +104,7 @@ public class SolarMain extends Game {
             list,
             Asset.STARRY_SKY_BACKGROUND_TILES,
             Asset.MAIN_MENU_BACKGROUND_SCENERY,
-            Asset.TREE_LINE
+            Asset.DEBUG_CIRCLE
         ));
 
         Logger.log(Logger.STARTUP, "Startup complete");

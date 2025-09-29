@@ -82,12 +82,9 @@ public final class Vector2D {
     }
 
     public Vector2D nor() {
-        if (x != 0 || y != 0) return this;
-
         double len = len();
         x /= len;
         y /= len;
-
         return this;
     }
 

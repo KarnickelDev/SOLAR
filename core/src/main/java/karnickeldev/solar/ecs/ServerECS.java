@@ -23,6 +23,9 @@ public class ServerECS extends ECSContext {
         registerComponent(SphereOfInfluenceComponent.class, new SphereOfInfluenceComponent());
         registerComponent(OrbitDataComponent.class, new OrbitDataComponent());
 
+        // textures
+        registerComponentAndHandler(AppearanceComponent.class, AppearanceSnapshot.class, new AppearanceComponent());
+
         hcs = new HCSServerSystem();
 
         registerSystem(new KeplerianOrbitSystem<ServerWorld>(this.world));

@@ -1,5 +1,6 @@
 package karnickeldev.solar.ecs;
 
+import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.ecs.components.*;
 import karnickeldev.solar.physics.PhysicsUtil;
 
@@ -23,6 +24,10 @@ public class EntityFactory {
         ecs.getComponentRegistry().get(RadiusComponent.class).add(entity, radius);
         ecs.getComponentRegistry().get(SphereOfInfluenceComponent.class).add(entity, sphereOfInfluence);
         ecs.hcs.add(entity, EntityManager.NO_ENTITY, x, y);
+
+        // texture
+        ecs.getComponentRegistry().get(AppearanceComponent.class).add(entity, (short) Asset.DEBUG_CIRCLE.ordinal(), (short)0, "");
+
         return entity;
     }
 
@@ -40,6 +45,9 @@ public class EntityFactory {
         ecs.getComponentRegistry().get(RadiusComponent.class).add(entity, radius);
         ecs.getComponentRegistry().get(SphereOfInfluenceComponent.class).add(entity, sphereOfInfluence);
         ecs.getComponentRegistry().get(OrbitDataComponent.class).add(entity, semiMajorAxis, eccentricity, omega, t0, centralBody);
+
+        // texture
+        ecs.getComponentRegistry().get(AppearanceComponent.class).add(entity, (short) Asset.DEBUG_CIRCLE.ordinal(), (short)0, "");
 
         PhysicsUtil.initializePlanetoidAtPeriapsisHCS(ecs, entity);
         return entity;

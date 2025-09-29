@@ -17,6 +17,7 @@ import karnickeldev.solar.network.server.Server;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
+import karnickeldev.solar.render.shader.ShaderManager;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.WorldManager;
@@ -46,6 +47,8 @@ public class GameContextBuilder {
 
         CameraInput cameraInput = new CameraInput(worldManager);
 
+        ShaderManager shaderManager = new ShaderManager();
+
         return new GameContextContainer(
             true,
             worldManager,
@@ -55,7 +58,8 @@ public class GameContextBuilder {
             clientClock,
             rs,
             cameraInput,
-            syncLayer
+            syncLayer,
+            shaderManager
         );
     }
 
@@ -89,6 +93,8 @@ public class GameContextBuilder {
 
         CameraInput cameraInput = new CameraInput(worldManager);
 
+        ShaderManager shaderManager = new ShaderManager();
+
         return new GameContextContainer(
             false,
             worldManager,
@@ -98,7 +104,8 @@ public class GameContextBuilder {
             time,
             rs,
             cameraInput,
-            syncLayer
+            syncLayer,
+            shaderManager
             );
     }
 
