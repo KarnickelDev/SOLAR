@@ -14,7 +14,7 @@ import java.util.Properties;
 public class Metadata {
 
     public static final String ROOT_DIR_NAME = "SOLAR";
-    private static final String user_dir = System.getProperty("os.name").startsWith("Windows") ? System.getenv("APPDATA") : System.getProperty("user.dir");
+    private static final String user_dir = System.getProperty("os.name").startsWith("Windows") ? System.getenv("APPDATA") : System.getProperty("user.home");
     public static final File ROOT_DIR = new File(user_dir, ROOT_DIR_NAME);
     public static String APP_NAME = "Unknown";
     public static String VERSION = "0.0.0";

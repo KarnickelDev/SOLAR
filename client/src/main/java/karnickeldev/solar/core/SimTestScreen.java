@@ -122,7 +122,6 @@ public class SimTestScreen implements Screen {
 
 
         double starRadiusWorld = clientWorldManager.getActiveWorld().getECS().getComponentRegistry().get(RadiusComponent.class).getRadius(0);
-
         starRenderer.renderStar(ePos.getX(), ePos.getY(), starRadiusWorld);
 
         UI.getUIManager().act(delta);

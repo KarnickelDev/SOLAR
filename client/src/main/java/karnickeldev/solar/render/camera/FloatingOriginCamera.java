@@ -56,7 +56,7 @@ public class FloatingOriginCamera {
         this.prevOrigin = new Vector2D();
         this.renderOrigin = new Vector2D();
 
-        zoom = prevZoom = targetZoom = renderZoom = 1f;
+        zoom = prevZoom = targetZoom = renderZoom = 1e4f;
     }
 
     /**
@@ -183,6 +183,14 @@ public class FloatingOriginCamera {
      */
     public Vector2D unprojectReuse(Vector2D screenPos) {
         return unproject(screenPos.getX(), screenPos.getY(), screenPos, renderZoom);
+    }
+
+    public double projectLength(double worldLength) {
+        return worldLength / renderZoom;
+    }
+
+    public double unprojectLength(double pixelLength) {
+        return pixelLength * renderZoom;
     }
 
     /**
