@@ -167,20 +167,10 @@ public class NettyClientNetwork implements ClientNetwork {
     private void handlePacket(Packet pkt) {
         if(pkt.isFastHandled()) {
             HandlerRegistry.getHandler(pkt).handle(0, pkt);
+        } else if(pkt instanceof GameStatePacket gp) {
+            GameContext.get().getSyncLayer().receivePacket(gp);
         } else {
-            if(pkt instanceof ECSUpdatePacket) {
-                ECSUpdatePacket p = (ECSUpdatePacket) pkt;
-                GameContext.get().getClock().addSegment(p.getSimTimeMicros(), (System.nanoTime() / 1000L),
-                    p.getCurrentSimSpeed(), p.getTargetSimSpeedIndex());
-                GameContext.get().getSyncLayer().receivePacket(p);
-
-                dispatcher.dispatch(() -> {
-                    UIComponent cmp = UI.getUIManager().getComponent("time_control");
-                    if(cmp != null) ((TimeControl) cmp).setTargetSpeedIndex(p.getTargetSimSpeedIndex());
-                });
-            } else {
-                dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));
-            }
+            dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));
         }
     }
 
@@ -195,6 +185,7 @@ public class NettyClientNetwork implements ClientNetwork {
                     Logger.error(Logger.NETWORK, "Handshake Failed!");
                     shutdown(false);
                 } else {
+                    Logger.log(Logger.NETWORK, "Handshake success!");
                     handshake = true;
                     dispatcher.dispatch(listener::onConnected);
                 }

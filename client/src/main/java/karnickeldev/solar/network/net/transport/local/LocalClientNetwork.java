@@ -6,6 +6,7 @@ import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.packets.ECSUpdatePacket;
+import karnickeldev.solar.network.packets.GameStatePacket;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.ui.components.UIComponent;
 import karnickeldev.solar.ui.components.game.TimeControl;
@@ -74,20 +75,10 @@ public class LocalClientNetwork implements ClientNetwork {
     private void handlePacket(Packet pkt) {
         if(pkt.isFastHandled()) {
             HandlerRegistry.getHandler(pkt).handle(0, pkt);
+        } else if(pkt instanceof GameStatePacket gp) {
+            GameContext.get().getSyncLayer().receivePacket(gp);
         } else {
-            if(pkt instanceof ECSUpdatePacket) {
-                ECSUpdatePacket p = (ECSUpdatePacket) pkt;
-                GameContext.get().getClock().addSegment(p.getSimTimeMicros(), System.nanoTime() / 1000L,
-                    p.getCurrentSimSpeed(), p.getTargetSimSpeedIndex());
-                GameContext.get().getSyncLayer().receivePacket(p);
-
-                dispatcher.dispatch(() -> {
-                    UIComponent cmp = UI.getUIManager().getComponent("time_control");
-                    if(cmp != null) ((TimeControl) cmp).setTargetSpeedIndex(p.getTargetSimSpeedIndex());
-                });
-            } else {
-                dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));
-            }
+            dispatcher.dispatch(() -> HandlerRegistry.getHandler(pkt).handle(0, pkt));
         }
     }
 

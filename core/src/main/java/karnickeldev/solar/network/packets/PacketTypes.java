@@ -8,6 +8,7 @@ public enum PacketTypes {
     PONG(PingPongPacket.class, PingPongPacket::create),
     HANDSHAKE(HandshakePacket.class, HandshakePacket::create),
     HANDSHAKE_RESPONSE(HandshakeResponsePacket.class, HandshakeResponsePacket::create),
+    TIMESTAMP(TimestampPacket.class, TimestampPacket::create),
     DISCONNECT(DisconnectPacket.class, DisconnectPacket::create),
     ENTITY_LIFECYCLE(EntityLifecyclePacket.class, EntityLifecyclePacket::create),
     WORLD_UPDATE(WorldUpdatePacket.class, WorldUpdatePacket::create),

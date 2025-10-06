@@ -181,6 +181,7 @@ public class NettyServerNetwork implements ServerNetwork {
                         ctx.channel().writeAndFlush(new HandshakeResponsePacket(HandshakeResponsePacket.FAILURE))
                             .addListener(ChannelFutureListener.CLOSE);
                     } else {
+                        Logger.log(Logger.NETWORK, "Handshake accepted for client " + session.getClientId());
                         session.completeHandshake();
                         ctx.channel().writeAndFlush(new HandshakeResponsePacket(HandshakeResponsePacket.SUCCESS));
                     }

@@ -62,6 +62,9 @@ public class PlanetoidRenderSystem {
         frustumCullingRadiusSquared = (halfW * halfW) + (halfH * halfH);
     }
 
+    double[] worldX = new double[100010];
+    double[] worldY = new double[100010];
+
     public void renderPlanetoids() {
         int width = Gdx.graphics.getWidth();
         int height = Gdx.graphics.getHeight();
@@ -79,8 +82,8 @@ public class PlanetoidRenderSystem {
 
         double alpha = hcs.getAlpha();
 
-        Vector2D reuseVec0 = new Vector2D();
-        Vector2D reuseVec1 = new Vector2D();
+        Vector2D ePos = new Vector2D();
+        Vector2D screenPos = new Vector2D();
 
         batch.setProjectionMatrix(camera.getCombinedMatrix());
         //batch.begin();
@@ -95,12 +98,22 @@ public class PlanetoidRenderSystem {
         Texture texture = null;
         short textureID = 0;
 
+        float maxZoom = (float) renderZoom * 16;
+
+        double x0, x1, y0, y1;
+        x0 = camera.unprojectReuse(new Vector2D(0,0)).getX();
+        y0 = camera.unprojectReuse(new Vector2D(0,0)).getY();
+        x1 = camera.unprojectReuse(new Vector2D(Gdx.graphics.getWidth(),Gdx.graphics.getHeight())).getX();
+        y1 = camera.unprojectReuse(new Vector2D(Gdx.graphics.getWidth(),Gdx.graphics.getHeight())).getY();
+
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
-            if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity) || !renderComponent.has(entity)) continue;
+            if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity) || !renderComponent.has(entity)) {
+                worldX[entity] = Double.MAX_VALUE;
+                worldY[entity] = Double.MAX_VALUE;
+                continue;
+            }
 
-            reuseVec0.zero();
-
-            Vector2D ePos = reuseVec0;
+            ePos.zero();
 
             ecs.toWorldSpace(ePos, entity, alpha);
 
@@ -109,22 +122,39 @@ public class PlanetoidRenderSystem {
             double localX = ePos.getX();
             double localY = ePos.getY();
 
-            double size = Math.max(16 * renderZoom, radius.getRadius(entity));
+            double size = Math.max(maxZoom, radius.getRadius(entity));
 
             // fast reject culling with sphere check
             if (!isNearFrustum(localX, localY, size)) {
+                worldX[entity] = Double.MAX_VALUE;
+                worldY[entity] = Double.MAX_VALUE;
                 continue;
             }
 
-            reuseVec1.set(ePos).add(camOrigin);
-            Vector2D screenPos = camera.projectReuse(reuseVec1);
+            screenPos.set(ePos).add(camOrigin);
+            screenPos = camera.projectReuse(screenPos);
             double screenX = screenPos.getX();
             double screenY = screenPos.getY();
 
             double sizePixels = size / renderZoom;
             if (screenX < -sizePixels || screenX > width + sizePixels || screenY < -sizePixels || screenY > height + sizePixels) {
+                worldX[entity] = Double.MAX_VALUE;
+                worldY[entity] = Double.MAX_VALUE;
                 continue;
             }
+
+            worldX[entity] = localX;
+            worldY[entity] = localY;
+        }
+
+        for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
+
+            double localX = worldX[entity];
+            double localY = worldY[entity];
+
+            if(localX == Double.MAX_VALUE || localY == Double.MAX_VALUE) continue;
+
+            double size = Math.max(maxZoom, radius.getRadius(entity));
 
             // avoid color changes to not flush GPU unnecessarily
             if (tags.has(entity, Tag.PLANET)) {
@@ -151,6 +181,7 @@ public class PlanetoidRenderSystem {
 
             batch.draw(texture, (float) (localX - 0.5 * size), (float) (localY - 0.5 * size), (float)size, (float)size);
         }
+
         float tsize = (float) (16 * camera.getRenderZoom());
         batch.setColor(Color.GREEN);
         for(Double[] camPos: DefaultClientNetworkListener.clientCamPos.values()) {
@@ -160,6 +191,7 @@ public class PlanetoidRenderSystem {
 
             batch.draw(testTex, (float)pos.getX() - 0.5f*tsize, (float)pos.getY() - 0.5f*tsize, tsize, tsize);
         }
+        batch.setColor(1,1,1,1);
         //batch.end();
     }
 

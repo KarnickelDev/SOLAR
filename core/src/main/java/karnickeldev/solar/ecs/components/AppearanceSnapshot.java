@@ -2,6 +2,9 @@ package karnickeldev.solar.ecs.components;
 
 import io.netty.buffer.ByteBuf;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 /**
  * @author : KarnickelDev
  * @since : 19.09.2025
@@ -46,6 +49,31 @@ public class AppearanceSnapshot implements ComponentSnapshot {
 
     @Override
     public void serialize(ByteBuf out) {
+        out.writeLong(simTimeMicros);
+        out.writeInt(count);
+        for (int i = 0; i < count; i++) {
+            out.writeInt(entityIds[i]);
+            out.writeShort(entityTypes[i]);
+            out.writeShort(seeds[i]);
+            out.writeInt(params[i].length());
+            out.writeCharSequence(params[i], StandardCharsets.UTF_8);
+        }
+    }
 
+    public static AppearanceSnapshot deserialize(ByteBuf in) {
+        long simTimeMicros = in.readLong();
+        int count = in.readInt();
+
+        AppearanceSnapshot snap = new AppearanceSnapshot(count, simTimeMicros);
+
+        for (int i = 0; i < count; i++) {
+            int entityId = in.readInt();
+            short type = in.readShort();
+            short seed = in.readShort();
+            int paramLength = in.readInt();
+            String param = in.readCharSequence(paramLength, StandardCharsets.UTF_8).toString();
+            snap.addChange(entityId, type, seed, param);
+        }
+        return snap;
     }
 }

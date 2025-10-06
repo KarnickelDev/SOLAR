@@ -33,6 +33,10 @@ public class FloatingOriginCamera {
 
     private float viewportWidth;
     private float viewportHeight;
+
+    private float viewportWidthHalf;
+    private float viewportHeightHalf;
+
     private double accumulator = 0;
     private float speed = MIN_SPEED;
     private byte direction = NO_MOVE;
@@ -46,9 +50,14 @@ public class FloatingOriginCamera {
 
     private final Vector2D zoomTargetPos = new Vector2D();
 
+    private float cos;
+    private float sin;
+
     public FloatingOriginCamera(float viewportWidth, float viewportHeight, HCSClientSystem hcsClient) {
         this.viewportWidth = viewportWidth;
         this.viewportHeight = viewportHeight;
+        this.viewportWidthHalf = viewportWidth / 2f;
+        this.viewportHeightHalf = viewportHeight / 2f;
 
         this.hcsClientSystem = hcsClient;
 
@@ -65,6 +74,8 @@ public class FloatingOriginCamera {
     public void update() {
         viewportHeight = Gdx.graphics.getHeight();
         viewportWidth = Gdx.graphics.getWidth();
+        viewportWidthHalf = viewportWidth * 0.5f;
+        viewportHeightHalf = viewportHeight * 0.5f;
 
         // execute camera movement
         moveHelper();
@@ -72,6 +83,10 @@ public class FloatingOriginCamera {
         renderOrigin.set(prevOrigin).lerp(origin, (float) (accumulator / CAMERA_MOVEMENT_TICK_RATE));
 
         renderZoom = MathUtil.lerp(prevZoom, zoom, accumulator / CAMERA_MOVEMENT_TICK_RATE);
+
+        float radians = rotationDegrees * DEG_TO_RAD;
+        cos = MathUtils.cos(radians);
+        sin = MathUtils.sin(radians);
 
         updateProjectionMatrix(viewportWidth, viewportHeight);
     }
@@ -108,17 +123,14 @@ public class FloatingOriginCamera {
         double localY = worldY - renderOrigin.getY();
 
         // Apply rotation
-        float radians = rotationDegrees * DEG_TO_RAD;
-        float cos = MathUtils.cos(radians);
-        float sin = MathUtils.sin(radians);
-
         double rotatedX = localX * cos - localY * sin;
         double rotatedY = localX * sin + localY * cos;
 
         // Apply zoom and move to screen center
+        double invZoom = 1.0 / zoom;
         return vec.set(
-            rotatedX / zoom + viewportWidth / 2.0,
-            -rotatedY / zoom + viewportHeight / 2.0
+            rotatedX * invZoom + viewportWidthHalf,
+            -rotatedY * invZoom + viewportHeightHalf
         );
     }
 
@@ -150,14 +162,10 @@ public class FloatingOriginCamera {
      */
     public Vector2D unproject(double screenX, double screenY, Vector2D vec, double zoom) {
         // Convert from screen space to local, zoomed space
-        double dx = (screenX - viewportWidth / 2.0) * zoom;
-        double dy = -(screenY - viewportHeight / 2.0) * zoom;
+        double dx = (screenX - viewportWidthHalf) * zoom;
+        double dy = -(screenY - viewportHeightHalf) * zoom;
 
         // Inverse rotation
-        float radians = rotationDegrees * DEG_TO_RAD;
-        double cos = MathUtils.cos(radians);
-        double sin = MathUtils.sin(radians);
-
         double unrotatedX = dx * cos + dy * sin;
         double unrotatedY = -dx * sin + dy * cos;
 
@@ -261,8 +269,10 @@ public class FloatingOriginCamera {
     }
 
     public void move(Vector2D direction) {
-        double cos = Math.cos(Math.toRadians(0));
-        double sin = Math.sin(Math.toRadians(0));
+        //double cos = Math.cos(Math.toRadians(0));
+        //double sin = Math.sin(Math.toRadians(0));
+        double cos = 1;
+        double sin = 0;
 
         origin.add(
             direction.getX() * cos - direction.getY() * sin,
@@ -284,8 +294,8 @@ public class FloatingOriginCamera {
 
 
     public void updateProjectionMatrix(float screenWidth, float screenHeight) {
-        double halfWidth = (screenWidth / 2.0) * renderZoom;
-        double halfHeight = (screenHeight / 2.0) * renderZoom;
+        double halfWidth = (screenWidth * 0.5) * renderZoom;
+        double halfHeight = (screenHeight * 0.5) * renderZoom;
 
         float left = (float) -halfWidth;
         float right = (float) halfWidth;

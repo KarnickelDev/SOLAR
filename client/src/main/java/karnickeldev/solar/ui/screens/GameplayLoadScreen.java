@@ -48,6 +48,7 @@ public class GameplayLoadScreen implements GameState {
             if(multiplayer) PacketTypes.registerCommon();
 
             PacketTypes.PONG.registerHandler(new PingPongHandler());
+            PacketTypes.TIMESTAMP.registerHandler(new TimestampHandler());
             PacketTypes.ECS_UPDATE.registerHandler(new ECSUpdateHandler());
             PacketTypes.ENTITY_LIFECYCLE.registerHandler(new EntityLifecycleHandler());
             PacketTypes.WORLD_UPDATE.registerHandler(new WorldUpdateHandler());

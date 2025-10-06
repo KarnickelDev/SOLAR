@@ -173,9 +173,11 @@ public class SimulationManager implements Runnable {
                 ));
             }
 
+            Packet timeStamp = PacketFactory.createTimestampPacket(globalSimTimeMicros, paused ? 0 : simSpeedController.getCurrentSimSpeed(),
+                simSpeedController.getPresetIndex(), paused);
+            ServerContext.get().getServer().getServerNetwork().broadcast(timeStamp);
             Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(
-                globalSimTimeMicros, paused ? 0 : simSpeedController.getCurrentSimSpeed(), simSpeedController.getPresetIndex(),
-                paused, worldManager.getActiveWorld()
+                globalSimTimeMicros, worldManager.getActiveWorld()
             );
             ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
             ServerContext.get().getServer().getServerNetwork().flush();

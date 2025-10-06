@@ -2,7 +2,6 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -105,16 +104,14 @@ public class SimTestScreen implements Screen {
         SolarMain.getInstance().getBatch().end();
 
         FloatingOriginCamera camera = clientWorldManager.getActiveWorld().getCamera();
-        Vector2D reuseVec0 = new Vector2D();
+        Vector2D ePos = new Vector2D();
         double alpha = clientWorldManager.getActiveWorld().getECS().hcs.getAlpha();
 
         // render (each frame)
         Vector2D camOrigin = camera.getRenderOrigin();
 
         Vector2D trackPos = clientWorldManager.getActiveWorld().getECS().toWorldSpace(PlanetoidRenderSystem.track, alpha).add(camOrigin);
-        reuseVec0.zero();
-
-        Vector2D ePos = reuseVec0;
+        ePos.zero();
 
         clientWorldManager.getActiveWorld().getECS().toWorldSpace(ePos, 0, alpha);
 
