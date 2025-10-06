@@ -6,24 +6,18 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.flush.FlushConsolidationHandler;
-import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.network.net.core.ClientNetwork;
-import karnickeldev.solar.network.net.core.PingTracker;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
-import karnickeldev.solar.network.net.transport.PacketDecoder;
-import karnickeldev.solar.network.net.transport.PacketEncoder;
+import karnickeldev.solar.network.net.transport.ClientNetworkTracker;
+import karnickeldev.solar.network.net.transport.NetworkTracker;
 import karnickeldev.solar.network.packets.*;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
-import karnickeldev.solar.ui.components.UIComponent;
-import karnickeldev.solar.ui.components.game.TimeControl;
-import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientClock;
 
@@ -61,6 +55,8 @@ public class NettyClientNetwork implements ClientNetwork {
 
     @Override
     public boolean connect() {
+        NetworkTracker networkTracker = new ClientNetworkTracker();
+
         group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
         Bootstrap b = new Bootstrap();
         b.group(group)
@@ -71,8 +67,8 @@ public class NettyClientNetwork implements ClientNetwork {
                 protected void initChannel(SocketChannel ch) {
                     ChannelPipeline p = ch.pipeline();
                     ch.config().setAllocator(PooledByteBufAllocator.DEFAULT);
-                    p.addLast(new PacketDecoder());
-                    p.addLast(new PacketEncoder());
+                    p.addLast(new PacketDecoder(networkTracker));
+                    p.addLast(new PacketEncoder(networkTracker));
                     p.addLast(new IdleStateHandler(5,0,0));
                     p.addLast(new ClientHandler());
                 }

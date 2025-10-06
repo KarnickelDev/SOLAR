@@ -2,7 +2,6 @@ package karnickeldev.solar.world;
 
 import karnickeldev.solar.network.net.core.PingTracker;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
-import karnickeldev.solar.simulation.execution.SimSpeedController;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -56,7 +55,7 @@ public class ClientClock {
     }
 
     public synchronized void addSegment(long simTimeMicros, long receiveMicros, double simSpeed, byte targetSimSpeedIndex) {
-        long pingEstimate = Math.round(PingTracker.getAvgRTT() / 2d);
+        long pingEstimate = (long) (PingTracker.getAvgRTT() / 2f);
 
         // Adjust anchor to when the server was actually at simTime
         long adjustedAnchor = receiveMicros - pingEstimate;
@@ -65,6 +64,11 @@ public class ClientClock {
 
         // update simSpeed index
         this.targetSimSpeedIndex = targetSimSpeedIndex;
+
+        if(!timeline.isEmpty()) {
+            long last = timeline.getLast().realTimeAnchor;
+            adjustedAnchor = (long) (0.5 * last + 0.5 * adjustedAnchor);
+        }
 
         // Insert new segment
         timeline.add(new TimeSegment(simTimeMicros, adjustedAnchor, Math.max(0, simSpeed)));
@@ -93,14 +97,14 @@ public class ClientClock {
     public synchronized long estimateSimTimeAt(long queryMicros) {
         if (timeline.isEmpty()) return 0;
 
-        // Find latest segment not after delayedQuery
+        // Find latest segment not after query
         TimeSegment seg = null;
         for (TimeSegment s : timeline) {
-            if (s.realTimeAnchor <= queryMicros) {
+            if (s.realTimeAnchor < queryMicros) {
                 seg = s;
             } else break;
         }
-        if(seg == null) seg = timeline.getFirst();
+        if(seg == null) seg = timeline.getLast();
 
         long dt = queryMicros - seg.realTimeAnchor;
         if (seg.simSpeed <= 0) {
@@ -109,7 +113,6 @@ public class ClientClock {
 
         long time = seg.simTimeAtAnchor + (long)(dt * seg.simSpeed);
         time = Math.max(time, last);
-        //Logger.log("dt: " + (long)((time - last) / (seg.simSpeed)));
         last = time;
         return time;
     }

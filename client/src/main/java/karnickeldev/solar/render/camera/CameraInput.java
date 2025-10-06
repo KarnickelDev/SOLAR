@@ -12,6 +12,7 @@ import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.core.UIManager;
 import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
@@ -124,6 +125,15 @@ public class CameraInput extends InputAdapter {
 
         if(keycode == Input.Keys.NUMPAD_SUBTRACT) {
             GameContext.get().getClock().getSimSpeedController().changeSpeed(-1);
+            return true;
+        }
+
+        if(keycode == Input.Keys.F3) {
+            if(UIManager.get().getComponent("debug").getGroup().isVisible()) {
+                UIManager.get().hideComponent("debug");
+            } else {
+                UIManager.get().showComponent("debug");
+            }
             return true;
         }
 

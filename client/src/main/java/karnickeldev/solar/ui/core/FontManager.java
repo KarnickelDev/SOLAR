@@ -70,6 +70,9 @@ public class FontManager {
         for(char unicode = 0xF000; unicode < 0xF2FF; unicode++) {
             customCharacters.append(unicode);
         }
+        //arrows
+        customCharacters.append((char)0x2191).append((char)0x2192).append((char)0x2193).append((char)0x2194);
+
         param.characters = customCharacters.toString();
         return (bold ? font.fontGenBold : font.fontGenRegular).generateFont(param);
     }

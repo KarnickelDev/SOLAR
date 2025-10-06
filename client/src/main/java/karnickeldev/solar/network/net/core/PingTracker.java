@@ -25,11 +25,17 @@ public class PingTracker {
 
     private static long lastUpdate = 0;
 
+    private static boolean init = false;
 
     public static void add(long rttMicros) {
         if(rttMicros > Integer.MAX_VALUE) {
             Logger.error("Insanely high Ping, something is very wrong!");
             return;
+        }
+
+        if(!init) {
+            init = true;
+            Arrays.fill(rttHistoryMicros, (int) rttMicros);
         }
 
         rttHistoryMicros[pos] = (int) rttMicros;
