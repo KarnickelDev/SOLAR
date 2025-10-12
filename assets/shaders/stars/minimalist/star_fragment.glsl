@@ -34,12 +34,8 @@ vec3 starColor(float T, float totalNoise) {
     vec3 col = mix(bb, vec3(1.0), whiteness);
 
     // Temperature-dependent noise modulation
-    float noiseStrength = mix(1.2, 0.7, clamp((T - 2500.0) / 30000.0, 0.0, 1.0));
-    col = mix(
-        col * (1.0 - 0.2 * noiseStrength),
-        col * (1.0 + 0.3 * noiseStrength),
-        totalNoise
-    );
+    //float noiseStrength = mix(1, -1, clamp((T - 2500.0) / 30000.0, 0.0, 1.0));
+    col = col + vec3(0.3 * totalNoise);
 
     return col;
 }
@@ -57,10 +53,10 @@ void main() {
     if (dist > 1.0) discard;
 
     // normal noise variation
-    float detail = mix(7.0, 20.0, clamp((u_temperature - 2500.0) / 30000.0, 0.0, 1.0));
-    detail = 10.0;
+    float detail = mix(7.0, 15.0, clamp((u_temperature - 2500.0) / 30000.0, 0.0, 1.0));
+    detail = 7.0;
     float activeness = 0.1 * detail;
-    vec3 pos1 = vec3(uv * 6.0,  u_time * 0.2);
+    vec3 pos1 = vec3(uv * 50.0,  u_time * 0.2);
     vec3 pos2 = vec3(uv * detail * 2.0, u_time * 0.1 * activeness);
     vec3 pos3 = vec3(uv * detail, u_time * 0.05 * activeness);
 
@@ -68,7 +64,7 @@ void main() {
     n += 0.5 * (snoise(pos2) + 1.0) * 0.5;
     n += 0.2 * (noise(pos3) + 1.0) * 0.5;
 
-    n = (1.8 * n) - 0.8;
+    n = (1.9 * n) - 0.9;
 
     // Sunspots
     float ss = 0.0;

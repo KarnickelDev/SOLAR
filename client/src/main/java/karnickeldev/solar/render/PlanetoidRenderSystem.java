@@ -7,13 +7,16 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
+import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.ClientECS;
+import karnickeldev.solar.ecs.ServerECS;
+import karnickeldev.solar.ecs.SystemGroup;
 import karnickeldev.solar.ecs.Tag;
-import karnickeldev.solar.ecs.components.RadiusComponent;
-import karnickeldev.solar.ecs.components.RenderComponent;
-import karnickeldev.solar.ecs.components.TagComponent;
+import karnickeldev.solar.ecs.components.*;
+import karnickeldev.solar.ecs.components.server.HCSServerSystem;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
+import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.world.ClientWorld;
@@ -100,11 +103,7 @@ public class PlanetoidRenderSystem {
 
         float maxZoom = (float) renderZoom * 16;
 
-        double x0, x1, y0, y1;
-        x0 = camera.unprojectReuse(new Vector2D(0,0)).getX();
-        y0 = camera.unprojectReuse(new Vector2D(0,0)).getY();
-        x1 = camera.unprojectReuse(new Vector2D(Gdx.graphics.getWidth(),Gdx.graphics.getHeight())).getX();
-        y1 = camera.unprojectReuse(new Vector2D(Gdx.graphics.getWidth(),Gdx.graphics.getHeight())).getY();
+        //update(GameContext.get().getClock().getFrameClockTime(), ecs);
 
         for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity) || !renderComponent.has(entity)) {
@@ -193,6 +192,67 @@ public class PlanetoidRenderSystem {
         }
         batch.setColor(1,1,1,1);
         //batch.end();
+    }
+
+
+    public void update(long time, ClientECS ecs) {
+        HCSClientSystem hcs = ecs.hcs;
+        OrbitDataComponent orbitData = ecs.getComponentRegistry().get(OrbitDataComponent.class);
+        MassComponent massComponent = ecs.getComponentRegistry().get(MassComponent.class);
+
+        double simTimeSec = time / 1e6;
+
+        for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
+            if (!ecs.getEntityManager().isValid(entity) || !orbitData.has(entity)) continue;
+
+            double a = orbitData.getSemiMajorAxis(entity) * Units.toSU(1, Units.Length.AU);
+
+            float e = orbitData.getEccentricity(entity);
+            float omega = orbitData.getOmega(entity);
+            float t0 = orbitData.getT0(entity);
+
+            int centralBodyId = orbitData.getCentralBody(entity);
+
+            double mu = Units.G_KM_TON * massComponent.getMass(centralBodyId); // G * M
+
+            double n = Math.sqrt(mu / (a * a * a));     // mean motion
+            double M = (n * ((simTimeSec) - t0));       // mean anomaly
+
+            double E = solveKepler((double) M, e);       // eccentric anomaly
+            double theta = 2 * Math.atan2(
+                Math.sqrt(1 + e) * Math.sin(E / 2),
+                Math.sqrt(1 - e) * Math.cos(E / 2)
+            );
+
+            double r = a * (1 - e * Math.cos(E));
+
+            double orbitX = r * Math.cos(theta);
+            double orbitY = r * Math.sin(theta);
+
+            // Rotate by omega
+            double cosW = Math.cos(omega);
+            double sinW = Math.sin(omega);
+
+            double rotatedX = cosW * orbitX - sinW * orbitY;
+            double rotatedY = sinW * orbitX + cosW * orbitY;
+
+            hcs.getPrevious().add(entity, centralBodyId, rotatedX, rotatedY);
+            hcs.getCurrent().add(entity, centralBodyId, rotatedX, rotatedY);
+        }
+        hcs.swapBuffers();
+    }
+
+    private static double solveKepler(double M, double e) {
+        double E = M;
+        double epsilon = 1e-5f;
+        for (int i = 0; i < 5; i++) {
+            double f = E - e * Math.sin(E) - M;
+            double fPrime = 1 - e * Math.cos(E);
+            double delta = f / fPrime;
+            E -= delta;
+            if (Math.abs(delta) < epsilon) break;
+        }
+        return E;
     }
 
 }

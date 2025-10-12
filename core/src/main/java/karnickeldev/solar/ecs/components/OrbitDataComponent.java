@@ -6,7 +6,7 @@ import karnickeldev.solar.util.MathUtil;
 import java.util.Arrays;
 import java.util.BitSet;
 
-public class OrbitDataComponent implements Component {
+public class OrbitDataComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<OrbitDataSnapshot> {
 
     private int CAPACITY = 16;
     private final BitSet hasComponent = new BitSet(CAPACITY);
@@ -83,4 +83,57 @@ public class OrbitDataComponent implements Component {
         if (index >= CAPACITY) return 0;
         return centralBody[index];
     }
+
+    @Override
+    public OrbitDataSnapshot createSnapshot(long tick) {
+        int size = getDirtyAmount();
+        if (size < 1) return null;
+
+        OrbitDataSnapshot snapshot = new OrbitDataSnapshot(size, tick);
+
+        for (int entity = 0; entity < CAPACITY; entity++) {
+            if (!isDirty(entity)) continue;
+
+            snapshot.addChange(
+                entity,
+                getSemiMajorAxis(entity),
+                getEccentricity(entity),
+                getOmega(entity),
+                getT0(entity),
+                getCentralBody(entity)
+            );
+        }
+        return snapshot;
+    }
+
+    @Override
+    public OrbitDataSnapshot createFullSnapshot(long tick) {
+        int size = CAPACITY;
+        if (size < 1) return null;
+
+        OrbitDataSnapshot snapshot = new OrbitDataSnapshot(size, tick);
+
+        for (int entity = 0; entity < CAPACITY; entity++) {
+            if (!has(entity)) continue;
+
+            snapshot.addChange(
+                entity,
+                getSemiMajorAxis(entity),
+                getEccentricity(entity),
+                getOmega(entity),
+                getT0(entity),
+                getCentralBody(entity)
+            );
+        }
+        return snapshot;
+    }
+
+    @Override
+    public void applySnapshot(OrbitDataSnapshot snapshot) {
+        for (int i = 0; i < snapshot.getChangedCount(); i++) {
+            int entity = snapshot.entities[i];
+            add(entity, snapshot.semiMajorAxis[i], snapshot.eccentricity[i], snapshot.omega[i], snapshot.t0[i], snapshot.centralBody[i]);
+        }
+    }
+
 }

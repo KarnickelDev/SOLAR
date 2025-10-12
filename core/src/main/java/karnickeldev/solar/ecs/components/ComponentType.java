@@ -14,7 +14,8 @@ public enum ComponentType {
     NAME(NameComponent.class),
     RADIUS(RadiusComponent.class, RadiusSnapshot.class, RadiusSnapshot::deserialize),
     TAG(TagComponent.class, TagSnapshot.class, TagSnapshot::deserialize),
-    APPEARANCE(AppearanceComponent.class, AppearanceSnapshot.class, AppearanceSnapshot::deserialize)
+    ORBIT_DATA(OrbitDataComponent.class, OrbitDataSnapshot.class, OrbitDataSnapshot::deserialize),
+    APPEARANCE(AppearanceComponent.class, AppearanceSnapshot.class, AppearanceSnapshot::deserialize),
     ;
 
     private final Class<? extends Component> clazz;

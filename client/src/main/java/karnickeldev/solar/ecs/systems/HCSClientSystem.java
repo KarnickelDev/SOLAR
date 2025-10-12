@@ -29,9 +29,14 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
         return componentBuffer[prev];
     }
 
-    public void update(HCSPositionSnapshot snapshot) {
+    public void swapBuffers() {
         curr = (curr + 1) % 2;
         prev = (prev + 1) % 2;
+    }
+
+    public void update(HCSPositionSnapshot snapshot) {
+        swapBuffers();
+
         componentBuffer[curr].applySnapshot(snapshot);
         if(previousSnapshot == null) {
             componentBuffer[prev].applySnapshot(snapshot);

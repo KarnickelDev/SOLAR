@@ -87,10 +87,10 @@ public class SimpleStarRenderer {
         noiseTex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         small.dispose();
 
+        fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,64, 64, false));
         fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,512, 512, false));
         fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,1024, 1024, false));
         fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,1024*4, 1024*4, false));
-        fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,1024*8, 1024*8, false));
     }
 
     private static double noise(double x, double y, double scale) {
@@ -112,7 +112,7 @@ public class SimpleStarRenderer {
     }
 
     private static FrameBuffer getFBO(double worldSize) {
-        double pixels = 0.9 * GameContext.get().getWorldManager().getActiveWorld().getCamera().projectLength(worldSize);
+        double pixels = 1.1 * GameContext.get().getWorldManager().getActiveWorld().getCamera().projectLength(worldSize);
 
         for(FrameBuffer lod: fboLODs) {
             if(lod.getWidth() > pixels) {

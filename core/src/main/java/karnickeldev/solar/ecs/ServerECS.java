@@ -21,7 +21,7 @@ public class ServerECS extends ECSContext {
 
         registerComponent(NameComponent.class, new NameComponent());
         registerComponent(SphereOfInfluenceComponent.class, new SphereOfInfluenceComponent());
-        registerComponent(OrbitDataComponent.class, new OrbitDataComponent());
+        registerComponentAndHandler(OrbitDataComponent.class, OrbitDataSnapshot.class, new OrbitDataComponent());
 
         // textures
         registerComponentAndHandler(AppearanceComponent.class, AppearanceSnapshot.class, new AppearanceComponent());

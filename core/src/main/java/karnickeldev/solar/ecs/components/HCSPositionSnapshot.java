@@ -2,6 +2,7 @@ package karnickeldev.solar.ecs.components;
 
 import io.netty.buffer.ByteBuf;
 import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.util.NettyUtil;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -72,9 +73,17 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
     public void serialize(ByteBuf out) {
         out.writeLong(simTimeMicros);
         out.writeInt(count);
+
+        int lastId = 0;
+        int lastParent = 0;
         for (int i = 0; i < count; i++) {
-            out.writeInt(entities[i]);
-            out.writeInt(parent[i]);
+            NettyUtil.writeVarInt(out, entities[i] - lastId);
+            lastId = entities[i];
+
+            //out.writeInt(parent[i]);
+            NettyUtil.writeVarInt(out, parent[i] - lastParent);
+            lastParent = parent[i];
+
             out.writeDouble(position[2 * i]);
             out.writeDouble(position[2 * i + 1]);
         }
@@ -86,9 +95,15 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
 
         HCSPositionSnapshot snapshot = new HCSPositionSnapshot(count, tick);
 
+        int lastId = 0;
+        int lastParent = 0;
         for (int i = 0; i < count; i++) {
-            int entity = in.readInt();
-            int parent = in.readInt();
+            int entity = lastId + NettyUtil.readVarInt(in);
+            lastId = entity;
+
+            int parent = lastParent + NettyUtil.readVarInt(in);
+            lastParent = parent;
+
             double x = in.readDouble();
             double y = in.readDouble();
 
