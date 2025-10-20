@@ -59,6 +59,7 @@ configure(subprojects) {
 
   compileJava {
     options.incremental = true
+    options.compilerArgs.addAll(["--add-modules", "jdk.incubator.vector"])
   }
 }
 

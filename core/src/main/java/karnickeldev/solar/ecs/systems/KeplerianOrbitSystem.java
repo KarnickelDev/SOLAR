@@ -6,10 +6,7 @@ import karnickeldev.solar.ecs.components.MassComponent;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.ecs.components.server.HCSServerSystem;
 import karnickeldev.solar.network.net.core.ServerNetwork;
-import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.physics.Units;
-import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
 
@@ -38,7 +35,7 @@ public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
 
         double simTimeSec = world.getWorldTime().getSimTimeMicros() / 1e6;
 
-        for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
+        for (int entity = 0; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !orbitData.has(entity)) continue;
 
             double a = orbitData.getSemiMajorAxis(entity) * Units.toSU(1, Units.Length.AU);

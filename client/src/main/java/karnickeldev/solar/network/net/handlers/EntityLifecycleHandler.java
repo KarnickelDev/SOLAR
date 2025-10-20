@@ -28,7 +28,7 @@ public class EntityLifecycleHandler implements PacketHandler<EntityLifecyclePack
             ecs.getEntityManager().destroy(packet.destroyedEntityIds[i]);
         }
         for (int i = 0; i < packet.createdEntityIds.length; i++) {
-            ecs.getEntityManager().registerEntity(packet.createdEntityIds[i]);
+            ecs.getEntityManager().importEntity(packet.createdEntityIds[i]);
         }
     }
 

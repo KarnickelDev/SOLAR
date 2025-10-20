@@ -35,15 +35,15 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
     }
 
     public void update(HCSPositionSnapshot snapshot) {
-        swapBuffers();
-
-        componentBuffer[curr].applySnapshot(snapshot);
-        if(previousSnapshot == null) {
-            componentBuffer[prev].applySnapshot(snapshot);
-        }
-
-        previousSnapshot = latestSnapshot;
-        latestSnapshot = snapshot;
+//        swapBuffers();
+//
+//        componentBuffer[curr].applySnapshot(snapshot);
+//        if(previousSnapshot == null) {
+//            componentBuffer[prev].applySnapshot(snapshot);
+//        }
+//
+//        previousSnapshot = latestSnapshot;
+//        latestSnapshot = snapshot;
 
         //Logger.log("update");
     }
@@ -85,7 +85,7 @@ public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSna
 
     @Override
     public void applySnapshot(HCSPositionSnapshot snapshot) {
-        if(snapshot != null) this.update(snapshot.copy());
+        if(snapshot != null) this.update(snapshot);
     }
 
     @Override

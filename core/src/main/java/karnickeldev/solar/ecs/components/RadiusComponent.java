@@ -8,19 +8,12 @@ import java.util.BitSet;
 
 public class RadiusComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<RadiusSnapshot> {
 
-    private int CAPACITY = 64;
-    private final BitSet hasComponent = new BitSet(CAPACITY);
-    private float[] radius = new float[CAPACITY];
+    private final BitSet hasComponent = new BitSet(EntityManager.MAX_ENTITIES);
+    private final float[] radius = new float[EntityManager.MAX_ENTITIES];
 
     @Override
     public void ensureCapacity(int entityId) {
-        int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) {
-            int oldCapacity = CAPACITY;
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
-            radius = Arrays.copyOf(radius, CAPACITY);
-            dirty.clear(oldCapacity, CAPACITY);
-        }
+        // nop
     }
 
     public void add(int entityId, float radius) {
@@ -41,7 +34,6 @@ public class RadiusComponent extends DirtyFlagComponent implements ComponentSnap
 
     public float getRadius(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
         return radius[index];
     }
 
@@ -51,7 +43,7 @@ public class RadiusComponent extends DirtyFlagComponent implements ComponentSnap
         if (size < 1) return null;
 
         RadiusSnapshot snap = new RadiusSnapshot(size, simTimeMicros);
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < radius.length; entity++) {
             if (!isDirty(entity)) continue;
             snap.addChange(entity, radius[EntityManager.extractIndex(entity)]);
         }
@@ -65,7 +57,7 @@ public class RadiusComponent extends DirtyFlagComponent implements ComponentSnap
         if (size < 1) return null;
 
         RadiusSnapshot snap = new RadiusSnapshot(size, simTimeMicros);
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < radius.length; entity++) {
             if (!has(entity)) continue;
             snap.addChange(entity, radius[EntityManager.extractIndex(entity)]);
         }

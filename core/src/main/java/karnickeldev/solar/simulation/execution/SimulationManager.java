@@ -6,6 +6,7 @@ import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.util.ThreadAffinity;
 import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
@@ -54,7 +55,8 @@ public class SimulationManager implements Runnable {
         this.worldManager = worldManager;
         this.dispatcher = dispatcher;
 
-        simulationThreadPool = Executors.newFixedThreadPool(3, new SimulationThreadFactory("SimThread"));
+        //simulationThreadPool = Executors.newFixedThreadPool(3, new SimulationThreadFactory("SimThread"));
+        simulationThreadPool = null;
 
         scheduledTasks = new PriorityQueue<>(simulationThreadCount);
 
@@ -119,6 +121,8 @@ public class SimulationManager implements Runnable {
         long tickStart;
 
         long simulationStartTime = System.nanoTime();
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 3);
+        ThreadAffinity.pinToCore(2);
 
         while(running.get()) {
             /*
@@ -138,17 +142,19 @@ public class SimulationManager implements Runnable {
                 CountDownLatch latch = new CountDownLatch(tasks.size());
 
                 for(SimulationTask task: tasks) {
-                    simulationThreadPool.submit(() -> {
-                        try {
-                            task.runUntil(globalSimTimeMicros);
-                        } catch (Exception e) {
-                            Logger.error("Simulation error: " + e.getMessage());
-                            errno.set(EXCEPTION_IN_TICK);
-                            running.set(false);
-                        } finally {
-                            latch.countDown();
-                        }
-                    });
+//                    simulationThreadPool.submit(() -> {
+//                        try {
+//                            task.runUntil(globalSimTimeMicros);
+//                        } catch (Exception e) {
+//                            Logger.error("Simulation error: " + e.getMessage());
+//                            errno.set(EXCEPTION_IN_TICK);
+//                            running.set(false);
+//                        } finally {
+//                            latch.countDown();
+//                        }
+//                    });
+                    task.runUntil(globalSimTimeMicros);
+                    latch.countDown();
                 }
 
                 try {
@@ -179,7 +185,7 @@ public class SimulationManager implements Runnable {
             Packet ecsUpdatePacket = PacketFactory.createECSUpdatePacket(
                 globalSimTimeMicros, worldManager.getActiveWorld()
             );
-            ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
+            if(ecsUpdatePacket != null) ServerContext.get().getServer().getServerNetwork().broadcast(ecsUpdatePacket);
             ServerContext.get().getServer().getServerNetwork().flush();
 
             tickEnd = System.nanoTime();

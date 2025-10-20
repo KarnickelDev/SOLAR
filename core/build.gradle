@@ -41,7 +41,11 @@ dependencies {
   api "org.apache.groovy:groovy-all:$groovyVersion"
 
   // Netty core
-  api 'io.netty:netty-all:4.2.2.Final'
+  api "io.netty:netty-all:$nettyVersion"
+
+  // jna (for thread affinity)
+  api "net.java.dev.jna:jna:$jnaVersion"
+  api "net.java.dev.jna:jna-platform:$jnaVersion"
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api:4.13.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:4.13.2'

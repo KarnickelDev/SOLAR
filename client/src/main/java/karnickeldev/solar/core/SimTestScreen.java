@@ -19,6 +19,7 @@ import karnickeldev.solar.ui.components.escapemenu.EscapeMenu;
 import karnickeldev.solar.ui.components.game.DateDisplay;
 import karnickeldev.solar.ui.components.game.TimeControl;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.util.ThreadAffinity;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
@@ -40,6 +41,8 @@ public class SimTestScreen implements Screen {
 
     @Override
     public void show() {
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+
         UI.getUIManager().addForceComponent("debug", new DebugToolTip(false));
         UI.getUIManager().showComponent("debug");
 
@@ -113,12 +116,12 @@ public class SimTestScreen implements Screen {
         Vector2D trackPos = clientWorldManager.getActiveWorld().getECS().toWorldSpace(PlanetoidRenderSystem.track, alpha).add(camOrigin);
         ePos.zero();
 
-        clientWorldManager.getActiveWorld().getECS().toWorldSpace(ePos, 0, alpha);
+        clientWorldManager.getActiveWorld().getECS().toWorldSpace(ePos, 1, alpha);
 
         ePos.subtract(trackPos);
 
 
-        double starRadiusWorld = clientWorldManager.getActiveWorld().getECS().getComponentRegistry().get(RadiusComponent.class).getRadius(0);
+        double starRadiusWorld = clientWorldManager.getActiveWorld().getECS().getComponentRegistry().get(RadiusComponent.class).getRadius(1);
         starRenderer.renderStar(ePos.getX(), ePos.getY(), starRadiusWorld);
 
         UI.getUIManager().act(delta);
@@ -145,6 +148,7 @@ public class SimTestScreen implements Screen {
 
     @Override
     public void hide() {
+        GameContext.get().getPlanetoidRenderSystem().shutdown();
         UI.getUIManager().hideComponent("debug");
         UI.getUIManager().removeComponent("escape_menu");
         UI.getUIManager().removeComponent("time_control");

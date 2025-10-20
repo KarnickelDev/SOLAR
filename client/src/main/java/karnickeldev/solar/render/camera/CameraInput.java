@@ -3,8 +3,6 @@ package karnickeldev.solar.render.camera;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.input.GestureDetector;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.ClientECS;
@@ -227,7 +225,7 @@ public class CameraInput extends InputAdapter {
         boolean processed = false;
         if (button == Input.Buttons.LEFT) {
             HCSClientSystem hcs = ecs.hcs;
-            for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
+            for (int entity = 0; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
                 if (ecs.getEntityManager().isValid(entity)) {
                     //if (!hcs.getCurrent().has(entity)) continue;
                     Vector2D screen = camera.project(ecs.toRelativeSpace(entity, PlanetoidRenderSystem.track, hcs.getAlpha()));

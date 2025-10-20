@@ -9,18 +9,11 @@ import java.util.Arrays;
 
 public class TagComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<TagSnapshot> {
 
-    private int CAPACITY = 64;
-
-    private int[] tagMasks = new int[CAPACITY];
+    private int[] tagMasks = new int[EntityManager.MAX_ENTITIES];
 
     @Override
     public void ensureCapacity(int index) {
-        if (index >= CAPACITY) {
-            int oldCapacity = CAPACITY;
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
-            tagMasks = Arrays.copyOf(tagMasks, CAPACITY);
-            dirty.clear(oldCapacity, CAPACITY);
-        }
+        // nop
     }
 
     public void add(int entityId, Tag tag) {
@@ -52,18 +45,17 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
 
     public void remove(int entityId, Tag tag) {
         int index = entityId & EntityManager.INDEX_MASK;
-        if (index >= CAPACITY) return;
         tagMasks[index] &= ~tag.bit;
     }
 
     public boolean has(int entityId, Tag tag) {
         int index = entityId & EntityManager.INDEX_MASK;
-        return index < CAPACITY && (tagMasks[index] & tag.bit) != 0;
+        return (tagMasks[index] & tag.bit) != 0;
     }
 
     public boolean matches(int entityId, Tag.Group group) {
         int index = entityId & EntityManager.INDEX_MASK;
-        return index < CAPACITY && group.matches(tagMasks[index]);
+        return group.matches(tagMasks[index]);
     }
 
     public int get(int entityId) {
@@ -72,8 +64,6 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
     }
 
     public void clearAll(int entityId) {
-        int index = entityId & EntityManager.INDEX_MASK;
-        if (index >= CAPACITY) return;
         tagMasks[entityId & EntityManager.INDEX_MASK] = 0;
     }
 
@@ -94,8 +84,7 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
 
         TagSnapshot snap = new TagSnapshot(size, tick);
 
-        for (int entity = 0; entity < CAPACITY; entity++) {
-            if (!isDirty(entity)) continue;
+        for (int entity = dirty.nextSetBit(0); entity >= 0; entity = dirty.nextSetBit(entity+1)) {
             snap.addChange(entity, tagMasks[EntityManager.extractIndex(entity)]);
         }
         dirty.clear();
@@ -105,12 +94,12 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
 
     @Override
     public TagSnapshot createFullSnapshot(long tick) {
-        int size = CAPACITY;
+        int size = tagMasks.length;
         if (size < 1) return null;
 
         TagSnapshot snap = new TagSnapshot(size, tick);
 
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < size; entity++) {
             snap.addChange(entity, tagMasks[EntityManager.extractIndex(entity)]);
         }
         dirty.clear();

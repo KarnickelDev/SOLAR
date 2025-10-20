@@ -1,34 +1,22 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
-import karnickeldev.solar.util.MathUtil;
-
-import java.util.Arrays;
 import java.util.BitSet;
 
 public class HCSPositionComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<HCSPositionSnapshot> {
 
-    private int CAPACITY = 64;
-    private final BitSet hasComponent = new BitSet(CAPACITY);
-    private int[] parentIds = new int[CAPACITY];
-    private double[] localPos = new double[2 * CAPACITY];
+    public final BitSet hasComponent = new BitSet(EntityManager.MAX_ENTITIES);
+    public final int[] parentIds = new int[EntityManager.MAX_ENTITIES];
+    public final double[] localX = new double[EntityManager.MAX_ENTITIES];
+    public final double[] localY = new double[EntityManager.MAX_ENTITIES];
 
     @Override
     public void ensureCapacity(int index) {
-        if (index >= CAPACITY) {
-            int oldCapacity = CAPACITY;
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
-
-            parentIds = Arrays.copyOf(parentIds, CAPACITY);
-            localPos = Arrays.copyOf(localPos, 2 * CAPACITY);
-
-            dirty.clear(oldCapacity, CAPACITY);
-            hasComponent.clear(oldCapacity, CAPACITY);
-        }
+        // nop
     }
 
     public int getCapacity() {
-        return CAPACITY;
+        return parentIds.length;
     }
 
     public void add(int entityId, int parentId, double localX, double localY) {
@@ -37,8 +25,8 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
 
         parentIds[index] = parentId;
 
-        this.localPos[2 * index] = localX;
-        this.localPos[(2 * index) + 1] = localY;
+        this.localX[index] = localX;
+        this.localY[index] = localY;
 
         dirty.set(index);
         hasComponent.set(index);
@@ -55,20 +43,17 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
 
     public int getParent(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if(index >= CAPACITY) return EntityManager.NO_ENTITY;
         return parentIds[index];
     }
 
     public double getLocalX(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
-        return localPos[2 * index];
+        return localX[index];
     }
 
     public double getLocalY(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
-        return localPos[(2 * index) + 1];
+        return localY[index];
     }
 
     @Override
@@ -78,7 +63,7 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
 
         HCSPositionSnapshot snapshot = new HCSPositionSnapshot(size, tick);
 
-        for (int entity = 0; entity < getCapacity(); entity++) {
+        for (int entity = 1; entity < getCapacity(); entity++) {
             if (!isDirty(entity)) continue;
 
             snapshot.addChange(
@@ -92,12 +77,12 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
 
     @Override
     public HCSPositionSnapshot createFullSnapshot(long tick) {
-        int size = CAPACITY;
+        int size = getCapacity();
         if (size < 1) return null;
 
         HCSPositionSnapshot snapshot = new HCSPositionSnapshot(size, tick);
 
-        for (int entity = 0; entity < getCapacity(); entity++) {
+        for (int entity = 1; entity < getCapacity(); entity++) {
             if (!has(entity)) continue;
 
             snapshot.addChange(
@@ -122,7 +107,7 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
         StringBuilder builder = new StringBuilder();
 
         for(int i = 0; i < hasComponent.length(); i++) {
-            builder.append(i).append(": ").append(localPos[2 * i]).append(", ").append(localPos[2 * i + 1]).append(", ").append(parentIds[i]).append("\n");
+            builder.append(i).append(": ").append(localX[i]).append(", ").append(localY[i]).append(", ").append(parentIds[i]).append("\n");
         }
 
         return builder.toString();

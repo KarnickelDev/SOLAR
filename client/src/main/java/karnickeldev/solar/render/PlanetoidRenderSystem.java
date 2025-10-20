@@ -9,22 +9,21 @@ import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.ClientECS;
-import karnickeldev.solar.ecs.ServerECS;
-import karnickeldev.solar.ecs.SystemGroup;
+import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.Tag;
 import karnickeldev.solar.ecs.components.*;
-import karnickeldev.solar.ecs.components.server.HCSServerSystem;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
 import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
+import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
 public class PlanetoidRenderSystem {
 
-    public static int track = 0;
+    public static int track = 1;
     private static double frustumCullingRadiusSquared = 0;
     private final SpriteBatch batch;
     public static Texture testTex;
@@ -65,8 +64,10 @@ public class PlanetoidRenderSystem {
         frustumCullingRadiusSquared = (halfW * halfW) + (halfH * halfH);
     }
 
-    double[] worldX = new double[100010];
-    double[] worldY = new double[100010];
+    double[] worldX = new double[EntityManager.MAX_ENTITIES];
+    double[] worldY = new double[EntityManager.MAX_ENTITIES];
+
+    private final OrbitUpdater orbitUpdater = new OrbitUpdater();
 
     public void renderPlanetoids() {
         int width = Gdx.graphics.getWidth();
@@ -83,13 +84,17 @@ public class PlanetoidRenderSystem {
         FloatingOriginCamera camera = worldManager.getActiveWorld().getCamera();
         double renderZoom = camera.getRenderZoom();
 
-        double alpha = hcs.getAlpha();
+        double alpha = 1;
 
         Vector2D ePos = new Vector2D();
         Vector2D screenPos = new Vector2D();
 
         batch.setProjectionMatrix(camera.getCombinedMatrix());
         //batch.begin();
+
+        //update(GameContext.get().getClock().getFrameClockTime(), ecs);
+        //hcs.swapBuffers();
+        orbitUpdater.startCompute(GameContext.get().getClock().getFrameClockTime(), ecs);
 
         Vector2D camOrigin = camera.getRenderOrigin();
 
@@ -103,18 +108,16 @@ public class PlanetoidRenderSystem {
 
         float maxZoom = (float) renderZoom * 16;
 
-        //update(GameContext.get().getClock().getFrameClockTime(), ecs);
-
-        for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
+        for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity) || !renderComponent.has(entity)) {
                 worldX[entity] = Double.MAX_VALUE;
                 worldY[entity] = Double.MAX_VALUE;
-                continue;
             }
 
             ePos.zero();
 
-            ecs.toWorldSpace(ePos, entity, alpha);
+            //ecs.toWorldSpace(ePos, entity, alpha);
+            ePos.add(orbitUpdater.currFrameData.posX[entity], orbitUpdater.currFrameData.posY[entity]);
 
             ePos.subtract(trackPos);
 
@@ -146,7 +149,7 @@ public class PlanetoidRenderSystem {
             worldY[entity] = localY;
         }
 
-        for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
+        for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
 
             double localX = worldX[entity];
             double localY = worldY[entity];
@@ -190,10 +193,16 @@ public class PlanetoidRenderSystem {
 
             batch.draw(testTex, (float)pos.getX() - 0.5f*tsize, (float)pos.getY() - 0.5f*tsize, tsize, tsize);
         }
+
+        orbitUpdater.waitAndSwap();
+
         batch.setColor(1,1,1,1);
         //batch.end();
     }
 
+    public void shutdown() {
+        orbitUpdater.shutdown();
+    }
 
     public void update(long time, ClientECS ecs) {
         HCSClientSystem hcs = ecs.hcs;
@@ -202,7 +211,7 @@ public class PlanetoidRenderSystem {
 
         double simTimeSec = time / 1e6;
 
-        for (int entity = 0; entity < ecs.getEntityManager().getAll(); entity++) {
+        for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !orbitData.has(entity)) continue;
 
             double a = orbitData.getSemiMajorAxis(entity) * Units.toSU(1, Units.Length.AU);
@@ -236,10 +245,8 @@ public class PlanetoidRenderSystem {
             double rotatedX = cosW * orbitX - sinW * orbitY;
             double rotatedY = sinW * orbitX + cosW * orbitY;
 
-            hcs.getPrevious().add(entity, centralBodyId, rotatedX, rotatedY);
             hcs.getCurrent().add(entity, centralBodyId, rotatedX, rotatedY);
         }
-        hcs.swapBuffers();
     }
 
     private static double solveKepler(double M, double e) {

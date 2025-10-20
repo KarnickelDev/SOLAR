@@ -82,6 +82,7 @@ public class NettyClientNetwork implements ClientNetwork {
             }
 
             channel = future.channel();
+            channel.config().setOption(ChannelOption.TCP_NODELAY, true);
             connected = true;
 
             channel.writeAndFlush(new HandshakePacket("test", "password"));

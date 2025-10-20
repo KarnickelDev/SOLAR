@@ -12,24 +12,15 @@ import java.util.BitSet;
  **/
 public class AppearanceComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<AppearanceSnapshot> {
 
-    private int CAPACITY = 64;
-    private final BitSet hasComponent = new BitSet(CAPACITY);
+    private final BitSet hasComponent = new BitSet(EntityManager.MAX_ENTITIES);
 
-    private short[] entityType = new short[CAPACITY];
-    private short[] seed = new short[CAPACITY];
-    private String[] params = new String[CAPACITY];
+    private short[] entityType = new short[EntityManager.MAX_ENTITIES];
+    private short[] seed = new short[EntityManager.MAX_ENTITIES];
+    private String[] params = new String[EntityManager.MAX_ENTITIES];
 
     @Override
     public void ensureCapacity(int entityId) {
-        int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) {
-            int oldCapacity = CAPACITY;
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
-            entityType = Arrays.copyOf(entityType, CAPACITY);
-            seed = Arrays.copyOf(seed, CAPACITY);
-            params = Arrays.copyOf(params, CAPACITY);
-            dirty.clear(oldCapacity, CAPACITY);
-        }
+        // nop
     }
 
     public void add(int entityId, short entityType, short seed, String params) {
@@ -54,20 +45,18 @@ public class AppearanceComponent extends DirtyFlagComponent implements Component
 
     public short getEntityType(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
         return entityType[index];
     }
 
     public short getSeed(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
         return seed[index];
     }
 
     public String getParams(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return "";
-        return params[index];
+        String p = params[index];
+        return p == null ? "" : p;
     }
 
 
@@ -77,7 +66,7 @@ public class AppearanceComponent extends DirtyFlagComponent implements Component
         if (size < 1) return null;
 
         AppearanceSnapshot snap = new AppearanceSnapshot(size, simTimeMicros);
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < entityType.length; entity++) {
             if (!isDirty(entity)) continue;
             int index = EntityManager.extractIndex(entity);
             snap.addChange(entity, entityType[index], seed[index], params[index]);
@@ -92,7 +81,7 @@ public class AppearanceComponent extends DirtyFlagComponent implements Component
         if (size < 1) return null;
 
         AppearanceSnapshot snap = new AppearanceSnapshot(size, simTimeMicros);
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < entityType.length; entity++) {
             if (!has(entity)) continue;
             int index = EntityManager.extractIndex(entity);
             snap.addChange(entity, entityType[index], seed[index], params[index]);

@@ -8,19 +8,12 @@ import java.util.BitSet;
 
 public class MassComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<MassSnapshot> {
 
-    private int CAPACITY = 64;
-    private final BitSet hasComponent = new BitSet(CAPACITY);
-    private double[] mass = new double[CAPACITY];
+    private final BitSet hasComponent = new BitSet(EntityManager.MAX_ENTITIES);
+    private double[] mass = new double[EntityManager.MAX_ENTITIES];
 
     @Override
     public void ensureCapacity(int entityId) {
-        int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) {
-            int oldCapacity = CAPACITY;
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
-            mass = Arrays.copyOf(mass, CAPACITY);
-            dirty.clear(oldCapacity, CAPACITY);
-        }
+        // nop
     }
 
     public void add(int entityId, double mass) {
@@ -41,7 +34,6 @@ public class MassComponent extends DirtyFlagComponent implements ComponentSnapsh
 
     public double getMass(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
         return mass[index];
     }
 
@@ -52,7 +44,7 @@ public class MassComponent extends DirtyFlagComponent implements ComponentSnapsh
 
         MassSnapshot snap = new MassSnapshot(size, tick);
 
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < mass.length; entity++) {
             if (!isDirty(entity)) continue;
             snap.addChange(entity, mass[EntityManager.extractIndex(entity)]);
         }
@@ -68,7 +60,7 @@ public class MassComponent extends DirtyFlagComponent implements ComponentSnapsh
 
         MassSnapshot snap = new MassSnapshot(size, tick);
 
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < mass.length; entity++) {
             if (!has(entity)) continue;
             snap.addChange(entity, mass[EntityManager.extractIndex(entity)]);
         }

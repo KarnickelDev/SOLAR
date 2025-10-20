@@ -26,6 +26,11 @@ java {
 }
 compileJava {
   options.release.set(21)
+  options.compilerArgs.addAll(["--add-modules", "jdk.incubator.vector"])
+}
+
+tasks.withType(JavaExec).configureEach {
+  jvmArgs += ["--add-modules", "jdk.incubator.vector"]
 }
 
 dependencies {

@@ -197,7 +197,7 @@ public class SimpleStarRenderer {
         starShader.setUniformf("u_temperature", T);
         starShader.setUniformf("u_sunSpotSeed", 42f);
         starShader.setUniformf("u_time", (float) elapsedTime);
-        starShader.setUniformf("u_edgeSmoothing", 0.15f);
+        starShader.setUniformf("u_edgeSmoothing", 0.1f);
 
         float size = fbSize / 2f;
         batch.draw(whiteTex,

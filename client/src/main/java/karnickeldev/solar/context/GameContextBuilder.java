@@ -1,6 +1,7 @@
 package karnickeldev.solar.context;
 
 import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
 import karnickeldev.solar.network.net.core.*;
 import karnickeldev.solar.network.net.dispatcher.DefaultDispatcher;
@@ -18,6 +19,7 @@ import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
+import karnickeldev.solar.util.ThreadAffinity;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.WorldManager;
@@ -88,6 +90,10 @@ public class GameContextBuilder {
         Server server = LocalServer.create(serverNetwork, serverDispatcher);
         ServerContext.setContext(ServerContextBuilder.buildServerContext(server));
 
+        ThreadAffinity.pinToCore(4);
+        for(int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
+            server.getWorldManager().getWorld(1).getECS().hcs.add(i,0,0,0);
+        }
 
         PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch());
 

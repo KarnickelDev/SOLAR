@@ -8,25 +8,17 @@ import java.util.BitSet;
 
 public class OrbitDataComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<OrbitDataSnapshot> {
 
-    private int CAPACITY = 16;
-    private final BitSet hasComponent = new BitSet(CAPACITY);
-    private float[] semiMajorAxis = new float[CAPACITY];
-    private float[] eccentricity = new float[CAPACITY];
-    private float[] omega = new float[CAPACITY];        // Argument of periapsis (radians)
-    private float[] t0 = new float[CAPACITY];           // Time of periapsis passage
-    private int[] centralBody = new int[CAPACITY];
+    public final BitSet hasComponent = new BitSet(EntityManager.MAX_ENTITIES);
+
+    public final double[] semiMajorAxis = new double[EntityManager.MAX_ENTITIES];
+    public final double[] eccentricity = new double[EntityManager.MAX_ENTITIES];
+    public final double[] omega = new double[EntityManager.MAX_ENTITIES];        // Argument of periapsis (radians)
+    public final double[] t0 = new double[EntityManager.MAX_ENTITIES];           // Time of periapsis passage
+    public final int[] centralBody = new int[EntityManager.MAX_ENTITIES];
 
     @Override
     public void ensureCapacity(int entityId) {
-        int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) {
-            CAPACITY = Math.max(2 * CAPACITY, 2 << (MathUtil.ld(index) + 1));
-            semiMajorAxis = Arrays.copyOf(semiMajorAxis, CAPACITY);
-            eccentricity = Arrays.copyOf(eccentricity, CAPACITY);
-            omega = Arrays.copyOf(omega, CAPACITY);
-            t0 = Arrays.copyOf(t0, CAPACITY);
-            centralBody = Arrays.copyOf(centralBody, CAPACITY);
-        }
+        // nop
     }
 
     public void add(int entityId, float semiMajorAxis, float eccentricity, float omega, float t0,
@@ -56,31 +48,26 @@ public class OrbitDataComponent extends DirtyFlagComponent implements ComponentS
 
     public float getSemiMajorAxis(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
-        return semiMajorAxis[index];
+        return (float) semiMajorAxis[index];
     }
 
     public float getEccentricity(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
-        return eccentricity[index];
+        return (float) eccentricity[index];
     }
 
     public float getOmega(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
-        return omega[index];
+        return (float) omega[index];
     }
 
     public float getT0(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
-        return t0[index];
+        return (float) t0[index];
     }
 
     public int getCentralBody(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        if (index >= CAPACITY) return 0;
         return centralBody[index];
     }
 
@@ -91,7 +78,7 @@ public class OrbitDataComponent extends DirtyFlagComponent implements ComponentS
 
         OrbitDataSnapshot snapshot = new OrbitDataSnapshot(size, tick);
 
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < 1 + EntityManager.MAX_ENTITIES; entity++) {
             if (!isDirty(entity)) continue;
 
             snapshot.addChange(
@@ -108,12 +95,11 @@ public class OrbitDataComponent extends DirtyFlagComponent implements ComponentS
 
     @Override
     public OrbitDataSnapshot createFullSnapshot(long tick) {
-        int size = CAPACITY;
-        if (size < 1) return null;
+        int size = 1 + EntityManager.MAX_ENTITIES;
 
         OrbitDataSnapshot snapshot = new OrbitDataSnapshot(size, tick);
 
-        for (int entity = 0; entity < CAPACITY; entity++) {
+        for (int entity = 1; entity < 1 + EntityManager.MAX_ENTITIES; entity++) {
             if (!has(entity)) continue;
 
             snapshot.addChange(

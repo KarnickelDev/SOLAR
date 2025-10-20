@@ -1,8 +1,6 @@
 package karnickeldev.solar.network.packets;
 
-import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
-import karnickeldev.solar.simulation.execution.SimulationManager;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
 
@@ -25,7 +23,7 @@ public class PacketFactory {
     }
 
     public static EntityLifecyclePacket createFullEntityLifecyclePacket(long simTime, World world) {
-        int count = world.getECS().getEntityManager().getAll();
+        int count = world.getECS().getEntityManager().getCapacityUsed();
         List<Integer> created = new ArrayList<>();
         List<Integer> destroyed = new ArrayList<>();
         for(int i = 0; i < count; i++) {
@@ -51,7 +49,7 @@ public class PacketFactory {
 
     public static ECSUpdatePacket createECSUpdatePacket(long simTime, ServerWorld world) {
         List<ComponentSnapshot> snaps = world.getECS().getComponentRegistry().createAllSnapshots(simTime);
-        snaps.add(world.getECS().hcs.getCurrent().createSnapshot(simTime));
+        //snaps.add(world.getECS().hcs.getCurrent().createSnapshot(simTime));
         snaps.removeAll(Collections.singleton(null));
         if(snaps.isEmpty()) return null;
 

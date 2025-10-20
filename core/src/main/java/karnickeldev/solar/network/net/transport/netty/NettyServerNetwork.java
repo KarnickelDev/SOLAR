@@ -56,7 +56,7 @@ public class NettyServerNetwork implements ServerNetwork {
     @Override
     public boolean start() {
         bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
-        workerGroup = new MultiThreadIoEventLoopGroup(2, NioIoHandler.newFactory());
+        workerGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
@@ -74,6 +74,7 @@ public class NettyServerNetwork implements ServerNetwork {
                     }
                 });
             serverChannel = b.bind(port).sync().channel();
+            serverChannel.config().setOption(ChannelOption.TCP_NODELAY, true);
         } catch (Exception e) {
             Logger.error(Logger.NETWORK, "Error starting Server", e);
             return false;
@@ -114,7 +115,7 @@ public class NettyServerNetwork implements ServerNetwork {
         if(!clientIdMap.get(clientId).channel.isWritable()) {
             return;
         }
-        Logger.log("packet queue: " + outgoing.size());
+        //Logger.log("packet queue: " + outgoing.size());
         if(!clientIdMap.get(clientId).isHandshake() || !outgoing.offer(new PacketContext(clientId, packet))) {
             Logger.error(Logger.NETWORK + "Packet dropped: " + packet);
         }
