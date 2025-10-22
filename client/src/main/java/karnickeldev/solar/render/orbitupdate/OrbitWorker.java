@@ -16,41 +16,43 @@ import karnickeldev.solar.util.spinbarrier.SyncBarrier;
 public class OrbitWorker implements Runnable {
 
     private static final VectorSpecies<Double> SPECIES = DoubleVector.SPECIES_PREFERRED;
-    private static final int chunkSize;
-
+    private static final int CHUNK_SIZE;
 
     static {
         int vectorLen = SPECIES.length();
         int perEntityBytes = 64; // estimate hot arrays
-        int cacheSize = 32 * 1024; // estimated cache size (either 32 for L1 or 256 for L2 seems to work well)
-        chunkSize = 2048;
+        int cacheSize = 256 * 1024; // estimated cache size (either 32 for L1 or 256 for L2 seem to work well)
+        CHUNK_SIZE = Math.max(vectorLen, ((cacheSize / perEntityBytes) / vectorLen) * vectorLen); // round to vector multiple
     }
 
+    // for (per-frame) sync with OrbitUpdater
     private final OrbitUpdater parent;
-    private final int workerCount;
     private final SyncBarrier barrier;
 
+    // local copy of worker-count
+    private final int workerCount;
 
     // per-worker temporaries (kept per-thread to avoid sharing)
     private final double[] tmpE = new double[SPECIES.length()];
     private final double[] tmpOmega = new double[SPECIES.length()];
 
-    private final double[] aArr = new double[chunkSize];
-    private final double[] muArr = new double[chunkSize];
-    private final double[] EArr = new double[chunkSize];
-    private final double[] thetaArr = new double[chunkSize];
+    private final int chunk_size = CHUNK_SIZE;
+    private final double[] aArr = new double[chunk_size];
+    private final double[] muArr = new double[chunk_size];
+    private final double[] EArr = new double[chunk_size];
+    private final double[] thetaArr = new double[chunk_size];
 
-    // per-workeroutput buffers allocated inside run (to ensure first-touch on pinned core)
-    private double[] localOutPosX;
-    private double[] localOutPosY;
+    // per-worker output buffers allocated inside run (to ensure first-touch on pinned core)
+    double[] localOutPosX;
+    double[] localOutPosY;
 
     // assigned range for this frame (set by main thread)
-    public volatile int assignedStart = 0;
-    public volatile int assignedEnd = 0;
+    volatile int assignedStart = 0;
+    volatile int assignedEnd = 0;
 
     public final int id;
 
-    private OrbitWorker(int id, OrbitUpdater parent, SyncBarrier barrier) {
+    OrbitWorker(int id, OrbitUpdater parent, SyncBarrier barrier) {
         this.id = id;
         this.parent = parent;
         this.barrier = barrier;
@@ -62,13 +64,13 @@ public class OrbitWorker implements Runnable {
     @Override
     public void run() {
         // Allocate per-worker outputs after the thread was pinned (ensures first-touch happens on pinned core).
-        int perWorkerCap = (EntityManager.MAX_ENTITIES + workerCount) / workerCount;
+        int perWorkerCap = (EntityManager.MAX_ENTITIES + workerCount - 1) / workerCount;
         localOutPosX = new double[perWorkerCap];
         localOutPosY = new double[perWorkerCap];
 
-        // Force page-touching to bind pages to this thread's core/CCX.
-        // Write a value every 512 doubles (~4KB pages * safety) to ensure pages are touched.
-        for (int i = 0; i < perWorkerCap; i += 512) {
+        // force page-touching to bind pages to this thread's core.
+        // write a value every 256 doubles (~4KB pages * safety=2) to ensure pages are touched.
+        for (int i = 0; i < perWorkerCap; i += 256) {
             localOutPosX[i] = 0.0;
             localOutPosY[i] = 0.0;
         }
@@ -80,10 +82,10 @@ public class OrbitWorker implements Runnable {
             if (!parent.isRunning()) break;
 
             int start = assignedStart;
-            int end   = assignedEnd;
-            for (int chunkStart = start; chunkStart < end; chunkStart += chunkSize) {
-                int chunkEnd = Math.min(chunkStart + chunkSize, end);
-                computeRangeIntoLocal(chunkStart, chunkEnd, simTimeSec, eArrRef, t0ArrRef, omegaArrRef,
+            int end = assignedEnd;
+            for (int chunkStart = start; chunkStart < end; chunkStart += chunk_size) {
+                int chunkEnd = Math.min(chunkStart + chunk_size, end);
+                computeRangeIntoLocal(chunkStart, chunkEnd, parent.getOrbitFrameCtx(),
                     tmpE, tmpOmega, aArr, muArr, EArr, thetaArr, localOutPosX, localOutPosY);
             }
 
@@ -92,14 +94,20 @@ public class OrbitWorker implements Runnable {
         }
     }
 
-    // computeRange variant that writes into per-worker localOut arrays at offset 0..(end-start)
-    private void computeRangeIntoLocal(int low, int high, double simTimeSec, double[] eArr, double[] t0Arr,
-                                       double[] omegaArr, double[] tmpE, double[] tmpOmega,
+    // computeRange variant that writes into per-worker localOut arrays at offset
+    private void computeRangeIntoLocal(int low, int high, OrbitFrameContext ctx, double[] tmpE, double[] tmpOmega,
                                        double[] aArr, double[] muArr, double[] EArr, double[] thetaArr,
                                        double[] outX, double[] outY) {
 
-        OrbitDataComponent orbitDataRef = ecsRef.getComponentRegistry().get(OrbitDataComponent.class);
-        MassComponent massComponent = ecsRef.getComponentRegistry().get(MassComponent.class);
+        OrbitDataComponent orbitDataRef = ctx.ecs().getComponentRegistry().get(OrbitDataComponent.class);
+        MassComponent massComponent = ctx.ecs().getComponentRegistry().get(MassComponent.class);
+
+        OrbitUpdater.FrameData nextFrameData = ctx.nextFrameData();
+
+        double simTimeSec = ctx.simTimeSec();
+        double[] eArr = orbitDataRef.eccentricity;
+        double[] t0Arr = orbitDataRef.t0;
+        double[] omegaArr = orbitDataRef.omega;
 
         int localOffset = low - assignedStart;
 
@@ -120,15 +128,14 @@ public class OrbitWorker implements Runnable {
             double n = Math.sqrt(mu / (a * a * a));
             double M = n * (simTimeSec - t0Arr[ent]);
             double E = solveKepler(M, e);
-            double theta = 2.0 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2),
-                Math.sqrt(1 - e) * Math.cos(E / 2));
+            double theta = 2.0 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
             EArr[local] = E;
             thetaArr[local] = theta;
         }
 
         // Step 2 — SIMD orbit position: vectorized portion
         int i = low;
-        int loopBound = SPECIES.loopBound(high);
+        int loopBound = low + SPECIES.loopBound(high - low);
         for (; i < loopBound; i += SPECIES.length()) {
             int localBase = i - low;
             DoubleVector vA = DoubleVector.fromArray(SPECIES, aArr, localBase);
@@ -156,7 +163,7 @@ public class OrbitWorker implements Runnable {
             DoubleVector vRotX = vCosW.mul(vX).sub(vSinW.mul(vY));
             DoubleVector vRotY = vSinW.mul(vX).add(vCosW.mul(vY));
 
-            // write into local output at offset localBase
+            // write into local output at offset
             vRotX.intoArray(outX, localOffset + localBase);
             vRotY.intoArray(outY, localOffset + localBase);
         }
@@ -180,7 +187,7 @@ public class OrbitWorker implements Runnable {
         }
     }
 
-    // physics computation helper reused by Workers (kept for completeness)
+    // physics computation helper
     private static double solveKepler(double M, double e) {
         double E = M + e * Math.sin(M);
         for (int i = 0; i < 6; i++) {
