@@ -3,8 +3,8 @@ package karnickeldev.solar.util;
 import io.netty.buffer.ByteBuf;
 
 /**
- * @author : KarnickelDev
- * @since : 12.10.2025
+ * @author KarnickelDev
+ * @since 12.10.2025
  **/
 public class NettyUtil {
 

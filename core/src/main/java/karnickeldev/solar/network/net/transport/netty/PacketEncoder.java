@@ -8,8 +8,8 @@ import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.util.Logger;
 
 /**
- * @author : KarnickelDev
- * @since : 24.06.2025
+ * @author KarnickelDev
+ * @since 24.06.2025
  **/
 public class PacketEncoder extends MessageToByteEncoder<Packet> {
 

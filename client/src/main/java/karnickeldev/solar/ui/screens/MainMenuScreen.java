@@ -19,8 +19,8 @@ import karnickeldev.solar.ui.components.optionsmenu.OptionsMenu;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 04.07.2025
+ * @author KarnickelDev
+ * @since 04.07.2025
  **/
 public class MainMenuScreen implements GameStateScreen {
 

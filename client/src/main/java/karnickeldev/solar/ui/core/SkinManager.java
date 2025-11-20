@@ -10,8 +10,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Disposable;
 
 /**
- * @author : KarnickelDev
- * @since : 07.07.2025
+ * @author KarnickelDev
+ * @since 07.07.2025
  **/
 public class SkinManager implements Disposable {
 

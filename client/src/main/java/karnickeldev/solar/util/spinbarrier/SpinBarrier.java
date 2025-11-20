@@ -4,8 +4,8 @@ import java.lang.invoke.VarHandle;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author : KarnickelDev
- * @since : 19.10.2025
+ * @author KarnickelDev
+ * @since 19.10.2025
  **/
 public class SpinBarrier implements SyncBarrier {
 

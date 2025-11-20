@@ -4,8 +4,8 @@ import karnickeldev.solar.core.gamestates.GameState;
 import karnickeldev.solar.core.gamestates.GameStateID;
 
 /**
- * @author : KarnickelDev
- * @since : 09.07.2025
+ * @author KarnickelDev
+ * @since 09.07.2025
 **/
 public class BootGameState implements GameState {
 

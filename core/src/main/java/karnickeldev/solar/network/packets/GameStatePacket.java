@@ -1,8 +1,8 @@
 package karnickeldev.solar.network.packets;
 
 /**
- * @author : KarnickelDev
- * @since : 28.06.2025
+ * @author KarnickelDev
+ * @since 28.06.2025
  **/
 public abstract class GameStatePacket extends Packet {
 

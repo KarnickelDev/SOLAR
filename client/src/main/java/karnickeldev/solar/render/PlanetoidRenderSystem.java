@@ -18,8 +18,13 @@ import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
+import karnickeldev.solar.render.orbitupdate.OrbitUpdaterImpl;
+import karnickeldev.solar.render.orbitupdate.OrbitUpdaterSimple;
+import karnickeldev.solar.util.threadlyout.ThreadContext;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
+
+import java.util.List;
 
 public class PlanetoidRenderSystem {
 
@@ -67,7 +72,7 @@ public class PlanetoidRenderSystem {
     double[] worldX = new double[EntityManager.MAX_ENTITIES];
     double[] worldY = new double[EntityManager.MAX_ENTITIES];
 
-    private final OrbitUpdater orbitUpdater = new OrbitUpdater();
+    public final OrbitUpdater orbitUpdater = new OrbitUpdaterImpl(new ThreadContext("orbitworker", List.of(8,10)));
 
     public void renderPlanetoids() {
         int width = Gdx.graphics.getWidth();
@@ -80,6 +85,7 @@ public class PlanetoidRenderSystem {
         TagComponent tags = ecs.getComponentRegistry().get(TagComponent.class);
         RadiusComponent radius = ecs.getComponentRegistry().get(RadiusComponent.class);
         RenderComponent renderComponent = ecs.getComponentRegistry().get(RenderComponent.class);
+        OrbitDataComponent orbitDataComponent = ecs.getComponentRegistry().get(OrbitDataComponent.class);
 
         FloatingOriginCamera camera = worldManager.getActiveWorld().getCamera();
         double renderZoom = camera.getRenderZoom();
@@ -109,15 +115,16 @@ public class PlanetoidRenderSystem {
         float maxZoom = (float) renderZoom * 16;
 
         for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
-            if (!ecs.getEntityManager().isValid(entity) || !hcs.getCurrent().has(entity) || !renderComponent.has(entity)) {
+            if (!ecs.getEntityManager().isValid(entity) || !orbitDataComponent.has(entity) || !renderComponent.has(entity)) {
                 worldX[entity] = Double.MAX_VALUE;
                 worldY[entity] = Double.MAX_VALUE;
+                continue;
             }
 
             ePos.zero();
 
             //ecs.toWorldSpace(ePos, entity, alpha);
-            ePos.add(orbitUpdater.currFrameData.posX[entity], orbitUpdater.currFrameData.posY[entity]);
+            ePos.add(orbitUpdater.getFrameData().posX[entity], orbitUpdater.getFrameData().posY[entity]);
 
             ePos.subtract(trackPos);
 

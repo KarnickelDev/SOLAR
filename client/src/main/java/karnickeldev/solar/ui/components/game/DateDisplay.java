@@ -12,8 +12,8 @@ import karnickeldev.solar.ui.core.FontManager;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 29.07.2025
+ * @author KarnickelDev
+ * @since 29.07.2025
  **/
 public class DateDisplay implements UIComponent {
 

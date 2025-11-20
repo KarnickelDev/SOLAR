@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * @author : KarnickelDev
- * @since : 24.09.2025
+ * @author KarnickelDev
+ * @since 24.09.2025
  **/
 public class ShaderUtils {
 

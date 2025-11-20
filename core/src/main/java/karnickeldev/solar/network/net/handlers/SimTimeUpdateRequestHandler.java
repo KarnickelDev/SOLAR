@@ -5,8 +5,8 @@ import karnickeldev.solar.network.packets.SimTimeUpdateRequestPacket;
 import karnickeldev.solar.simulation.execution.SimSpeedController;
 
 /**
- * @author : KarnickelDev
- * @since : 15.07.2025
+ * @author KarnickelDev
+ * @since 15.07.2025
  **/
 public class SimTimeUpdateRequestHandler implements PacketHandler<SimTimeUpdateRequestPacket> {
     @Override

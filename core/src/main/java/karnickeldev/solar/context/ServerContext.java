@@ -1,8 +1,8 @@
 package karnickeldev.solar.context;
 
 /**
- * @author : KarnickelDev
- * @since : 01.07.2025
+ * @author KarnickelDev
+ * @since 01.07.2025
  **/
 public class ServerContext {
 

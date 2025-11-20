@@ -9,8 +9,8 @@ import karnickeldev.solar.util.Logger;
 import java.util.*;
 
 /**
- * @author : KarnickelDev
- * @since : 28.09.2025
+ * @author KarnickelDev
+ * @since 28.09.2025
  **/
 public class ShaderManager implements Disposable {
 

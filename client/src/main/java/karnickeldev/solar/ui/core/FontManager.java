@@ -9,8 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author : KarnickelDev
- * @since : 07.07.2025
+ * @author KarnickelDev
+ * @since 07.07.2025
  **/
 public class FontManager {
 

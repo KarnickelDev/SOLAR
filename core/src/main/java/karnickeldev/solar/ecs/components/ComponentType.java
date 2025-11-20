@@ -4,8 +4,8 @@ import karnickeldev.solar.ecs.registries.SnapshotRegistry;
 import karnickeldev.solar.network.net.core.Deserializer;
 
 /**
- * @author : KarnickelDev
- * @since : 21.06.2025
+ * @author KarnickelDev
+ * @since 21.06.2025
  **/
 public enum ComponentType {
 

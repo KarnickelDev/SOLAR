@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import karnickeldev.solar.util.NettyUtil;
 
 /**
- * @author : KarnickelDev
- * @since : 12.10.2025
+ * @author KarnickelDev
+ * @since 12.10.2025
  **/
 public class OrbitDataSnapshot implements ComponentSnapshot {
 

@@ -5,8 +5,8 @@ import karnickeldev.solar.util.MathUtil;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * @author : KarnickelDev
- * @since : 04.06.2025
+ * @author KarnickelDev
+ * @since 04.06.2025
  **/
 public class SimulationThreadFactory implements ThreadFactory {
     private final String namePrefix;

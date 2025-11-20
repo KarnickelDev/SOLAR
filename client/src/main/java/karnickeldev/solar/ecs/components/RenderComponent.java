@@ -8,8 +8,8 @@ import java.util.Arrays;
 import java.util.BitSet;
 
 /**
- * @author : KarnickelDev
- * @since : 19.09.2025
+ * @author KarnickelDev
+ * @since 19.09.2025
  **/
 public class RenderComponent implements ComponentSnapshotProvider<AppearanceSnapshot> {
 

@@ -19,7 +19,7 @@ import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
-import karnickeldev.solar.util.ThreadAffinity;
+import karnickeldev.solar.util.threadlyout.ThreadAffinity;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.WorldManager;
@@ -28,8 +28,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * @author : KarnickelDev
- * @since : 01.07.2025
+ * @author KarnickelDev
+ * @since 01.07.2025
  **/
 public class GameContextBuilder {
 
@@ -90,7 +90,7 @@ public class GameContextBuilder {
         Server server = LocalServer.create(serverNetwork, serverDispatcher);
         ServerContext.setContext(ServerContextBuilder.buildServerContext(server));
 
-        ThreadAffinity.pinToCore(4);
+        ThreadAffinity.pinToCore(6);
         for(int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
             server.getWorldManager().getWorld(1).getECS().hcs.add(i,0,0,0);
         }

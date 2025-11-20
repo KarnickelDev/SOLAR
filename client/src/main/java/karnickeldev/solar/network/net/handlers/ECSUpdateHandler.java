@@ -8,8 +8,8 @@ import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
 /**
- * @author : KarnickelDev
- * @since : 03.07.2025
+ * @author KarnickelDev
+ * @since 03.07.2025
  **/
 public class ECSUpdateHandler implements PacketHandler<ECSUpdatePacket> {
     @Override

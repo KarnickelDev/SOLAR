@@ -1,4 +1,4 @@
-package karnickeldev.solar.util;
+package karnickeldev.solar.util.threadlyout;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
@@ -6,14 +6,13 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.Platform;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.NativeLongByReference;
+import karnickeldev.solar.util.Logger;
 
 /**
- * @author : KarnickelDev
- * @since : 19.10.2025
+ * @author KarnickelDev
+ * @since 19.10.2025
  **/
 public interface ThreadAffinity extends Library {
-
-    boolean THREAD_AFFINITY_ENABLED = true;
 
     ThreadAffinity INSTANCE = Native.load(Platform.isWindows() ? "kernel32" : "c", ThreadAffinity.class);
 
@@ -25,7 +24,6 @@ public interface ThreadAffinity extends Library {
     long SetThreadAffinityMask(WinNT.HANDLE hThread, long dwThreadAffinityMask);
 
     static void pinToCore(int coreId) {
-        if(!THREAD_AFFINITY_ENABLED) return;
 
         if(Platform.isWindows()) {
             var h = ThreadAffinity.INSTANCE.GetCurrentThread();

@@ -11,8 +11,8 @@ import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 10.07.2025
+ * @author KarnickelDev
+ * @since 10.07.2025
  **/
 public class Message implements UIComponent {
 

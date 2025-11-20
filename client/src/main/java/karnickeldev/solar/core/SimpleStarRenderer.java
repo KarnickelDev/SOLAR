@@ -18,8 +18,8 @@ import java.util.List;
 /**
  * Minimal star renderer: draws a circular star with radial falloff.
  * Usage: call renderStar(worldX, worldY, worldRadiusWorldUnits, color, camera) from your render loop.
-* @author : KarnickelDev
-* @since : 18.09.2025
+* @author KarnickelDev
+* @since 18.09.2025
  */
 public class SimpleStarRenderer {
 

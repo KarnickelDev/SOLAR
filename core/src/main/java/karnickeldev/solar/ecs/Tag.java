@@ -3,8 +3,8 @@ package karnickeldev.solar.ecs;
 import karnickeldev.solar.util.Logger;
 
 /**
- * @author : KarnickelDev
- * @since : 16.08.2025
+ * @author KarnickelDev
+ * @since 16.08.2025
  **/
 public enum Tag {
 

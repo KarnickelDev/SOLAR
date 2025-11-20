@@ -13,8 +13,8 @@ import karnickeldev.solar.ui.components.UIComponent;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 19.07.2025
+ * @author KarnickelDev
+ * @since 19.07.2025
  **/
 public class TimeControl implements UIComponent {
 

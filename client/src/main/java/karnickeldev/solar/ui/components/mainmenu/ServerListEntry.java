@@ -10,8 +10,8 @@ import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 
 /**
- * @author : KarnickelDev
- * @since : 11.07.2025
+ * @author KarnickelDev
+ * @since 11.07.2025
  **/
 public class ServerListEntry extends Table {
 

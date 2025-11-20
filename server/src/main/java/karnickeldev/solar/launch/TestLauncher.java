@@ -16,6 +16,16 @@ public class TestLauncher {
 
     public static void main(String[] args) {
 
+        for(String cmd: args) {
+            if (cmd.equals("--verbose")) {
+                Logger.setVerbose(true);
+                Logger.log("Set Logging to VERBOSE");
+            } else if(cmd.equals("--debug")) {
+                Logger.setLogLevel(Logger.LOG_DEBUG);
+                Logger.log("Set Logging Level to DEBUG");
+            }
+        }
+
         Metadata.loadVersionData();
 
         Logger.log(Logger.SERVER, Metadata.APP_NAME + " v" + Metadata.VERSION);

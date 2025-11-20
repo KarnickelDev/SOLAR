@@ -1,8 +1,8 @@
 package karnickeldev.solar.util;
 
 /**
- * @author : KarnickelDev
- * @since : 30.09.2025
+ * @author KarnickelDev
+ * @since 30.09.2025
  **/
 public class BlackBodyUtil {
 

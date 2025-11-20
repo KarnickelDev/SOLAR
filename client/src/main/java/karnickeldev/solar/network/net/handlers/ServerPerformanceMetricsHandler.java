@@ -4,8 +4,8 @@ import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 
 /**
- * @author : KarnickelDev
- * @since : 03.07.2025
+ * @author KarnickelDev
+ * @since 03.07.2025
  **/
 public class ServerPerformanceMetricsHandler implements PacketHandler<ServerPerformanceMetricsPacket> {
     @Override

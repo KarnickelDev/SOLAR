@@ -13,8 +13,8 @@ import karnickeldev.solar.world.World;
 import java.util.Objects;
 
 /**
- * @author : KarnickelDev
- * @since : 31.05.2025
+ * @author KarnickelDev
+ * @since 31.05.2025
  **/
 public class KeplerianOrbitSystem<T extends World> implements ECSSystem {
 

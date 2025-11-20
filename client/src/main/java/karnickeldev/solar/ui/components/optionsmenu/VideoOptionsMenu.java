@@ -11,8 +11,8 @@ import karnickeldev.solar.ui.components.UIComponent;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 09.07.2025
+ * @author KarnickelDev
+ * @since 09.07.2025
  **/
 public class VideoOptionsMenu implements UIComponent {
 

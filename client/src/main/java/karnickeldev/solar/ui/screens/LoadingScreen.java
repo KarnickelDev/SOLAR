@@ -23,28 +23,45 @@ import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.MathUtil;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BooleanSupplier;
 
 /**
  * Displays a lightweight, animated loading screen
  * Loads assets and dispatches tasks while trying to stay at 50fps
- * @author : KarnickelDev
- * @since : 05.07.2025
+ * @author KarnickelDev
+ * @since 05.07.2025
  **/
 public class LoadingScreen implements Screen {
 
-    private static final int FRAME_MS = 20;
+    private static final int TARGET_FPS = 40;
+    private static final int FRAME_MS = 1000 / TARGET_FPS;
+
+    private static final float DEFAULT_FADEOUT_SECONDS = 0.8f;
+
+    private float progress_anim_speed = 3f; // fraction per second
 
     public static final StarField.Container background = StarField.generateRandom((short) (1024 * 4), 0.3f, 0.3f);
 
     private final Runnable onComplete;
-    private final List<Runnable> loadTasks;
+    private final List<Runnable> asyncTasks;
+    private final List<BooleanSupplier> conditions;
+    private final Asset[] loadAssets;
 
-    private static final ShapeRenderer shapeRenderer = new ShapeRenderer();
+    private final Dispatcher dispatcher = new DefaultDispatcher();
+
+    private float displayedProgress = 0f;
+    private float conditionsProgress = 0f;
+
+    private final float fadeout_seconds;
+    private float completionTimer = 0f;
+    private boolean allDone = false;
+
+    private final GlyphLayout versionGlyphLayout = new GlyphLayout();
+    private final ShapeRenderer shapeRenderer = new ShapeRenderer();
 
     private static final Viewport viewport = new FitViewport(1920, 1080);
     private static final Viewport backgroundViewport = new ExtendViewport(1920, 1080);
-
-    private final GlyphLayout versionGlyphLayout;
 
     private float angle0 = 1.57f, angle1 = 1.57f;
     private final static float planet0Radius = 4, planet1Radius = 6, sunRadius = 11;
@@ -55,46 +72,101 @@ public class LoadingScreen implements Screen {
     private static final Color DARK_ORANGE = new Color(0x9D5E2AFF);
     private static final Color BEIGE = new Color(0xD1A46BFF);
 
-    private final Asset[] loadAssets;
-
-    private final Dispatcher dispatcher = new DefaultDispatcher();
-
-    private float time_done = 0f;
-    boolean done = false;
-
-    public LoadingScreen(Runnable onComplete, List<Runnable> loadTasks, Asset... loadAssets) {
-        this.onComplete = onComplete;
-        this.loadTasks = loadTasks;
+    public LoadingScreen(float fadeout_seconds, Runnable onComplete, List<Runnable> asyncTasks, List<BooleanSupplier> conditions, Asset... loadAssets) {
+        this.onComplete = Objects.requireNonNull(onComplete);
+        this.asyncTasks = asyncTasks == null ? List.of() : asyncTasks;
+        this.conditions = conditions == null ? List.of() : conditions;
         this.loadAssets = loadAssets;
+        this.fadeout_seconds = fadeout_seconds;
+    }
 
-        versionGlyphLayout = new GlyphLayout();
+    public LoadingScreen(Runnable onComplete, List<Runnable> asyncTasks, List<BooleanSupplier> conditions, Asset... loadAssets) {
+        this(DEFAULT_FADEOUT_SECONDS, onComplete, asyncTasks, conditions, loadAssets);
     }
 
     @Override
     public void show() {
-        time_done = 0;
-
-        SolarMain.getInstance().getSettingsManager().setFpsOverride(50);
+        SolarMain.getInstance().getSettingsManager().setFpsOverride(TARGET_FPS);
 
         StarField.loadAssets();
 
-        if(loadTasks != null) {
-            for(Runnable task: loadTasks) {
+        if(asyncTasks != null) {
+            for(Runnable task: asyncTasks) {
                 dispatcher.dispatch(task);
             }
         }
 
         for(Asset asset: loadAssets) {
-            if(AssetWrapper.getInstance().isLoaded(asset)) continue;
-            AssetWrapper.getInstance().loadGlobal(asset);
+            if(!AssetWrapper.getInstance().isLoaded(asset)) {
+                AssetWrapper.getInstance().loadGlobal(asset);
+            }
         }
     }
 
     @Override
     public void render(float delta) {
+        drawLoadingScreen(delta);
+        updateLoadingLogic(delta);
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        StarField.regenerateStarTexture(background);
+        viewport.update(width, height, true);
+        backgroundViewport.update(width, height, true);
+    }
+
+    @Override
+    public void dispose() {
+        shapeRenderer.dispose();
+    }
+
+    private void updateLoadingLogic(float delta) {
+
+        long t0 = System.nanoTime();
+        boolean assetsDone = AssetWrapper.getInstance().update(FRAME_MS);
+        long t1 = System.nanoTime();
+
+        boolean tasksDone = dispatcher.update(FRAME_MS - (int)((t1 - t0) / 1_000_000));
+
+        float condComplete = 0;
+        boolean conditionsDone = true;
+        for(BooleanSupplier cond : conditions) {
+            if(!cond.getAsBoolean()) {
+                conditionsDone = false;
+                break;
+            }
+            condComplete += 1;
+        }
+
+        conditionsProgress = conditions.isEmpty() ? 1 : condComplete / conditions.size();
+
+        if(!allDone && assetsDone && tasksDone && conditionsDone) {
+            allDone = true;
+            completionTimer = 0;
+            progress_anim_speed = (1 - displayedProgress) / (0.85f*fadeout_seconds);
+        }
+
+        if(allDone) {
+            completionTimer += delta;
+            if(completionTimer > fadeout_seconds) {
+                SolarMain.getInstance().getSettingsManager().clearFpsOverride();
+                onComplete.run();
+            }
+        }
+
+    }
+
+    private void drawLoadingScreen(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
+        drawBackground();
+        drawLoadingSpinner(delta);
+        drawProgressBar(delta);
+    }
+
+    private void drawBackground() {
         backgroundViewport.apply();
         SolarMain.getInstance().getBatch().setProjectionMatrix(backgroundViewport.getCamera().combined);
         SolarMain.getInstance().getBatch().setColor(1f,1f,1f,1f);
@@ -107,7 +179,9 @@ public class LoadingScreen implements Screen {
             font.draw(SolarMain.getInstance().getBatch(), versionGlyphLayout,5,versionGlyphLayout.height + 5);
         }
         SolarMain.getInstance().getBatch().end();
+    }
 
+    private void drawLoadingSpinner(float delta) {
         angle0 = (angle0 + (10 * delta)) % 6.283185f;
         angle1 = (angle1 + (6 * delta)) % 6.283185f;
 
@@ -143,15 +217,24 @@ public class LoadingScreen implements Screen {
         shapeRenderer.setColor(BEIGE);
         shapeRenderer.circle(planet1X, planet1Y, planet1Radius, 8);
         shapeRenderer.end();
+    }
 
+    private void drawProgressBar(float delta) {
         //Draw progress bar
         float edgePad = 250;
         float height = 24;
         float width = 1920 - 2*edgePad;
 
         float progress = MathUtil.clamp(
-            (dispatcher.getProgress() + AssetWrapper.getInstance().getAssetManager().getProgress()) / 2f,
+            (dispatcher.getProgress() + AssetWrapper.getInstance().getAssetManager().getProgress() + conditionsProgress) / 3f,
             0f, 1f);
+
+        if(!allDone) {
+            displayedProgress += (progress - displayedProgress) * progress_anim_speed * delta;
+        } else {
+            displayedProgress += progress_anim_speed * delta;
+        }
+        displayedProgress = Math.min(1f, displayedProgress);
 
         shapeRenderer.setColor(DARK_ORANGE);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
@@ -160,51 +243,17 @@ public class LoadingScreen implements Screen {
 
         shapeRenderer.setColor(BEIGE);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.rect(edgePad, orbit1Radius, progress*width, height);
+        shapeRenderer.rect(edgePad, orbit1Radius, displayedProgress*width, height);
         shapeRenderer.end();
-
-        long start = System.nanoTime();
-        boolean tasksLoaded = dispatcher.update(FRAME_MS);
-        int assetTime = (int) (System.nanoTime() - start) / 1_000_000;
-
-        if(AssetWrapper.getInstance().update(FRAME_MS - assetTime) && tasksLoaded && !done) {
-            done = true;
-            time_done = 0;
-        }
-
-        // delay onComplete a bit for smooth transition
-        if(done) time_done += delta;
-        if(done && time_done > 0.17f) {
-            done = false;
-            SolarMain.getInstance().getSettingsManager().clearFpsOverride();
-            onComplete.run();
-        }
     }
 
     @Override
-    public void resize(int width, int height) {
-        StarField.regenerateStarTexture(background);
-        viewport.update(width, height, true);
-        backgroundViewport.update(width, height, true);
-    }
+    public void pause() {}
 
     @Override
-    public void pause() {
-
-    }
+    public void resume() {}
 
     @Override
-    public void resume() {
+    public void hide() {}
 
-    }
-
-    @Override
-    public void hide() {
-
-    }
-
-    @Override
-    public void dispose() {
-        shapeRenderer.dispose();
-    }
 }

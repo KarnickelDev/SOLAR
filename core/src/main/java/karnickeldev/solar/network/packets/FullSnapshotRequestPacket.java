@@ -7,8 +7,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * @author : KarnickelDev
- * @since : 22.06.2025
+ * @author KarnickelDev
+ * @since 22.06.2025
  **/
 public class FullSnapshotRequestPacket extends Packet {
 

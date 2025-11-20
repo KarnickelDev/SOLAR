@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author : KarnickelDev
- * @since : 11.07.2025
+ * @author KarnickelDev
+ * @since 11.07.2025
  **/
 public class IniFile {
 

@@ -4,8 +4,8 @@ import karnickeldev.solar.network.packets.PingPongPacket;
 import karnickeldev.solar.network.net.core.PingTracker;
 
 /**
- * @author : KarnickelDev
- * @since : 20.06.2025
+ * @author KarnickelDev
+ * @since 20.06.2025
  **/
 public class PingPongHandler implements PacketHandler<PingPongPacket> {
 

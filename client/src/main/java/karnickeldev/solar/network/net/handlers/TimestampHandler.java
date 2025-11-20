@@ -8,8 +8,8 @@ import karnickeldev.solar.ui.components.game.TimeControl;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 06.10.2025
+ * @author KarnickelDev
+ * @since 06.10.2025
  **/
 public class TimestampHandler implements PacketHandler<TimestampPacket> {
 

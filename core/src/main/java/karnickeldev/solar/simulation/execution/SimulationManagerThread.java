@@ -7,8 +7,8 @@ import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.WorldManager;
 
 /**
- * @author : KarnickelDev
- * @since : 05.06.2025
+ * @author KarnickelDev
+ * @since 05.06.2025
  **/
 public class SimulationManagerThread {
 

@@ -21,8 +21,8 @@ import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 08.07.2025
+ * @author KarnickelDev
+ * @since 08.07.2025
  **/
 public class MainMenu implements UIComponent {
 

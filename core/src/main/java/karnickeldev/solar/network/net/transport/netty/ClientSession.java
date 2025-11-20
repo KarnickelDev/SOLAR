@@ -1,12 +1,13 @@
 package karnickeldev.solar.network.net.transport.netty;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.util.Logger;
 
 /**
- * @author : KarnickelDev
- * @since : 26.06.2025
+ * @author KarnickelDev
+ * @since 26.06.2025
  **/
 public class ClientSession {
 
@@ -34,7 +35,17 @@ public class ClientSession {
     public void send(Packet packet) {
         channel.eventLoop().execute(() -> {
             //Logger.log("bytes: " + channel.unsafe().outboundBuffer().totalPendingWriteBytes());
-            if(channel.isActive()) channel.writeAndFlush(packet);
+            if(channel.isActive()) {
+                channel.writeAndFlush(packet).addListener((ChannelFuture future) -> {
+                    if (future.isSuccess()) {
+                        Logger.debug(Logger.NETWORK, "writeAndFlush SUCCESS for packet " + packet);
+                    } else {
+                        Logger.error(Logger.NETWORK, "writeAndFlush FAILED for packet " + packet, future.cause());
+                    }
+                });
+            } else {
+                Logger.error(Logger.NETWORK, "Packet dropped (channel not active): " + packet);
+            }
         });
     }
 
@@ -43,6 +54,6 @@ public class ClientSession {
     }
 
     public boolean isActive() {
-        return channel.isActive() && handshake;
+        return channel.isActive();
     }
 }

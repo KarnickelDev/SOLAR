@@ -5,8 +5,8 @@ import io.netty.buffer.ByteBuf;
 import java.nio.charset.StandardCharsets;
 
 /**
- * @author : KarnickelDev
- * @since : 28.06.2025
+ * @author KarnickelDev
+ * @since 28.06.2025
  **/
 public class HandshakePacket extends Packet {
 

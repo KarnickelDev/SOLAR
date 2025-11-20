@@ -4,8 +4,8 @@ import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.network.packets.TestCamPacket;
 
 /**
- * @author : KarnickelDev
- * @since : 03.07.2025
+ * @author KarnickelDev
+ * @since 03.07.2025
  **/
 public class TestCamHandler implements PacketHandler<TestCamPacket> {
     @Override

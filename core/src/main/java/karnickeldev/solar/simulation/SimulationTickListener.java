@@ -1,8 +1,8 @@
 package karnickeldev.solar.simulation;
 
 /**
- * @author : KarnickelDev
- * @since : 30.05.2025
+ * @author KarnickelDev
+ * @since 30.05.2025
  **/
 public interface SimulationTickListener {
 

@@ -6,8 +6,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
- * @author : KarnickelDev
- * @since : 19.09.2025
+ * @author KarnickelDev
+ * @since 19.09.2025
  **/
 public class AppearanceSnapshot implements ComponentSnapshot {
 

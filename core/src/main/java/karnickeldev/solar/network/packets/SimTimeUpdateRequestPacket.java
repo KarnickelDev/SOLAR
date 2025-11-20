@@ -3,8 +3,8 @@ package karnickeldev.solar.network.packets;
 import io.netty.buffer.ByteBuf;
 
 /**
- * @author : KarnickelDev
- * @since : 15.07.2025
+ * @author KarnickelDev
+ * @since 15.07.2025
  **/
 public class SimTimeUpdateRequestPacket extends Packet {
 

@@ -26,8 +26,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author : KarnickelDev
- * @since : 26.06.2025
+ * @author KarnickelDev
+ * @since 26.06.2025
  **/
 public class NettyServerNetwork implements ServerNetwork {
 
@@ -56,7 +56,7 @@ public class NettyServerNetwork implements ServerNetwork {
     @Override
     public boolean start() {
         bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
-        workerGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
+        workerGroup = new MultiThreadIoEventLoopGroup(0, NioIoHandler.newFactory());
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
@@ -69,7 +69,7 @@ public class NettyServerNetwork implements ServerNetwork {
                         //p.addLast(new LengthFieldPrepender(4));
                         p.addLast(new PacketDecoder());
                         p.addLast(new PacketEncoder());
-                        p.addLast(new IdleStateHandler(5,0,0));
+                        p.addLast(new IdleStateHandler(20,0,0));
                         p.addLast(new ServerHandler());
                     }
                 });
@@ -112,9 +112,10 @@ public class NettyServerNetwork implements ServerNetwork {
     @Override
     public void sendToClient(int clientId, Packet packet) {
         if(packet == null) return;
-        if(!clientIdMap.get(clientId).channel.isWritable()) {
-            return;
-        }
+//        if(!clientIdMap.get(clientId).channel.isWritable()) {
+//            Logger.error(Logger.NETWORK + "Packet dropped (channel not writable): " + packet);
+//            return;
+//        }
         //Logger.log("packet queue: " + outgoing.size());
         if(!clientIdMap.get(clientId).isHandshake() || !outgoing.offer(new PacketContext(clientId, packet))) {
             Logger.error(Logger.NETWORK + "Packet dropped: " + packet);

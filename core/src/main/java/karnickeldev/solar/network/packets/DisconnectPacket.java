@@ -5,8 +5,8 @@ import io.netty.buffer.ByteBuf;
 import java.nio.charset.StandardCharsets;
 
 /**
- * @author : KarnickelDev
- * @since : 27.06.2025
+ * @author KarnickelDev
+ * @since 27.06.2025
  **/
 public class DisconnectPacket extends Packet{
 

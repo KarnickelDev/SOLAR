@@ -5,8 +5,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 /**
- * @author : KarnickelDev
- * @since : 05.07.2025
+ * @author KarnickelDev
+ * @since 05.07.2025
  **/
 public class LeftAnchoredFitViewport extends FitViewport {
 

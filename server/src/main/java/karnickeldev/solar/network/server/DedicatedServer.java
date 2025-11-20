@@ -1,6 +1,7 @@
 package karnickeldev.solar.network.server;
 
 import karnickeldev.solar.ecs.EntityFactory;
+import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.physics.Units;
@@ -97,11 +98,15 @@ public class DedicatedServer extends Server implements GameServer {
         simulationManagerThread.getSimulationManager().setPriority(world1, SimulationTask.Priority.LOW);
 
         for (int i = 0; i < (100_000); i++) {
-            EntityFactory.createStaticPlanetoidHCS(world1.getECS(), "",
+            int e  = EntityFactory.createStaticPlanetoidHCS(world1.getECS(), "",
                 Units.toSU(MathUtil.random(1, 1e10f), Units.Mass.TON),
                 1, 1,
                 (float) Units.convert(MathUtil.random(1e-2f, 100f), Units.Length.AU, Units.Length.AU),
                 MathUtil.random(0, 0.9f), MathUtil.random(0, (float) (2 * Math.PI)), 0, sun);
+
+            if(Math.random() > 0.3) {
+                world1.getECS().getComponentRegistry().get(OrbitDataComponent.class).remove(e);
+            }
         }
 
     }

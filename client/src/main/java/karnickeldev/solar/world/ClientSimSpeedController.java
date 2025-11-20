@@ -6,8 +6,8 @@ import karnickeldev.solar.simulation.execution.SimSpeedController;
 import karnickeldev.solar.util.MathUtil;
 
 /**
- * @author : KarnickelDev
- * @since : 05.08.2025
+ * @author KarnickelDev
+ * @since 05.08.2025
 **/
 public class ClientSimSpeedController {
 

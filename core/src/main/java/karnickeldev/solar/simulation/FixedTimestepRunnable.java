@@ -12,8 +12,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * @author : KarnickelDev
- * @since : 30.05.2025
+ * @author KarnickelDev
+ * @since 30.05.2025
 **/
 public class FixedTimestepRunnable implements Runnable {
 

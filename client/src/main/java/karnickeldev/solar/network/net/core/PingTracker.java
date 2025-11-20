@@ -5,8 +5,8 @@ import karnickeldev.solar.util.Logger;
 import java.util.Arrays;
 
 /**
- * @author : KarnickelDev
- * @since : 26.06.2025
+ * @author KarnickelDev
+ * @since 26.06.2025
  **/
 public class PingTracker {
 

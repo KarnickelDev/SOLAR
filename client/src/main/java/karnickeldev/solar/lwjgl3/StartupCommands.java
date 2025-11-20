@@ -14,8 +14,12 @@ public class StartupCommands {
         for (int i = 0; i < args.length; i++) {
             String cmd = args[i];
 
-            if (cmd.startsWith("--verbose")) {
+            if (cmd.equals("--verbose")) {
                 Logger.setVerbose(true);
+                Logger.log("Set Logging to VERBOSE");
+            } else if(cmd.equals("--debug")) {
+                Logger.setLogLevel(Logger.LOG_DEBUG);
+                Logger.log("Set Logging Level to DEBUG");
             }
 
         }

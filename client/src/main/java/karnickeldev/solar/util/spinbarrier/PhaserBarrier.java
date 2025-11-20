@@ -3,8 +3,8 @@ package karnickeldev.solar.util.spinbarrier;
 import java.util.concurrent.Phaser;
 
 /**
- * @author : KarnickelDev
- * @since : 21.10.2025
+ * @author KarnickelDev
+ * @since 21.10.2025
  **/
 public class PhaserBarrier implements SyncBarrier {
     private final int parties;

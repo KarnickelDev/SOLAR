@@ -8,8 +8,8 @@ import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ServerWorld;
 
 /**
- * @author : KarnickelDev
- * @since : 03.07.2025
+ * @author KarnickelDev
+ * @since 03.07.2025
  **/
 public class FullSnapshotRequestHandler implements PacketHandler<FullSnapshotRequestPacket> {
     @Override

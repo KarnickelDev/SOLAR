@@ -5,8 +5,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
- * @author : KarnickelDev
- * @since : 08.07.2025
+ * @author KarnickelDev
+ * @since 08.07.2025
  **/
 public class GasGiantTest {
 

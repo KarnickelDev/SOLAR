@@ -2,7 +2,6 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
@@ -87,21 +86,13 @@ public class SolarMain extends Game {
         List<Runnable> list = new ArrayList<>();
         list.add(SkinManager::init);
 
-        for(int i = 0; i < 256; i++) {
-            list.add(() -> {
-                try {
-                    Thread.sleep(2);
-                } catch (InterruptedException ignored) {}
-            });
-        }
-
         AssetWrapper.getInstance().loadGlobal(Asset.GAME_ICON);
         AssetWrapper.getInstance().loadGlobal(Asset.STARS_ATLAS);
         AssetWrapper.getInstance().finishLoading();
 
-        setScreen(new LoadingScreen(
+        setScreen(new LoadingScreen(0f,
             () -> GameStateManager.get().changeState(new MainMenuScreen(this)),
-            list,
+            list, null,
             Asset.STARRY_SKY_BACKGROUND_TILES,
             Asset.MAIN_MENU_BACKGROUND_SCENERY,
             Asset.DEBUG_CIRCLE

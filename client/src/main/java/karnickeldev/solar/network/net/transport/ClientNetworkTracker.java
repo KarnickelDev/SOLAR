@@ -1,13 +1,14 @@
 package karnickeldev.solar.network.net.transport;
 
 import io.netty.channel.ChannelId;
+import karnickeldev.solar.network.packets.PacketTypes;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * @author : KarnickelDev
- * @since : 08.10.2025
+ * @author KarnickelDev
+ * @since 08.10.2025
  **/
 public class ClientNetworkTracker implements NetworkTracker {
 
@@ -23,6 +24,10 @@ public class ClientNetworkTracker implements NetworkTracker {
 
     @Override
     public void onPacketRead(ChannelId clientId, short packetType, int bytes) {
+        if(packetType == PacketTypes.FULL_SNAPSHOT.getType()) {
+            System.out.println("FullSnapshot: " + bytes + " Byte");
+        }
+
         bytesRead.addAndGet(bytes);
         update();
     }

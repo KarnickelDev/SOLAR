@@ -7,8 +7,8 @@ import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 09.07.2025
+ * @author KarnickelDev
+ * @since 09.07.2025
  **/
 public class CheckButton extends TextButton {
 

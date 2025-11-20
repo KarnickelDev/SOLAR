@@ -1,8 +1,8 @@
 package karnickeldev.solar.world;
 
 /**
- * @author : KarnickelDev
- * @since : 07.06.2025
+ * @author KarnickelDev
+ * @since 07.06.2025
  **/
 
 public class TickPerformanceTracker {

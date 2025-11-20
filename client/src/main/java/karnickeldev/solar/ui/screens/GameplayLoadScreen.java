@@ -13,14 +13,16 @@ import karnickeldev.solar.ecs.components.ComponentType;
 import karnickeldev.solar.network.net.handlers.*;
 import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.render.BackgroundStarRenderer;
+import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
 import karnickeldev.solar.ui.core.UIManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
- * @author : KarnickelDev
- * @since : 04.07.2025
+ * @author KarnickelDev
+ * @since 04.07.2025
  **/
 public class GameplayLoadScreen implements GameState {
 
@@ -75,16 +77,43 @@ public class GameplayLoadScreen implements GameState {
                         () -> GameStateManager.get().changeState(
                             new MainMenuScreen(SolarMain.getInstance(), () -> UIManager.get().showMessage("Connection failed!"))
                         ),
-                        null
+                        null, null
                     )
                 );
             }
         });
 
+        List<BooleanSupplier> conditions = new ArrayList<>();
+
+        conditions.add(() -> {
+            GameContextContainer ctx = GameContext.get();
+            boolean worldReady = ctx.getWorldManager().containsWorld(1);
+            if(worldReady) return true;
+
+            ctx.getClock().updateFrameClockTime();
+
+            // do not use current here, we manually subtract PacketSyncDelay
+            ctx.getSyncLayer().update(ctx.getClock().getFrameClockTime());
+
+            // probably better to do after processing input
+            ctx.getDispatcher().update();
+
+            OrbitUpdater p = ctx.getPlanetoidRenderSystem().orbitUpdater;
+            if(ctx.getWorldManager().containsWorld(1)) {
+                p.prepare(GameContext.get().getWorldManager().getWorld(1).getECS());
+                return true;
+            }
+
+            return false;
+        });
+
+        conditions.add(() -> !GameContext.get().getPlanetoidRenderSystem().orbitUpdater.isWarmupActive());
+
         SolarMain.getInstance().setScreen(
             new LoadingScreen(
                 () -> SolarMain.getInstance().setScreen(new SimTestScreen()),
-                tasks
+                tasks,
+                conditions
             )
         );
     }

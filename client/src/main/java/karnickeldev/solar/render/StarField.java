@@ -16,8 +16,8 @@ import karnickeldev.solar.util.MathUtil;
 import java.util.Random;
 
 /**
- * @author : KarnickelDev
- * @since : 06.07.2025
+ * @author KarnickelDev
+ * @since 06.07.2025
  **/
 public class StarField {
 

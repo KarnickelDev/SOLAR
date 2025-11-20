@@ -15,8 +15,8 @@ import karnickeldev.solar.network.net.transport.ClientNetworkTracker;
 import karnickeldev.solar.ui.core.UI;
 
 /**
- * @author : KarnickelDev
- * @since : 03.07.2025
+ * @author KarnickelDev
+ * @since 03.07.2025
  **/
 public class DebugToolTip implements UIComponent {
 

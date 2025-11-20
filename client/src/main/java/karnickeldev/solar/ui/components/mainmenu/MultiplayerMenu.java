@@ -15,8 +15,8 @@ import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 import java.util.ArrayList;
 
 /**
- * @author : KarnickelDev
- * @since : 10.07.2025
+ * @author KarnickelDev
+ * @since 10.07.2025
  **/
 public class MultiplayerMenu implements UIComponent {
 

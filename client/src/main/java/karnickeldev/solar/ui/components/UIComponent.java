@@ -4,8 +4,8 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 
 /**
- * @author : KarnickelDev
- * @since : 08.07.2025
+ * @author KarnickelDev
+ * @since 08.07.2025
  **/
 public interface UIComponent {
 

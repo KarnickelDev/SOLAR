@@ -7,195 +7,215 @@ import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.MassComponent;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.physics.Units;
+import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.spinbarrier.SyncBarrier;
 
 /**
- * @author : KarnickelDev
- * @since : 21.10.2025
+ * A worker runnable for multithreading that computes some chunks of entity orbits
+ * using SIMD and dense data for cache locality
+ * @see karnickeldev.solar.render.orbitupdate.OrbitUpdaterImpl
+ * @author KarnickelDev
+ * @since 21.10.2025
  **/
-public class OrbitWorker implements Runnable {
+public final class OrbitWorker implements Runnable {
 
     private static final VectorSpecies<Double> SPECIES = DoubleVector.SPECIES_PREFERRED;
     private static final int CHUNK_SIZE;
 
     static {
         int vectorLen = SPECIES.length();
-        int perEntityBytes = 64; // estimate hot arrays
+        int perEntityBytes = 128; // estimate bytes-per-entity in hot arrays
         int cacheSize = 256 * 1024; // estimated cache size (either 32 for L1 or 256 for L2 seem to work well)
         CHUNK_SIZE = Math.max(vectorLen, ((cacheSize / perEntityBytes) / vectorLen) * vectorLen); // round to vector multiple
+        Logger.log(Logger.GENERAL, "OrbitWorker using chunks of size: " + CHUNK_SIZE);
     }
 
     // for (per-frame) sync with OrbitUpdater
-    private final OrbitUpdater parent;
+    private final OrbitUpdaterImpl parent;
     private final SyncBarrier barrier;
+
+    // local scratch for E and theta (per-worker)
+    private final double[] EArr = new double[CHUNK_SIZE];
+    private final double[] thetaArr = new double[CHUNK_SIZE];
 
     // local copy of worker-count
     private final int workerCount;
 
-    // per-worker temporaries (kept per-thread to avoid sharing)
-    private final double[] tmpE = new double[SPECIES.length()];
-    private final double[] tmpOmega = new double[SPECIES.length()];
-
     private final int chunk_size = CHUNK_SIZE;
-    private final double[] aArr = new double[chunk_size];
-    private final double[] muArr = new double[chunk_size];
-    private final double[] EArr = new double[chunk_size];
-    private final double[] thetaArr = new double[chunk_size];
-
-    // per-worker output buffers allocated inside run (to ensure first-touch on pinned core)
-    double[] localOutPosX;
-    double[] localOutPosY;
-
-    // assigned range for this frame (set by main thread)
-    volatile int assignedStart = 0;
-    volatile int assignedEnd = 0;
 
     public final int id;
 
-    OrbitWorker(int id, OrbitUpdater parent, SyncBarrier barrier) {
+    OrbitWorker(int id, OrbitUpdaterImpl parent, SyncBarrier barrier) {
         this.id = id;
         this.parent = parent;
         this.barrier = barrier;
         this.workerCount = parent.getWorkerCount();
-
-        // do NOT allocate large localOut buffers here — allocate inside run() after pinning
     }
 
     @Override
     public void run() {
-        // Allocate per-worker outputs after the thread was pinned (ensures first-touch happens on pinned core).
-        int perWorkerCap = (EntityManager.MAX_ENTITIES + workerCount - 1) / workerCount;
-        localOutPosX = new double[perWorkerCap];
-        localOutPosY = new double[perWorkerCap];
 
-        // force page-touching to bind pages to this thread's core.
-        // write a value every 256 doubles (~4KB pages * safety=2) to ensure pages are touched.
-        for (int i = 0; i < perWorkerCap; i += 256) {
-            localOutPosX[i] = 0.0;
-            localOutPosY[i] = 0.0;
+        /*
+        Interleaved chunk sections for automatic work balancing with static slices.
+        Thread1[0-100, 300-400, ...]; Thread2[100-200, 400-500, ...]
+        DON'T FORGET THE +1, WE NEED IT TO CAPTURE ALL ENTITIES
+        */
+        int[] chunks = new int[(EntityManager.MAX_ENTITIES / (workerCount * chunk_size)) + 1];
+        for(int i = 0; i < chunks.length; i++) {
+            chunks[i] = chunk_size * ((workerCount*i) + id);
         }
 
-        while (parent.isRunning()) {
+        while(parent.isRunning()) {
+
+            // async warmup/pretouch
+            while(parent.isWarmupActive()) {
+                int start = parent.requestWarmupSlice(chunk_size);
+                if (start == -1) break;
+                int end = Math.min(start + chunk_size, parent.warmupTarget());
+
+                OrbitUpdaterImpl.FrameData fd = parent.nextFrameData;
+                // hopefully touch pages on this cpu core so they don't cause page faults
+                for (int i = start; i < end; i++) {
+                    fd.posX[i] = 0;
+                    fd.posY[i] = 0;
+                    fd.entityIds[i] = 0;
+                    fd.parentIds[i] = 0;
+                }
+            }
+
+            int validCount = parent.nextFrameData.validCount;
+
+            if(parent.getOrbitFrameCtx() != null) {
+                OrbitDataComponent orbitDataRef = parent.getOrbitFrameCtx().ecs().getComponentRegistry().get(OrbitDataComponent.class);
+                MassComponent mass = parent.getOrbitFrameCtx().ecs().getComponentRegistry().get(MassComponent.class);
+                OrbitUpdaterImpl.OrbitSoA orbitSoA = parent.getOrbitSoA();
+
+                // TODO: only recalculate on changes
+                for (int chunk : chunks) {
+                    for (int i = chunk; i < Math.min(chunk + chunk_size, validCount); i++) {
+                        int ent = parent.nextFrameData.entityIds[i];
+                        int p = parent.nextFrameData.parentIds[i];
+                        orbitSoA.entityIds[i] = ent;
+                        orbitSoA.a[i] = orbitDataRef.getSemiMajorAxis(ent) * Units.toSU(1, Units.Length.AU);
+                        orbitSoA.mu[i] = Units.G_KM_TON * mass.getMass(p);
+                        orbitSoA.e[i] = orbitDataRef.eccentricity[ent];
+                        orbitSoA.t0[i] = orbitDataRef.t0[ent];
+                        orbitSoA.omega[i] = orbitDataRef.omega[ent];
+                    }
+                }
+            }
+
             // Wait for main thread to start the frame (startCompute calls barrier.await())
             barrier.await();
 
-            if (!parent.isRunning()) break;
+            if(!parent.isRunning()) break;
 
-            int start = assignedStart;
-            int end = assignedEnd;
-            for (int chunkStart = start; chunkStart < end; chunkStart += chunk_size) {
-                int chunkEnd = Math.min(chunkStart + chunk_size, end);
-                computeRangeIntoLocal(chunkStart, chunkEnd, parent.getOrbitFrameCtx(),
-                    tmpE, tmpOmega, aArr, muArr, EArr, thetaArr, localOutPosX, localOutPosY);
+            OrbitUpdaterImpl.OrbitSoA soa = parent.getOrbitSoA(); // hot buffer
+
+            // iterate interleaved chunks (indices are into SoA arrays)
+            for (int chunkStart : chunks) {
+                if (chunkStart >= validCount) break;
+                int chunkEnd = Math.min(chunkStart + chunk_size, validCount);
+
+                computeRangeSoA(soa, chunkStart, chunkEnd);
             }
 
             // signal done
             barrier.await();
         }
+
+        Logger.log("Stopped OrbitWorker-" + id);
     }
 
-    // computeRange variant that writes into per-worker localOut arrays at offset
-    private void computeRangeIntoLocal(int low, int high, OrbitFrameContext ctx, double[] tmpE, double[] tmpOmega,
-                                       double[] aArr, double[] muArr, double[] EArr, double[] thetaArr,
-                                       double[] outX, double[] outY) {
+    private void computeRangeSoA(OrbitUpdaterImpl.OrbitSoA soa, int low, int high) {
+        int count = high - low;
+        int vecLen = SPECIES.length();
 
-        OrbitDataComponent orbitDataRef = ctx.ecs().getComponentRegistry().get(OrbitDataComponent.class);
-        MassComponent massComponent = ctx.ecs().getComponentRegistry().get(MassComponent.class);
+        double simTimeSec = parent.getOrbitFrameCtx().simTimeSec();
 
-        OrbitUpdater.FrameData nextFrameData = ctx.nextFrameData();
-
-        double simTimeSec = ctx.simTimeSec();
-        double[] eArr = orbitDataRef.eccentricity;
-        double[] t0Arr = orbitDataRef.t0;
-        double[] omegaArr = orbitDataRef.omega;
-
-        int localOffset = low - assignedStart;
-
-        // Step: fill aArr and muArr for this subrange
-        for (int i = low; i < high; i++) {
-            int local = i - low;
-            aArr[local] = orbitDataRef.getSemiMajorAxis(i) * Units.toSU(1, Units.Length.AU);
-            muArr[local] = Units.G_KM_TON * massComponent.getMass(nextFrameData.parentIds[i]);
-        }
-
-        // Step 1 — scalar Kepler solve
-        for (int i = low; i < high; i++) {
-            int local = i - low;
-            int ent = nextFrameData.entityIds[i];
-            double a = aArr[local];
-            double e = eArr[ent];
-            double mu = muArr[local];
+        // Step 1: scalar Kepler solve (we compute E and theta into local arrays)
+        for (int i = 0; i < count; i++) {
+            int idx = low + i;
+            double a = soa.a[idx];
+            double e = soa.e[idx];
+            double mu = soa.mu[idx];
             double n = Math.sqrt(mu / (a * a * a));
-            double M = n * (simTimeSec - t0Arr[ent]);
+            double M = n * (simTimeSec - soa.t0[idx]);
             double E = solveKepler(M, e);
             double theta = 2.0 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
-            EArr[local] = E;
-            thetaArr[local] = theta;
+            EArr[i] = E;
+            thetaArr[i] = theta;
         }
 
-        // Step 2 — SIMD orbit position: vectorized portion
-        int i = low;
-        int loopBound = low + SPECIES.loopBound(high - low);
-        for (; i < loopBound; i += SPECIES.length()) {
-            int localBase = i - low;
-            DoubleVector vA = DoubleVector.fromArray(SPECIES, aArr, localBase);
-            DoubleVector vEcc = DoubleVector.fromArray(SPECIES, EArr, localBase);
-            DoubleVector vTheta = DoubleVector.fromArray(SPECIES, thetaArr, localBase);
+        // Step 2: SIMD vectorized position compute using linear SoA inputs
+        int loopBound = SPECIES.loopBound(count);
+        int local = 0;
+        for (; local < loopBound; local += vecLen) {
+            int base = low + local; // dense base index into SoA arrays
 
-            // gather per-lane e and omega from global arrays using entityIds
-            for (int lane = 0; lane < SPECIES.length(); lane++) {
-                int entIdx = nextFrameData.entityIds[i + lane];
-                tmpE[lane] = eArr[entIdx];
-                tmpOmega[lane] = omegaArr[entIdx];
-            }
-            DoubleVector vE = DoubleVector.fromArray(SPECIES, tmpE, 0);
-            DoubleVector vOmega = DoubleVector.fromArray(SPECIES, tmpOmega, 0);
+            DoubleVector vA = DoubleVector.fromArray(SPECIES, soa.a, base);
+            DoubleVector vEcc = DoubleVector.fromArray(SPECIES, EArr, local);
+            DoubleVector vTheta = DoubleVector.fromArray(SPECIES, thetaArr, local);
+
+
+            // NOTE: soa.e and soa.omega are linear, so we can load them directly
+            DoubleVector vE = DoubleVector.fromArray(SPECIES, soa.e, base);
+            DoubleVector vOmega = DoubleVector.fromArray(SPECIES, soa.omega, base);
+
+
             DoubleVector one = DoubleVector.broadcast(SPECIES, 1.0);
             DoubleVector vCosE = vEcc.lanewise(VectorOperators.COS);
             DoubleVector vR = vA.mul(one.sub(vE.mul(vCosE)));
+
 
             DoubleVector vCosTheta = vTheta.lanewise(VectorOperators.COS);
             DoubleVector vSinTheta = vTheta.lanewise(VectorOperators.SIN);
             DoubleVector vX = vR.mul(vCosTheta);
             DoubleVector vY = vR.mul(vSinTheta);
+
+
             DoubleVector vCosW = vOmega.lanewise(VectorOperators.COS);
             DoubleVector vSinW = vOmega.lanewise(VectorOperators.SIN);
             DoubleVector vRotX = vCosW.mul(vX).sub(vSinW.mul(vY));
             DoubleVector vRotY = vSinW.mul(vX).add(vCosW.mul(vY));
 
-            // write into local output at offset
-            vRotX.intoArray(outX, localOffset + localBase);
-            vRotY.intoArray(outY, localOffset + localBase);
+
+            vRotX.intoArray(parent.nextFrameData.posX, base);
+            vRotY.intoArray(parent.nextFrameData.posY, base);
+
         }
 
-        // Tail
-        for (; i < high; i++) {
-            int local = i - low;
-            int ent = nextFrameData.entityIds[i];
-            double a = aArr[local];
-            double e = eArr[ent];
-            double omega = omegaArr[ent];
+        // Tail scalar (remainder of entities that don't fill another SIMD lane)
+        for (; local < count; local++) {
+            int idx = low + local;
+
+            double a = soa.a[idx];
+            double e = soa.e[idx];
+            double omega = soa.omega[idx];
             double E = EArr[local];
             double theta = thetaArr[local];
+
             double r = a * (1 - e * Math.cos(E));
             double ox = r * Math.cos(theta);
             double oy = r * Math.sin(theta);
             double cosW = Math.cos(omega);
             double sinW = Math.sin(omega);
-            outX[localOffset + local] = cosW * ox - sinW * oy;
-            outY[localOffset + local] = sinW * ox + cosW * oy;
+
+            parent.nextFrameData.posX[idx] = cosW * ox - sinW * oy;
+            parent.nextFrameData.posY[idx] = sinW * ox + cosW * oy;
+
         }
     }
 
     // physics computation helper
     private static double solveKepler(double M, double e) {
-        double E = M + e * Math.sin(M);
-        for (int i = 0; i < 6; i++) {
+        double E = (e < 0.8) ? M : Math.PI;
+        for (int i = 0; i < 5; i++) {
             double f = E - e * Math.sin(E) - M;
             double fp = 1 - e * Math.cos(E);
             double d = f / fp;
             E -= d;
-            if (Math.abs(d) < 1e-6) break;
+            if (Math.abs(d) < 1e-5) break;
         }
         return E;
     }

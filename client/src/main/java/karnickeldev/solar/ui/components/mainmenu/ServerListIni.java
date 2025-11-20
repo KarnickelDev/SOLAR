@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author : KarnickelDev
- * @since : 11.07.2025
+ * @author KarnickelDev
+ * @since 11.07.2025
  **/
 public class ServerListIni {
 

@@ -5,8 +5,8 @@ import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.TickPerformanceTracker;
 
 /**
- * @author : KarnickelDev
- * @since : 01.06.2025
+ * @author KarnickelDev
+ * @since 01.06.2025
  **/
 public class SimulationTask implements Comparable<SimulationTask> {
 

@@ -1,8 +1,8 @@
 package karnickeldev.solar.simulation.execution;
 
 /**
- * @author : KarnickelDev
- * @since : 20.07.2025
+ * @author KarnickelDev
+ * @since 20.07.2025
  **/
 public class SimSpeedController {
 

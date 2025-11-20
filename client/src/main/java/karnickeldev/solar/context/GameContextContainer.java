@@ -12,8 +12,8 @@ import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.WorldManager;
 
 /**
- * @author : KarnickelDev
- * @since : 30.06.2025
+ * @author KarnickelDev
+ * @since 30.06.2025
  **/
 public class GameContextContainer {
 

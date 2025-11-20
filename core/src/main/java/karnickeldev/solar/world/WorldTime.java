@@ -3,8 +3,8 @@ package karnickeldev.solar.world;
 import karnickeldev.solar.simulation.SimulationTimeProvider;
 
 /**
- * @author : KarnickelDev
- * @since : 02.06.2025
+ * @author KarnickelDev
+ * @since 02.06.2025
  **/
 public class WorldTime implements SimulationTimeProvider {
 

@@ -58,7 +58,7 @@ public class PacketFactory {
 
     public static ECSUpdatePacket createFullECSUpdatePacket(long simTime, ServerWorld world) {
         List<ComponentSnapshot> snaps = world.getECS().getComponentRegistry().createFullSnapshot(simTime);
-        snaps.add(world.getECS().hcs.getCurrent().createFullSnapshot(simTime));
+        //snaps.add(world.getECS().hcs.getCurrent().createFullSnapshot(simTime));
         snaps.removeAll(Collections.singleton(null));
         if(snaps.isEmpty()) return null;
 

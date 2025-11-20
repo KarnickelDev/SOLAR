@@ -5,8 +5,8 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 /**
- * @author : KarnickelDev
- * @since : 07.07.2025
+ * @author KarnickelDev
+ * @since 07.07.2025
  **/
 public final class UI {
 

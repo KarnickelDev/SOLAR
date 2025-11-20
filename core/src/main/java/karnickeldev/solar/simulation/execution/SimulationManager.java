@@ -6,7 +6,7 @@ import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.util.Logger;
-import karnickeldev.solar.util.ThreadAffinity;
+import karnickeldev.solar.util.threadlyout.ThreadAffinity;
 import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
@@ -17,8 +17,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @author : KarnickelDev
- * @since : 01.06.2025
+ * @author KarnickelDev
+ * @since 01.06.2025
  **/
 public class SimulationManager implements Runnable {
 
@@ -111,7 +111,7 @@ public class SimulationManager implements Runnable {
         }
     }
 
-    int tmp = 0;
+    private long lastTPS = 0;
 
     boolean init = false;
 
@@ -170,13 +170,16 @@ public class SimulationManager implements Runnable {
                 }
             }
 
-            for(SimulationTask t: tasks) {
-                ServerContext.get().getServer().getServerNetwork().broadcast(new ServerPerformanceMetricsPacket(
-                    t.getWorld().getID(),
-                    t.getWorld().getWorldTime().getSimTimeMicros(),
-                    t.tpsTracker.getTPS(),
-                    t.tpsTracker.getTPS()
-                ));
+            if(System.nanoTime() - lastTPS > 1 * 1e9) {
+                for(SimulationTask t: tasks) {
+                    ServerContext.get().getServer().getServerNetwork().broadcast(new ServerPerformanceMetricsPacket(
+                        t.getWorld().getID(),
+                        t.getWorld().getWorldTime().getSimTimeMicros(),
+                        t.tpsTracker.getTPS(),
+                        t.tpsTracker.getTPS()
+                    ));
+                }
+                lastTPS = System.nanoTime();
             }
 
             Packet timeStamp = PacketFactory.createTimestampPacket(globalSimTimeMicros, paused ? 0 : simSpeedController.getCurrentSimSpeed(),

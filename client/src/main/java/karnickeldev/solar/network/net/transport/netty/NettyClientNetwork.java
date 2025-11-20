@@ -22,8 +22,8 @@ import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientClock;
 
 /**
- * @author : KarnickelDev
- * @since : 26.06.2025
+ * @author KarnickelDev
+ * @since 26.06.2025
  **/
 public class NettyClientNetwork implements ClientNetwork {
 
@@ -57,7 +57,7 @@ public class NettyClientNetwork implements ClientNetwork {
     public boolean connect() {
         NetworkTracker networkTracker = new ClientNetworkTracker();
 
-        group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
+        group = new MultiThreadIoEventLoopGroup(4, NioIoHandler.newFactory());
         Bootstrap b = new Bootstrap();
         b.group(group)
             .channel(NioSocketChannel.class)
@@ -69,7 +69,7 @@ public class NettyClientNetwork implements ClientNetwork {
                     ch.config().setAllocator(PooledByteBufAllocator.DEFAULT);
                     p.addLast(new PacketDecoder(networkTracker));
                     p.addLast(new PacketEncoder(networkTracker));
-                    p.addLast(new IdleStateHandler(5,0,0));
+                    p.addLast(new IdleStateHandler(20,0,0));
                     p.addLast(new ClientHandler());
                 }
             });

@@ -4,8 +4,8 @@ import karnickeldev.solar.network.packets.FullSnapshotPacket;
 import karnickeldev.solar.util.Logger;
 
 /**
- * @author : KarnickelDev
- * @since : 03.07.2025
+ * @author KarnickelDev
+ * @since 03.07.2025
  **/
 public class FullSnapshotHandler implements PacketHandler<FullSnapshotPacket> {
     @Override

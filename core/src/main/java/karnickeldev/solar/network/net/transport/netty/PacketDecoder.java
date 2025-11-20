@@ -9,8 +9,8 @@ import karnickeldev.solar.network.packets.Packet;
 import java.util.List;
 
 /**
- * @author : KarnickelDev
- * @since : 24.06.2025
+ * @author KarnickelDev
+ * @since 24.06.2025
  **/
 public class PacketDecoder extends ByteToMessageDecoder {
 
