@@ -3,43 +3,29 @@ package karnickeldev.solar.world;
 import karnickeldev.solar.network.net.core.PingTracker;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author KarnickelDev
  * @since 01.07.2025
  **/
-public class ClientClock {
+public final class ClientClock {
 
-    private static final int BUFFER_SIZE = 8;
+    private static final double MAX_DRIFT_MICROS = 300_000;
+    private static final long SOFT_CATCHUP_MICROS = 5_000;
 
-    private static class TimeSegment {
-        final long simTimeAtAnchor; // server simTime at anchor (microseconds)
-        final long realTimeAnchor;  // local wall time (microseconds), adjusted for RTT
-        final double simSpeed;      // sim speed during this segment
+    private record ClockSnapshot(long simTimeAnchor, long realTimeAnchor, double simSpeed) {}
 
-        private TimeSegment(long simTimeAtAnchor, long realTimeAnchor, double simSpeed) {
-            this.simTimeAtAnchor = simTimeAtAnchor;
-            this.realTimeAnchor = realTimeAnchor;
-            this.simSpeed = simSpeed;
-        }
-
-        @Override
-        public String toString() {
-            return '{' + simTimeAtAnchor + "," + realTimeAnchor + "," + simSpeed + '}';
-        }
-    }
-
-    private final Deque<TimeSegment> timeline = new ArrayDeque<>();
+    private final AtomicReference<ClockSnapshot> snapshot = new AtomicReference<>(new ClockSnapshot(0,0,0));
 
     private final ClientSimSpeedController simSpeedController;
 
-    private boolean paused = false;
+    private volatile boolean paused = false;
 
-    private byte targetSimSpeedIndex = 1;
+    private volatile byte targetSimSpeedIndex = 1;
 
-    private long frameClockTime = 0;
+    private volatile long frameClockTime = 0;
+    private volatile long lastComputedSimTime = 0;
 
 
     public ClientClock() {
@@ -54,27 +40,45 @@ public class ClientClock {
         return paused;
     }
 
-    public synchronized void addSegment(long simTimeMicros, long receiveMicros, double simSpeed, byte targetSimSpeedIndex) {
+    public void updateClockData(long simTimeMicros, long receiveMicros, double simSpeed, byte targetSimSpeedIndex) {
         long pingEstimate = (long) (PingTracker.getAvgRTT() / 2f);
 
         // Adjust anchor to when the server was actually at simTime
-        long adjustedAnchor = receiveMicros - pingEstimate;
-
-        this.paused = simSpeed <= 0;
+        long adjustedAnchor = receiveMicros + pingEstimate;
 
         // update simSpeed index
         this.targetSimSpeedIndex = targetSimSpeedIndex;
+        this.paused = simSpeed <= 0;
 
-        if(!timeline.isEmpty()) {
-            long last = timeline.getLast().realTimeAnchor;
-            adjustedAnchor = (long) (0.5 * last + 0.5 * adjustedAnchor);
+        ClockSnapshot old = snapshot.get();
+        long blendedAnchor;
+        if(old.realTimeAnchor > 0) {
+            long error = adjustedAnchor - old.realTimeAnchor;
+            double blendFactor = Math.clamp(Math.abs(error) / MAX_DRIFT_MICROS, 0.5, 0.9);
+            blendedAnchor = old.realTimeAnchor + (long) (error * blendFactor);
+        } else {
+            blendedAnchor = adjustedAnchor;
         }
 
-        // Insert new segment
-        timeline.add(new TimeSegment(simTimeMicros, adjustedAnchor, Math.max(0, simSpeed)));
-        if (timeline.size() > BUFFER_SIZE) {
-            timeline.poll();
+       snapshot.set(new ClockSnapshot(simTimeMicros, blendedAnchor, Math.max(0, simSpeed)));
+
+    }
+
+    public long estimateSimTimeAt(long queryMicros) {
+        ClockSnapshot snap = snapshot.get();
+        long dt = queryMicros - snap.realTimeAnchor;
+
+        long estimatedSimTime;
+        if (snap.simSpeed <= 0) {
+            estimatedSimTime = snap.simTimeAnchor;
+        } else {
+            estimatedSimTime = snap.simTimeAnchor + (long) (dt * snap.simSpeed);
         }
+
+        long minAllowed = lastComputedSimTime - SOFT_CATCHUP_MICROS;
+        estimatedSimTime = Math.max(minAllowed, estimatedSimTime);
+        lastComputedSimTime = estimatedSimTime;
+        return estimatedSimTime;
     }
 
     public int getTargetSimSpeedIndex() {
@@ -89,36 +93,8 @@ public class ClientClock {
         return frameClockTime;
     }
 
-    public synchronized long estimateSimTimeNow() {
-        return estimateSimTimeAt(System.nanoTime() / 1000);
-    }
-
-    private long last = 0;
-    public synchronized long estimateSimTimeAt(long queryMicros) {
-        if (timeline.isEmpty()) return 0;
-
-        // Find latest segment not after query
-        TimeSegment seg = null;
-        for (TimeSegment s : timeline) {
-            if (s.realTimeAnchor < queryMicros) {
-                seg = s;
-            } else break;
-        }
-        if(seg == null) seg = timeline.getLast();
-
-        long dt = queryMicros - seg.realTimeAnchor;
-        if (seg.simSpeed <= 0) {
-            return seg.simTimeAtAnchor; // paused
-        }
-
-        long time = seg.simTimeAtAnchor + (long)(dt * seg.simSpeed);
-        time = Math.max(time, last);
-        last = time;
-        return time;
-    }
-
     public long nowSimSeconds() {
-        return estimateSimTimeAt((System.nanoTime() / 1000) - PacketSyncLayer.syncDelayMicros) / 1_000_000;
+        return frameClockTime / 1_000_000;
     }
 
 }

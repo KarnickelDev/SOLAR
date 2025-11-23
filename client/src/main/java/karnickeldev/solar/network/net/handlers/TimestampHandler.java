@@ -16,7 +16,7 @@ public class TimestampHandler implements PacketHandler<TimestampPacket> {
     @Override
     public void handle(int clientId, TimestampPacket packet) {
         GameContextContainer gc = GameContext.get();
-        gc.getClock().addSegment(
+        gc.getClock().updateClockData(
             packet.getSimTimeMicros(),
             System.nanoTime() / 1000L,
             packet.getCurrentSimSpeed(),

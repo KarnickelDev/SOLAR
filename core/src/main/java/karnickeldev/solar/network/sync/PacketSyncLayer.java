@@ -16,7 +16,7 @@ import java.util.Queue;
  **/
 public final class PacketSyncLayer {
 
-    public static final long syncDelayMicros = 100 * 1_000;
+    public static final long syncDelayMicros = 150 * 1_000;
 
     private record BufferEntry(GameStatePacket pkt, long arrivalMicros) {}
 
