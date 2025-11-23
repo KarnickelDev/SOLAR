@@ -1,8 +1,6 @@
 package karnickeldev.solar.settings;
 
 import com.badlogic.gdx.Gdx;
-import karnickeldev.solar.core.gamestates.GameStateID;
-import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.util.Logger;
 
 import java.awt.*;

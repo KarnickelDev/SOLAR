@@ -5,9 +5,10 @@ import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.spinbarrier.PhaserBarrier;
-import karnickeldev.solar.util.threadlyout.ThreadAffinity;
 import karnickeldev.solar.util.spinbarrier.SyncBarrier;
-import karnickeldev.solar.util.threadlyout.ThreadContext;
+import karnickeldev.solar.util.threadlayout.ThreadAffinity;
+import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
+import karnickeldev.solar.util.threadlayout.ThreadContext;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,23 +44,23 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
 
     private final OrbitSoA orbitSoA = new OrbitSoA(EntityManager.MAX_ENTITIES);
 
-    public OrbitUpdaterImpl(ThreadContext orbitUpdaterThreadContext) {
-        this.workerCount = orbitUpdaterThreadContext.getCpuIds().size();
+    public OrbitUpdaterImpl(ClientThreadLayout threadLayout) {
+        ThreadContext context = threadLayout.getOrbitWorkerContext();
+        this.workerCount = context.getThreadCount();
         this.barrier = new PhaserBarrier(workerCount + 1); // +1 for main thread
 
         workerThreads = new Thread[workerCount];
 
         // Start worker threads once and keep references
-        for (int i = 0; i < workerCount; i++) {
-            final int id = i;
+        for (int id = 0; id < workerCount; id++) {
             OrbitWorker w = new OrbitWorker(id, this, barrier);
 
             String name = "OrbitWorker-" + id;
-            workerThreads[i] = Thread.ofPlatform().name(name).priority(Thread.MAX_PRIORITY-1)
+            workerThreads[id] = Thread.ofPlatform().name(name).priority(Thread.MAX_PRIORITY-1)
                 .unstarted(() -> {
                     Logger.log(Logger.STARTUP, "Starting " + name);
                     // Pin the OS thread to chosen core
-                    ThreadAffinity.pinToCore(orbitUpdaterThreadContext.nextCpuId());
+                    if(context.useCoreAffinity()) ThreadAffinity.pinToCore(context.nextCpuId());
                     w.run();
                 });
         }

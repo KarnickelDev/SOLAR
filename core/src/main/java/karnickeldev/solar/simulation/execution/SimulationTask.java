@@ -1,6 +1,5 @@
 package karnickeldev.solar.simulation.execution;
 
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.TickPerformanceTracker;
 

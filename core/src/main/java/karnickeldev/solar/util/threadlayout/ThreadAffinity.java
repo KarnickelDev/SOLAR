@@ -1,4 +1,4 @@
-package karnickeldev.solar.util.threadlyout;
+package karnickeldev.solar.util.threadlayout;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;

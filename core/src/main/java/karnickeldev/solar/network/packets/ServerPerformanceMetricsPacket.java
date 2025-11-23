@@ -2,10 +2,6 @@ package karnickeldev.solar.network.packets;
 
 import io.netty.buffer.ByteBuf;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 public class ServerPerformanceMetricsPacket extends Packet {
 
     private int worldId;

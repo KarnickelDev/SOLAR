@@ -6,14 +6,17 @@ import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.util.Logger;
-import karnickeldev.solar.util.threadlyout.ThreadAffinity;
 import karnickeldev.solar.util.datastructures.BitMask;
+import karnickeldev.solar.util.threadlayout.ThreadAffinity;
+import karnickeldev.solar.util.threadlayout.ThreadContext;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
 import karnickeldev.solar.world.WorldManager;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -49,11 +52,15 @@ public class SimulationManager implements Runnable {
 
     private final BitMask errno = new BitMask();
 
+    private final ThreadContext threadContext;
+
     public boolean paused = false;
 
-    public SimulationManager(int simulationThreadCount, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
+    public SimulationManager(int simulationThreadCount, WorldManager<ServerWorld> worldManager,
+                             Dispatcher dispatcher, ThreadContext threadContext) {
         this.worldManager = worldManager;
         this.dispatcher = dispatcher;
+        this.threadContext = threadContext;
 
         //simulationThreadPool = Executors.newFixedThreadPool(3, new SimulationThreadFactory("SimThread"));
         simulationThreadPool = null;
@@ -122,7 +129,7 @@ public class SimulationManager implements Runnable {
 
         long simulationStartTime = System.nanoTime();
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 3);
-        ThreadAffinity.pinToCore(2);
+        if(threadContext.useCoreAffinity()) ThreadAffinity.pinToCore(threadContext.nextCpuId());
 
         while(running.get()) {
             /*

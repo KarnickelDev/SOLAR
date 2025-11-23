@@ -3,6 +3,7 @@ package karnickeldev.solar.simulation.execution;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
+import karnickeldev.solar.util.threadlayout.ThreadContext;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.WorldManager;
 
@@ -15,8 +16,8 @@ public class SimulationManagerThread {
     private final SimulationManager simulationManager;
     private final Thread thread;
 
-    public SimulationManagerThread(int threadCount, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
-        simulationManager = new SimulationManager(threadCount, worldManager, dispatcher);
+    public SimulationManagerThread(int threadCount, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher, ThreadContext threadContext) {
+        simulationManager = new SimulationManager(threadCount, worldManager, dispatcher, threadContext);
         thread = new Thread(simulationManager, "SimulationManager");
 
         thread.setPriority((int)MathUtil.lerp(Thread.NORM_PRIORITY, Thread.MAX_PRIORITY, 0.6));

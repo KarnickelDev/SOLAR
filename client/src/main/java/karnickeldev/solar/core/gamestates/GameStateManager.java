@@ -1,6 +1,5 @@
 package karnickeldev.solar.core.gamestates;
 
-import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.ui.screens.BootGameState;
 
 /**

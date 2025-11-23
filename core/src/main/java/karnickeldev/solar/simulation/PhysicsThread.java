@@ -1,7 +1,7 @@
 package karnickeldev.solar.simulation;
 
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.ServerNetwork;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.network.server.ServerPerformanceMetrics;
 import karnickeldev.solar.util.Logger;

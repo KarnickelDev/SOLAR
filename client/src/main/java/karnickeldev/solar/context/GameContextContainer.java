@@ -1,14 +1,14 @@
 package karnickeldev.solar.context;
 
-import karnickeldev.solar.network.net.core.*;
+import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
-import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.ClientClock;
+import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
 /**

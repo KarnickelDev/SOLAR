@@ -4,8 +4,6 @@ import io.netty.buffer.ByteBuf;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
 import karnickeldev.solar.network.net.core.Deserializer;
 
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 

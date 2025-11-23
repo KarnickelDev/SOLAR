@@ -1,12 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import io.netty.buffer.ByteBuf;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.NettyUtil;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public class HCSPositionSnapshot implements ComponentSnapshot {
 

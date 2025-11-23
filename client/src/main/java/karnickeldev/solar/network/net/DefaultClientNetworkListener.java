@@ -4,7 +4,7 @@ import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
-import karnickeldev.solar.network.packets.*;
+import karnickeldev.solar.network.packets.FullSnapshotRequestPacket;
 import karnickeldev.solar.ui.core.UIManager;
 import karnickeldev.solar.ui.screens.LoadingScreen;
 import karnickeldev.solar.ui.screens.MainMenuScreen;

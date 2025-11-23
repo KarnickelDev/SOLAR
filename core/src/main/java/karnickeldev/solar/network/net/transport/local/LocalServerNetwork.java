@@ -5,7 +5,6 @@ import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
 import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.util.Logger;
 
 import java.util.concurrent.*;

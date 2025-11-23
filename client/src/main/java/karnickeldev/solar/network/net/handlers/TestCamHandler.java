@@ -1,7 +1,6 @@
 package karnickeldev.solar.network.net.handlers;
 
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
-import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.network.packets.TestCamPacket;
 
 /**

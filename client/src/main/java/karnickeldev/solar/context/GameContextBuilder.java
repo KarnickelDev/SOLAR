@@ -3,7 +3,8 @@ package karnickeldev.solar.context;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
-import karnickeldev.solar.network.net.core.*;
+import karnickeldev.solar.network.net.core.ClientNetwork;
+import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.net.dispatcher.DefaultDispatcher;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
@@ -19,9 +20,10 @@ import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
-import karnickeldev.solar.util.threadlyout.ThreadAffinity;
-import karnickeldev.solar.world.ClientWorld;
+import karnickeldev.solar.util.threadlayout.ThreadAffinity;
+import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.world.ClientClock;
+import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
 import java.util.concurrent.BlockingQueue;
@@ -33,7 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  **/
 public class GameContextBuilder {
 
-    public static GameContextContainer buildClientDedicatedServer(String host, int port) {
+    public static GameContextContainer buildClientDedicatedServer(String host, int port, ClientThreadLayout threadLayout) {
         WorldManager<ClientWorld> worldManager = new WorldManager<>(new ClientWorld(0));
 
         ClientNetworkListener clientListener = new DefaultClientNetworkListener(worldManager);
@@ -45,11 +47,13 @@ public class GameContextBuilder {
 
         ClientNetwork clientNetwork = new NettyClientNetwork(host, port, clientListener, dispatcher, syncLayer, clientClock);
 
-        PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch());
+        PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch(), threadLayout);
 
         CameraInput cameraInput = new CameraInput(worldManager);
 
         ShaderManager shaderManager = new ShaderManager();
+
+        if(threadLayout.getMainContext().useCoreAffinity()) ThreadAffinity.pinToCore(threadLayout.getMainContext().nextCpuId());
 
         return new GameContextContainer(
             true,
@@ -65,7 +69,7 @@ public class GameContextBuilder {
         );
     }
 
-    public static GameContextContainer buildClientLocalServer() {
+    public static GameContextContainer buildClientLocalServer(ClientThreadLayout threadLayout) {
         WorldManager<ClientWorld> worldManager = new WorldManager<>(new ClientWorld(0));
 
         ClientNetworkListener clientListener = new DefaultClientNetworkListener(worldManager);
@@ -87,19 +91,20 @@ public class GameContextBuilder {
         clientNetwork = new LocalClientNetwork(toServer, fromServer, clientListener, dispatcher);
         ServerNetwork serverNetwork = new LocalServerNetwork(toServer, fromServer, serverListener, serverDispatcher);
 
-        Server server = LocalServer.create(serverNetwork, serverDispatcher);
+        Server server = LocalServer.create(serverNetwork, serverDispatcher, threadLayout.getSimulationContext());
         ServerContext.setContext(ServerContextBuilder.buildServerContext(server));
 
-        ThreadAffinity.pinToCore(6);
         for(int i = 0; i < EntityManager.MAX_ENTITIES; i++) {
             server.getWorldManager().getWorld(1).getECS().hcs.add(i,0,0,0);
         }
 
-        PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch());
+        PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch(), threadLayout);
 
         CameraInput cameraInput = new CameraInput(worldManager);
 
         ShaderManager shaderManager = new ShaderManager();
+
+        if(threadLayout.getMainContext().useCoreAffinity()) ThreadAffinity.pinToCore(threadLayout.getMainContext().nextCpuId());
 
         return new GameContextContainer(
             false,

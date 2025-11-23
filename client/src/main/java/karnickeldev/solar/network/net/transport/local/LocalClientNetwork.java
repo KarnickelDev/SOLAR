@@ -5,15 +5,14 @@ import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
-import karnickeldev.solar.network.packets.ECSUpdatePacket;
 import karnickeldev.solar.network.packets.GameStatePacket;
 import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.ui.components.UIComponent;
-import karnickeldev.solar.ui.components.game.TimeControl;
-import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.util.Logger;
 
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LocalClientNetwork implements ClientNetwork {

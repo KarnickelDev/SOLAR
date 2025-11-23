@@ -1,9 +1,5 @@
 package karnickeldev.solartest.ui;
 
-import org.junit.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 public class ResolutionTests {
 
 

@@ -9,11 +9,11 @@ import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.context.GameContextContainer;
 import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.core.gamestates.GameStateManager;
-import karnickeldev.solar.ui.screens.LoadingScreen;
-import karnickeldev.solar.ui.screens.MainMenuScreen;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.settings.SettingsManager;
 import karnickeldev.solar.ui.core.SkinManager;
+import karnickeldev.solar.ui.screens.LoadingScreen;
+import karnickeldev.solar.ui.screens.MainMenuScreen;
 import karnickeldev.solar.util.Logger;
 
 import java.util.ArrayList;

@@ -1,16 +1,13 @@
 package karnickeldev.solar.ui.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.core.SolarMain;
-import karnickeldev.solar.core.gamestates.GameState;
 import karnickeldev.solar.core.gamestates.GameStateID;
 import karnickeldev.solar.core.gamestates.GameStateScreen;
-import karnickeldev.solar.render.GasGiantTest;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.ui.components.DebugToolTip;
 import karnickeldev.solar.ui.components.mainmenu.MainMenu;

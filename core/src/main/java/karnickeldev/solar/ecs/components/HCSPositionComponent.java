@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
+
 import java.util.BitSet;
 
 public class HCSPositionComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<HCSPositionSnapshot> {

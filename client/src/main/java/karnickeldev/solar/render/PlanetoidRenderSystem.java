@@ -19,12 +19,9 @@ import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
 import karnickeldev.solar.render.orbitupdate.OrbitUpdaterImpl;
-import karnickeldev.solar.render.orbitupdate.OrbitUpdaterSimple;
-import karnickeldev.solar.util.threadlyout.ThreadContext;
+import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
-
-import java.util.List;
 
 public class PlanetoidRenderSystem {
 
@@ -35,9 +32,12 @@ public class PlanetoidRenderSystem {
 
     private final WorldManager<ClientWorld> worldManager;
 
-    public PlanetoidRenderSystem(WorldManager<ClientWorld> worldManager, SpriteBatch batch) {
+    public final OrbitUpdater orbitUpdater;
+
+    public PlanetoidRenderSystem(WorldManager<ClientWorld> worldManager, SpriteBatch batch, ClientThreadLayout threadLayout) {
         this.worldManager = worldManager;
         this.batch = batch;
+        this.orbitUpdater = new OrbitUpdaterImpl(threadLayout);
 
         int size = 256;
         int r = (size / 2) - 1;
@@ -69,10 +69,8 @@ public class PlanetoidRenderSystem {
         frustumCullingRadiusSquared = (halfW * halfW) + (halfH * halfH);
     }
 
-    double[] worldX = new double[EntityManager.MAX_ENTITIES];
-    double[] worldY = new double[EntityManager.MAX_ENTITIES];
-
-    public final OrbitUpdater orbitUpdater = new OrbitUpdaterImpl(new ThreadContext("orbitworker", List.of(8,10)));
+    private final double[] worldX = new double[EntityManager.MAX_ENTITIES];
+    private final double[] worldY = new double[EntityManager.MAX_ENTITIES];
 
     public void renderPlanetoids() {
         int width = Gdx.graphics.getWidth();

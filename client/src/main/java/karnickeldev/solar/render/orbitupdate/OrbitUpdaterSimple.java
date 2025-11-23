@@ -11,7 +11,7 @@ import karnickeldev.solar.physics.Units;
  * @author KarnickelDev
  * @since 22.11.2025
  **/
-public class OrbitUpdaterSimple implements OrbitUpdater {
+public final class OrbitUpdaterSimple implements OrbitUpdater {
 
     @Override
     public void waitAndSwap() {}

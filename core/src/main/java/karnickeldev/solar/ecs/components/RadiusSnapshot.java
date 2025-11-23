@@ -2,10 +2,6 @@ package karnickeldev.solar.ecs.components;
 
 import io.netty.buffer.ByteBuf;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 public class RadiusSnapshot implements ComponentSnapshot {
 
     public final long tick;

@@ -1,4 +1,4 @@
-package karnickeldev.solar.util.threadlyout;
+package karnickeldev.solar.util.threadlayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,25 +12,25 @@ import java.util.List;
  **/
 public final class CpuLayout {
 
-    private final int logicalCores;
-    private final int physicalCores;
+    private final short logicalCores;
+    private final short physicalCores;
+    private final short smtLevel;
     private final List<List<Integer>> siblings; // physical core -> list of logical cores
 
     public CpuLayout() {
-        this.logicalCores = Runtime.getRuntime().availableProcessors();
+        this.logicalCores = (short) Runtime.getRuntime().availableProcessors();
 
         // naive but surprisingly effective SMT grouping:
         // assume each physical core has N siblings where N = logical / physical.
         // try 2 first (common: HT), fallback if not divisible.
-        int smtLevel = guessSMTLevel(logicalCores);
+        this.smtLevel = (short) guessSMTLevel(logicalCores);
 
-        this.physicalCores = logicalCores / smtLevel;
+        this.physicalCores = (short) (logicalCores / smtLevel);
         this.siblings = buildSiblings(physicalCores, smtLevel);
     }
 
     private int guessSMTLevel(int logical) {
         if (logical % 2 == 0) return 2;
-        if (logical % 4 == 0) return 4;
         return 1; // fallback value
     }
 
@@ -47,12 +47,16 @@ public final class CpuLayout {
         return list;
     }
 
-    public int getLogicalCores() {
+    public short getLogicalCores() {
         return logicalCores;
     }
 
-    public int getPhysicalCores() {
+    public short getPhysicalCores() {
         return physicalCores;
+    }
+
+    public short getSmtLevel() {
+        return smtLevel;
     }
 
     public List<Integer> logicalCoresFlat() {

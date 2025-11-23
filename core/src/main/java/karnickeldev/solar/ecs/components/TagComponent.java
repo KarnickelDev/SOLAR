@@ -3,9 +3,6 @@ package karnickeldev.solar.ecs.components;
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.Tag;
 import karnickeldev.solar.util.Logger;
-import karnickeldev.solar.util.MathUtil;
-
-import java.util.Arrays;
 
 public class TagComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<TagSnapshot> {
 

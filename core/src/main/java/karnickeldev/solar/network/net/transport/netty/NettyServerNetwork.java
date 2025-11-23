@@ -1,7 +1,7 @@
 package karnickeldev.solar.network.net.transport.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.*;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;

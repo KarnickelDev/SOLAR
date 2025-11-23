@@ -1,8 +1,8 @@
 package karnickeldev.solar.network.packets;
 
 import io.netty.buffer.ByteBuf;
-import karnickeldev.solar.ecs.registries.SnapshotRegistry;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
+import karnickeldev.solar.ecs.registries.SnapshotRegistry;
 
 import java.util.Arrays;
 

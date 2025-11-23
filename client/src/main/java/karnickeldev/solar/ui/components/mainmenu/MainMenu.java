@@ -17,8 +17,8 @@ import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.ui.components.UIComponent;
-import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 
 /**
  * @author KarnickelDev

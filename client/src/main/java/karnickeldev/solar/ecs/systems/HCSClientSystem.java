@@ -4,7 +4,6 @@ import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
 import karnickeldev.solar.ecs.components.HCSPositionSnapshot;
-import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.util.MathUtil;
 
 public class HCSClientSystem implements ComponentSnapshotProvider<HCSPositionSnapshot> {

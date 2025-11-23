@@ -3,7 +3,6 @@ package karnickeldev.solar.ui;
 import karnickeldev.solar.Metadata;
 
 import javax.swing.*;
-import javax.swing.UIManager;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;

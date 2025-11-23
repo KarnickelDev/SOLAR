@@ -1,9 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
-import karnickeldev.solar.util.MathUtil;
 
-import java.util.Arrays;
 import java.util.BitSet;
 
 public class RadiusComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<RadiusSnapshot> {

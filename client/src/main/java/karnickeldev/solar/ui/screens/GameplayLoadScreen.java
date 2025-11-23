@@ -15,6 +15,8 @@ import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.render.BackgroundStarRenderer;
 import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
 import karnickeldev.solar.ui.core.UIManager;
+import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,7 @@ import java.util.function.BooleanSupplier;
  * @author KarnickelDev
  * @since 04.07.2025
  **/
-public class GameplayLoadScreen implements GameState {
+public final class GameplayLoadScreen implements GameState {
 
     private final boolean multiplayer;
     private final String ip;
@@ -40,9 +42,13 @@ public class GameplayLoadScreen implements GameState {
 
         tasks.add(() -> {
             if(multiplayer) {
-                GameContext.setContext(GameContextBuilder.buildClientDedicatedServer(ip, 25566));
+                ClientThreadLayout threadLayout = ClientThreadLayout.create(1,true, true);
+                GameContext.setContext(GameContextBuilder.buildClientDedicatedServer(ip, 25566, threadLayout));
+                Logger.log(Logger.STARTUP, "Using ThreadLayout: " + threadLayout);
             } else {
-                GameContext.setContext(GameContextBuilder.buildClientLocalServer());
+                ClientThreadLayout threadLayout = ClientThreadLayout.create(1,true, false);
+                GameContext.setContext(GameContextBuilder.buildClientLocalServer(threadLayout));
+                Logger.log(Logger.STARTUP, "Using ThreadLayout: " + threadLayout);
             }
         });
 

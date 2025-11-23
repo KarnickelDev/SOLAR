@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.ui.components.Message;
 import karnickeldev.solar.ui.components.UIComponent;
 

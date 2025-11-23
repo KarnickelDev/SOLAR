@@ -2,10 +2,6 @@ package karnickeldev.solar.network.net.listener;
 
 import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.network.packets.*;
-import karnickeldev.solar.network.packets.PingPongPacket;
-import karnickeldev.solar.network.packets.FullSnapshotRequestPacket;
-import karnickeldev.solar.network.packets.PingPacket;
-import karnickeldev.solar.network.server.Server;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ServerWorld;
 

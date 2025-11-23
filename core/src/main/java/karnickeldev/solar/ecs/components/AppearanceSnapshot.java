@@ -2,7 +2,6 @@ package karnickeldev.solar.ecs.components;
 
 import io.netty.buffer.ByteBuf;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**

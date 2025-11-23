@@ -12,8 +12,6 @@ import karnickeldev.solar.ui.components.UIComponent;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 
-import java.util.ArrayList;
-
 /**
  * @author KarnickelDev
  * @since 10.07.2025

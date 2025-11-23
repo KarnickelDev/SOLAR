@@ -1,8 +1,8 @@
 package karnickeldev.solar.network.server;
 
 import karnickeldev.solar.ecs.components.ComponentType;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.ServerNetwork;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.simulation.execution.SimulationManagerThread;
 import karnickeldev.solar.world.ServerWorld;
@@ -20,12 +20,11 @@ public abstract class Server implements GameServer {
 
     private boolean running = false;
 
-    public Server(ServerNetwork serverNetwork, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
+    public Server(ServerNetwork serverNetwork, WorldManager<ServerWorld> worldManager, SimulationManagerThread simulationManagerThread, Dispatcher dispatcher) {
         this.serverNetwork = serverNetwork;
         this.worldManager = worldManager;
+        this.simulationManagerThread = simulationManagerThread;
         this.dispatcher = dispatcher;
-
-        this.simulationManagerThread = new SimulationManagerThread(8, worldManager, dispatcher);
     }
 
     public final void start() {

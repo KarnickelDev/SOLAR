@@ -2,8 +2,8 @@ package karnickeldev.solar.network.server;
 
 import karnickeldev.solar.ecs.EntityFactory;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.network.net.core.ServerNetwork;
+import karnickeldev.solar.network.net.dispatcher.Dispatcher;
 import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.simulation.execution.SimulationTask;
 import karnickeldev.solar.util.MathUtil;
