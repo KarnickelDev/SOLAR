@@ -7,7 +7,7 @@ import java.util.List;
  * @author KarnickelDev
  * @since 23.11.2025
  **/
-@SuppressWarnings("ClassCanBeRecord")
+@SuppressWarnings({"ClassCanBeRecord", "unused"})
 public final class ClientThreadLayout {
 
     private final boolean useCoreAffinity;
@@ -92,15 +92,15 @@ public final class ClientThreadLayout {
             if(isDedicatedServer) {
                 return new ClientThreadLayout(useCoreAffinity, false,
                     reserved,
-                    new ThreadContext("sim", useCoreAffinity, List.of(nThreads-5*smtLevel, nThreads-6*smtLevel)),
+                    new ThreadContext("sim"),
                     new ThreadContext("main", useCoreAffinity, List.of(nThreads-4*smtLevel)),
                     new ThreadContext("orbit-worker", useCoreAffinity, List.of(nThreads-smtLevel, nThreads-2*smtLevel, nThreads-3*smtLevel)),
-                    new ThreadContext("background")
+                    new ThreadContext("background", useCoreAffinity, cpuLayout.logicalSiblingsOf(nThreads-7*smtLevel))
                 );
             } else {
                 return new ClientThreadLayout(useCoreAffinity, false,
                     reserved,
-                    new ThreadContext("sim", useCoreAffinity, List.of(nThreads-5*smtLevel, nThreads-6*smtLevel)),
+                    new ThreadContext("sim", useCoreAffinity, List.of(nThreads-5*smtLevel, nThreads-6*smtLevel, nThreads-7*smtLevel)),
                     new ThreadContext("main", useCoreAffinity, List.of(nThreads-4*smtLevel)),
                     new ThreadContext("orbit-worker", useCoreAffinity, List.of(nThreads-smtLevel, nThreads-2*smtLevel, nThreads-3*smtLevel)),
                     new ThreadContext("background")
@@ -115,7 +115,7 @@ public final class ClientThreadLayout {
                     new ThreadContext("sim"),
                     new ThreadContext("main", useCoreAffinity, List.of(nThreads-smtLevel)),
                     new ThreadContext("orbit-worker", useCoreAffinity, List.of(nThreads-2*smtLevel, nThreads-3*smtLevel)),
-                    new ThreadContext("background", useCoreAffinity, cpuLayout.logicalSiblingsOf(nThreads-4*smtLevel))
+                    new ThreadContext("background")
                 );
             } else {
                 return new ClientThreadLayout(useCoreAffinity, false,

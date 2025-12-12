@@ -27,7 +27,7 @@ public final class OrbitWorker implements Runnable {
         int perEntityBytes = 128; // estimate bytes-per-entity in hot arrays
         int cacheSize = 256 * 1024; // estimated cache size (either 32 for L1 or 256 for L2 seem to work well)
         CHUNK_SIZE = Math.max(vectorLen, ((cacheSize / perEntityBytes) / vectorLen) * vectorLen); // round to vector multiple
-        Logger.log(Logger.GENERAL, "OrbitWorker using chunks of size: " + CHUNK_SIZE);
+        Logger.log("[OrbitWorker] ", "OrbitWorker using chunks of size: " + CHUNK_SIZE);
     }
 
     // for (per-frame) sync with OrbitUpdater
@@ -65,7 +65,7 @@ public final class OrbitWorker implements Runnable {
             chunks[i] = chunk_size * ((workerCount*i) + id);
         }
 
-        while(parent.isRunning()) {
+        while(parent.isRunning() && !barrier.isTerminated()) {
 
             // async warmup/pretouch
             while(parent.isWarmupActive()) {
@@ -108,7 +108,8 @@ public final class OrbitWorker implements Runnable {
             // Wait for main thread to start the frame (startCompute calls barrier.await())
             barrier.await();
 
-            if(!parent.isRunning()) break;
+            // if shutdown was requested or barrier was force-terminated, exit loop BEFORE computing.
+            if(!parent.isRunning() || barrier.isTerminated()) break;
 
             OrbitUpdaterImpl.OrbitSoA soa = parent.getOrbitSoA(); // hot buffer
 
@@ -117,6 +118,9 @@ public final class OrbitWorker implements Runnable {
                 if (chunkStart >= validCount) break;
                 int chunkEnd = Math.min(chunkStart + chunk_size, validCount);
 
+                // if shutdown occurred mid-loop, break out quickly
+                if (!parent.isRunning() || barrier.isTerminated()) break;
+
                 computeRangeSoA(soa, chunkStart, chunkEnd);
             }
 
@@ -124,7 +128,7 @@ public final class OrbitWorker implements Runnable {
             barrier.await();
         }
 
-        Logger.log("Stopped OrbitWorker-" + id);
+        Logger.log("[OrbitWorker] ", "Stopped OrbitWorker-" + id);
     }
 
     private void computeRangeSoA(OrbitUpdaterImpl.OrbitSoA soa, int low, int high) {

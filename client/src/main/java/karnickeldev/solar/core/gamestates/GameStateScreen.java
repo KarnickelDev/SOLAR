@@ -8,6 +8,4 @@ import com.badlogic.gdx.Screen;
  **/
 public interface GameStateScreen extends GameState, Screen {
 
-    GameStateID getGameStateID();
-
 }

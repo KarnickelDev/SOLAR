@@ -72,7 +72,7 @@ public class MainMenu implements UIComponent {
 
         singleplayer.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                GameStateManager.get().changeState(new GameplayLoadScreen(false, "localhost"));
+                GameStateManager.get().requestStateLoading(new GameplayLoadScreen(false, "localhost"));
             }
         });
 

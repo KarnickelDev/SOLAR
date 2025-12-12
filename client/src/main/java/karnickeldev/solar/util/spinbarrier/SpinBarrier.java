@@ -20,11 +20,15 @@ public class SpinBarrier implements SyncBarrier {
     public void await() {
         VarHandle.fullFence();
         int currentPhase = phase;
+
+        if(isTerminated()) return;
+
         if (arrived.incrementAndGet() == parties) {
             arrived.set(0);
             phase = currentPhase + 1;   // release all
         } else {
             while (phase == currentPhase) {
+                if(isTerminated()) break;
                 Thread.onSpinWait();
             }
         }
@@ -32,7 +36,18 @@ public class SpinBarrier implements SyncBarrier {
     }
 
     @Override
+    public boolean isTerminated() {
+        return phase == Integer.MAX_VALUE;
+    }
+
+    @Override
     public int getParties() {
         return parties;
+    }
+
+    @Override
+    public void forceTermination() {
+        phase = Integer.MAX_VALUE;
+        VarHandle.fullFence();
     }
 }

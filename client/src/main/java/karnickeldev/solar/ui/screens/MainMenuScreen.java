@@ -1,13 +1,14 @@
 package karnickeldev.solar.ui.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateID;
+import karnickeldev.solar.core.gamestates.LoadingPlan;
 import karnickeldev.solar.core.gamestates.GameStateScreen;
+import karnickeldev.solar.core.gamestates.LoadingPlanBuilder;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.ui.components.DebugToolTip;
 import karnickeldev.solar.ui.components.mainmenu.MainMenu;
@@ -24,8 +25,6 @@ public class MainMenuScreen implements GameStateScreen {
     private final SolarMain game;
     private final Viewport backgroundViewport;
 
-    private final ShapeRenderer shapeRenderer = new ShapeRenderer();
-
     private final MainMenu mainMenu = new MainMenu();
     private final OptionsMenu optionsMenu = new OptionsMenu();
 
@@ -39,6 +38,11 @@ public class MainMenuScreen implements GameStateScreen {
         this.game = solarMain;
         backgroundViewport = new ExtendViewport(UI.VIRTUAL_WIDTH,UI.VIRTUAL_HEIGHT);
         this.onInitRunnable = onInitRunnable;
+    }
+
+    @Override
+    public LoadingPlan preEnterLoadingPlan() {
+        return LoadingPlanBuilder.empty();
     }
 
     @Override
@@ -69,6 +73,11 @@ public class MainMenuScreen implements GameStateScreen {
         UI.getUIManager().removeComponent("multiplayer_menu");
 
         UI.getUIManager().hideAll();
+    }
+
+    @Override
+    public LoadingPlan postExitLoadingPlan() {
+        return LoadingPlanBuilder.empty();
     }
 
     float time = 0;
@@ -131,11 +140,6 @@ public class MainMenuScreen implements GameStateScreen {
 
     @Override
     public GameStateID getID() {
-        return GameStateID.MAIN_MENU;
-    }
-
-    @Override
-    public GameStateID getGameStateID() {
         return GameStateID.MAIN_MENU;
     }
 }

@@ -1,12 +1,14 @@
 package karnickeldev.solar.context;
 
 import karnickeldev.solar.network.net.core.ClientNetwork;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.scheduler.ClientScheduler;
+import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
+import karnickeldev.solar.scheduler.Scheduler;
 import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
@@ -18,7 +20,7 @@ import karnickeldev.solar.world.WorldManager;
 public class GameContextContainer {
 
     private final WorldManager<ClientWorld> worldManager;
-    private final Dispatcher dispatcher;
+    private final ClientScheduler scheduler;
 
     private final ClientNetwork clientNetwork;
     private final ClientNetworkListener clientListener;
@@ -33,12 +35,12 @@ public class GameContextContainer {
 
     private final ShaderManager shaderManager;
 
-    public GameContextContainer(boolean multiplayer, WorldManager<ClientWorld> worldManager, Dispatcher dispatcher,
+    public GameContextContainer(boolean multiplayer, WorldManager<ClientWorld> worldManager, ClientScheduler scheduler,
                                 ClientNetwork clientNetwork, ClientNetworkListener clientListener,
                                 ClientClock clientClock, PlanetoidRenderSystem rs, CameraInput cameraInput, PacketSyncLayer syncLayer, ShaderManager shaderManager) {
         this.multiplayer = multiplayer;
         this.worldManager = worldManager;
-        this.dispatcher = dispatcher;
+        this.scheduler = scheduler;
         this.clientNetwork = clientNetwork;
         this.clientListener = clientListener;
         this.clientClock = clientClock;
@@ -60,8 +62,8 @@ public class GameContextContainer {
         return worldManager;
     }
 
-    public Dispatcher getDispatcher() {
-        return dispatcher;
+    public ClientScheduler getScheduler() {
+        return scheduler;
     }
 
     public ClientNetwork getClientNetwork() {

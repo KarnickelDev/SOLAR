@@ -94,7 +94,8 @@ public class SimTestScreen implements Screen {
         gameContext.getSyncLayer().update(gameContext.getClock().getFrameClockTime());
 
         // probably better to do after processing input
-        gameContext.getDispatcher().update();
+        gameContext.getScheduler().main().update();
+        gameContext.getScheduler().timer().update(System.currentTimeMillis());
 
         backgroundViewport.apply();
         SolarMain.getInstance().getBatch().setColor(1,1,1,1);
@@ -149,7 +150,6 @@ public class SimTestScreen implements Screen {
 
     @Override
     public void hide() {
-        GameContext.get().getPlanetoidRenderSystem().shutdown();
         UI.getUIManager().hideComponent("debug");
         UI.getUIManager().removeComponent("escape_menu");
         UI.getUIManager().removeComponent("time_control");

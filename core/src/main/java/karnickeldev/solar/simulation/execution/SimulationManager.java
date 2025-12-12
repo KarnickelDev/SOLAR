@@ -1,7 +1,7 @@
 package karnickeldev.solar.simulation.execution;
 
 import karnickeldev.solar.context.ServerContext;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
@@ -249,7 +249,7 @@ public class SimulationManager implements Runnable {
         // shutdown logic
         running.set(false);
 
-        simulationThreadPool.shutdown();
+        //simulationThreadPool.shutdown();
         try {
             boolean orderlyShutdown = simulationThreadPool.awaitTermination(3, TimeUnit.SECONDS);
             if (!orderlyShutdown) {
@@ -260,6 +260,8 @@ public class SimulationManager implements Runnable {
         } catch (InterruptedException e) {
             simulationThreadPool.shutdownNow();
             Thread.currentThread().interrupt();
+        } catch (Exception remove) {
+
         }
 
         logShutdown(errno);

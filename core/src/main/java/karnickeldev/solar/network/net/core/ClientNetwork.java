@@ -2,6 +2,8 @@ package karnickeldev.solar.network.net.core;
 
 import karnickeldev.solar.network.packets.Packet;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface ClientNetwork extends Network {
 
     /**

@@ -23,7 +23,7 @@ public class TimestampHandler implements PacketHandler<TimestampPacket> {
             packet.getTargetSimSpeedIndex()
         );
 
-        gc.getDispatcher().dispatch(() -> {
+        gc.getScheduler().schedule(() -> {
             UIComponent cmp = UI.getUIManager().getComponent("time_control");
             if(cmp != null) ((TimeControl) cmp).setTargetSpeedIndex(packet.getTargetSimSpeedIndex());
         });

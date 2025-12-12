@@ -12,19 +12,15 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.Metadata;
-import karnickeldev.solar.assetmanager.Asset;
-import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.core.SolarMain;
-import karnickeldev.solar.network.net.dispatcher.DefaultDispatcher;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.core.gamestates.LoadingPlan;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.ui.core.SkinManager;
 import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.util.MathUtil;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.function.BooleanSupplier;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 /**
  * Displays a lightweight, animated loading screen
@@ -34,29 +30,28 @@ import java.util.function.BooleanSupplier;
  **/
 public class LoadingScreen implements Screen {
 
-    private static final int TARGET_FPS = 40;
-    private static final int FRAME_MS = 1000 / TARGET_FPS;
-
-    private static final float DEFAULT_FADEOUT_SECONDS = 0.8f;
-
-    private float progress_anim_speed = 3f; // fraction per second
-
     public static final StarField.Container background = StarField.generateRandom((short) (1024 * 4), 0.3f, 0.3f);
 
+    private static final int TARGET_FPS = 40;
+    private static final int FRAME_MS = 1000 / TARGET_FPS;
+    private static final float DEFAULT_FADEOUT_SECONDS = 0.5f;
+
+
+    // state keeping
     private final Runnable onComplete;
-    private final List<Runnable> asyncTasks;
-    private final List<BooleanSupplier> conditions;
-    private final Asset[] loadAssets;
+    private final List<LoadingPlan> plans;
+    private int currentPlan = 0;
 
-    private final Dispatcher dispatcher = new DefaultDispatcher();
-
+    private float progress_anim_speed = 3f; // fraction per second
     private float displayedProgress = 0f;
-    private float conditionsProgress = 0f;
-
     private final float fadeout_seconds;
+
     private float completionTimer = 0f;
     private boolean allDone = false;
 
+    private Consumer<Throwable> onFailure = null;
+
+    // render components
     private final GlyphLayout versionGlyphLayout = new GlyphLayout();
     private final ShapeRenderer shapeRenderer = new ShapeRenderer();
 
@@ -72,16 +67,19 @@ public class LoadingScreen implements Screen {
     private static final Color DARK_ORANGE = new Color(0x9D5E2AFF);
     private static final Color BEIGE = new Color(0xD1A46BFF);
 
-    public LoadingScreen(float fadeout_seconds, Runnable onComplete, List<Runnable> asyncTasks, List<BooleanSupplier> conditions, Asset... loadAssets) {
+    public LoadingScreen(float fadeout_seconds, Runnable onComplete, List<LoadingPlan> loadingPlans) {
         this.onComplete = Objects.requireNonNull(onComplete);
-        this.asyncTasks = asyncTasks == null ? List.of() : asyncTasks;
-        this.conditions = conditions == null ? List.of() : conditions;
-        this.loadAssets = loadAssets;
         this.fadeout_seconds = fadeout_seconds;
+
+        this.plans = new ArrayList<>(loadingPlans);
     }
 
-    public LoadingScreen(Runnable onComplete, List<Runnable> asyncTasks, List<BooleanSupplier> conditions, Asset... loadAssets) {
-        this(DEFAULT_FADEOUT_SECONDS, onComplete, asyncTasks, conditions, loadAssets);
+    public LoadingScreen(Runnable onComplete, List<LoadingPlan> loadingPlans) {
+        this(DEFAULT_FADEOUT_SECONDS, onComplete, loadingPlans);
+    }
+
+    public void setOnFailure(Consumer<Throwable> onFailure) {
+        this.onFailure = onFailure;
     }
 
     @Override
@@ -90,16 +88,11 @@ public class LoadingScreen implements Screen {
 
         StarField.loadAssets();
 
-        if(asyncTasks != null) {
-            for(Runnable task: asyncTasks) {
-                dispatcher.dispatch(task);
-            }
-        }
-
-        for(Asset asset: loadAssets) {
-            if(!AssetWrapper.getInstance().isLoaded(asset)) {
-                AssetWrapper.getInstance().loadGlobal(asset);
-            }
+        if(!plans.isEmpty()) {
+            plans.getFirst().begin();
+        } else {
+            allDone = true;
+            displayedProgress = 1f;
         }
     }
 
@@ -123,38 +116,45 @@ public class LoadingScreen implements Screen {
 
     private void updateLoadingLogic(float delta) {
 
-        long t0 = System.nanoTime();
-        boolean assetsDone = AssetWrapper.getInstance().update(FRAME_MS);
-        long t1 = System.nanoTime();
+        // execute loading plans
+        if(currentPlan < plans.size()) {
+            // IMPORTANT: check for any failure
+            LoadingPlan plan = plans.get(currentPlan);
+            boolean stepDone = plan.step(FRAME_MS);
 
-        boolean tasksDone = dispatcher.update(FRAME_MS - (int)((t1 - t0) / 1_000_000));
-
-        float condComplete = 0;
-        boolean conditionsDone = true;
-        for(BooleanSupplier cond : conditions) {
-            if(!cond.getAsBoolean()) {
-                conditionsDone = false;
-                break;
+            if(plan.failed()) {
+                triggerFailure(plan.getFailure());
+                return;
             }
-            condComplete += 1;
+            if(plan.isCancelled()) {
+                triggerFailure(new CancellationException("loading was cancelled"));
+                return;
+            }
+
+            // start next step if current step done
+            if(stepDone) {
+                currentPlan++;
+                if(currentPlan < plans.size()) {
+                    plans.get(currentPlan).begin();
+                }
+            }
         }
 
-        conditionsProgress = conditions.isEmpty() ? 1 : condComplete / conditions.size();
-
-        if(!allDone && assetsDone && tasksDone && conditionsDone) {
+        // loading done, start transition
+        if(!allDone && currentPlan >= plans.size()) {
             allDone = true;
             completionTimer = 0;
             progress_anim_speed = (1 - displayedProgress) / (0.85f*fadeout_seconds);
         }
 
+        // animate transition
         if(allDone) {
             completionTimer += delta;
-            if(completionTimer > fadeout_seconds) {
+            if(completionTimer >= fadeout_seconds) {
                 SolarMain.getInstance().getSettingsManager().clearFpsOverride();
                 onComplete.run();
             }
         }
-
     }
 
     private void drawLoadingScreen(float delta) {
@@ -225,9 +225,7 @@ public class LoadingScreen implements Screen {
         float height = 24;
         float width = 1920 - 2*edgePad;
 
-        float progress = MathUtil.clamp(
-            (dispatcher.getProgress() + AssetWrapper.getInstance().getAssetManager().getProgress() + conditionsProgress) / 3f,
-            0f, 1f);
+        float progress = getOverallProgress();
 
         if(!allDone) {
             displayedProgress += (progress - displayedProgress) * progress_anim_speed * delta;
@@ -245,6 +243,34 @@ public class LoadingScreen implements Screen {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.rect(edgePad, orbit1Radius, displayedProgress*width, height);
         shapeRenderer.end();
+    }
+
+    private float getOverallProgress() {
+        if(plans.isEmpty()) return 1f;
+
+        float perPlan = 1f / plans.size();
+        float sum = currentPlan * perPlan;  // plans that are done
+
+        if(currentPlan < plans.size()) {
+            sum += plans.get(currentPlan).getProgress() * perPlan;  // add progress of current plan
+        }
+
+        return sum;
+    }
+
+    private void triggerFailure(Throwable cause) {
+        Throwable finalCause = cause != null ? cause : new RuntimeException("Unknown loading failure");
+
+        for(int i = currentPlan; i < plans.size(); i++) plans.get(i).cancel();
+
+        if(onFailure != null) {
+            try {
+                onFailure.accept(finalCause);
+            } catch (Exception ignored) {}
+        }
+
+        allDone = true;
+        completionTimer = Float.MAX_VALUE;
     }
 
     @Override

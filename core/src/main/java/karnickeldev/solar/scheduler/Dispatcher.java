@@ -1,4 +1,4 @@
-package karnickeldev.solar.network.net.dispatcher;
+package karnickeldev.solar.scheduler;
 
 import java.util.List;
 
@@ -16,9 +16,6 @@ public interface Dispatcher {
      * @return True if all tasks done, False if there are tasks left in the queue
      */
     boolean update(int ms);
-
-    /** The current progress in range [0; 1] */
-    float getProgress();
 
     /** Initiates an orderly shutdown. No new tasks are accepted, and already dispatched tasks are finished*/
     void shutdown();

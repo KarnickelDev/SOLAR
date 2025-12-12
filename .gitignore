@@ -62,6 +62,7 @@ www-test/
 *.ipr
 *.iws
 *.iml
+!icon.svg
 
 ## Eclipse:
 .classpath

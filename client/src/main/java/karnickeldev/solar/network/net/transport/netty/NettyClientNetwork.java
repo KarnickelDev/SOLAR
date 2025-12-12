@@ -11,7 +11,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.network.net.core.ClientNetwork;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.net.transport.ClientNetworkTracker;

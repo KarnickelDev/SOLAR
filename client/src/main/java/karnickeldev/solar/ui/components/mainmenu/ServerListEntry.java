@@ -63,7 +63,7 @@ public class ServerListEntry extends Table {
 
         connect.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                GameStateManager.get().changeState(new GameplayLoadScreen(true, ip));
+                GameStateManager.get().requestStateLoading(new GameplayLoadScreen(true, ip));
             }
         });
 

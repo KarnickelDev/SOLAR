@@ -104,7 +104,7 @@ public class MultiplayerMenu implements UIComponent {
         TextButton join = new TextButton("Direct join", UI.skin());
         join.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                GameStateManager.get().changeState(new GameplayLoadScreen(true, ip.getText()));
+                GameStateManager.get().requestStateLoading(new GameplayLoadScreen(true, ip.getText()));
             }
         });
 

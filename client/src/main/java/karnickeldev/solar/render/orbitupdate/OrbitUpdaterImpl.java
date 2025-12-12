@@ -5,11 +5,13 @@ import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.spinbarrier.PhaserBarrier;
+import karnickeldev.solar.util.spinbarrier.SpinBarrier;
 import karnickeldev.solar.util.spinbarrier.SyncBarrier;
 import karnickeldev.solar.util.threadlayout.ThreadAffinity;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.util.threadlayout.ThreadContext;
 
+import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -187,9 +189,52 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
     }
 
     public void shutdown() {
+        if(!running) return;
         running = false;
-        // wake workers so they can break out
-        barrier.await();
+
+        Logger.log("[OrbitUpdater] ", "stopping...");
+
+        // tell workers to stop and break any waiting barrier
+        try {
+            barrier.forceTermination();
+        } catch (Throwable t) {
+            Logger.error("[OrbitUpdater] ", "Failed to force-terminate barrier", t);
+        }
+
+        // Interrupt alive worker threads to break any blocking operations
+        for (Thread t : workerThreads) {
+            if (t == null) continue;
+            try {
+                if (t.isAlive()) t.interrupt();
+            } catch (Throwable ignored) {}
+        }
+
+        // Join with a per-thread timeout; total join budget e.g. 2 seconds
+        final long totalTimeoutMs = 2000;
+        final long start = System.nanoTime();
+        for (Thread t : workerThreads) {
+            if (t == null) continue;
+            long elapsed = (System.nanoTime() - start) / 1_000_000;
+            long remaining = Math.max(0, totalTimeoutMs - elapsed);
+            if (!t.isAlive()) continue;
+            try {
+                t.join(remaining);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (Throwable ignored) {}
+        }
+
+        // As final check, log threads still alive
+        boolean ok = true;
+        for (Thread t : workerThreads) {
+            if (t != null && t.isAlive()) {
+                Logger.error("[OrbitUpdater] ", "Orbit worker failed to stop: " + t.getName());
+                ok = false;
+            }
+        }
+
+        if(ok) Logger.log("[OrbitUpdater] ", "shutdown complete");
     }
 
     public boolean isWarmupActive() {

@@ -5,10 +5,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
+import karnickeldev.solar.context.EngineContext;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.context.GameContextContainer;
 import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.core.gamestates.GameStateManager;
+import karnickeldev.solar.core.gamestates.LoadingPlanBuilder;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.settings.SettingsManager;
 import karnickeldev.solar.ui.core.SkinManager;
@@ -24,7 +26,7 @@ import java.util.List;
  */
 public class SolarMain extends Game {
 
-    private static boolean shuttingDown = false;
+    private static volatile boolean shuttingDown = false;
 
     private static SolarMain instance;
     private final SettingsManager settingsManager;
@@ -79,24 +81,29 @@ public class SolarMain extends Game {
 
         getSettingsManager().applySettings();
 
+        EngineContext.init(2);
+
         batch = new SpriteBatch();
 
         Gdx.input.setInputProcessor(getInputManager().getInputMultiplexer());
 
-        List<Runnable> list = new ArrayList<>();
-        list.add(SkinManager::init);
-
+        // load minimal assets
         AssetWrapper.getInstance().loadGlobal(Asset.GAME_ICON);
         AssetWrapper.getInstance().loadGlobal(Asset.STARS_ATLAS);
         AssetWrapper.getInstance().finishLoading();
 
+        LoadingPlanBuilder b = new LoadingPlanBuilder()
+            .syncTask(SkinManager::init)
+            .loadAsset(
+                Asset.STARRY_SKY_BACKGROUND_TILES,
+                Asset.MAIN_MENU_BACKGROUND_SCENERY,
+                Asset.DEBUG_CIRCLE
+            );
+
+        // TODO: load more of the above during loading screen
         setScreen(new LoadingScreen(0f,
-            () -> GameStateManager.get().changeState(new MainMenuScreen(this)),
-            list, null,
-            Asset.STARRY_SKY_BACKGROUND_TILES,
-            Asset.MAIN_MENU_BACKGROUND_SCENERY,
-            Asset.DEBUG_CIRCLE
-        ));
+            () -> GameStateManager.get().requestStateLoading(new MainMenuScreen(this)),
+            List.of(b.build())));
 
         Logger.log(Logger.STARTUP, "Startup complete");
     }
@@ -132,12 +139,24 @@ public class SolarMain extends Game {
                 GameContextContainer ctx = GameContext.get();
 
                 if (ctx.getClientNetwork() != null) {
-                    if(ctx.getClientNetwork().isConnected()) ctx.getClientNetwork().disconnect();
+                    if(ctx.getClientNetwork().isConnected()) {
+                        ctx.getClientNetwork().disconnect();
+                    }
                 }
 
-                ctx.getDispatcher().shutdown();
-                ctx.getDispatcher().update(30_000);
+                ctx.getPlanetoidRenderSystem().shutdown();
 
+                ctx.getScheduler().shutdown();
+
+                long nowMS = System.currentTimeMillis();
+                ctx.getScheduler().timer().update(nowMS);
+                long delta = System.currentTimeMillis() - nowMS;
+
+                int remainingMS = (int) Math.max(500, 30_000 - delta);
+                ctx.getScheduler().main().update(remainingMS);
+
+                ctx.getScheduler().main().shutdownNow();
+                ctx.getScheduler().async().shutdownNow();
             }
 
             if (ServerContext.isSet()) {

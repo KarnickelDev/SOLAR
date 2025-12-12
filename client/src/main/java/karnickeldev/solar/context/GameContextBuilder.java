@@ -5,8 +5,7 @@ import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
 import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.network.net.core.ServerNetwork;
-import karnickeldev.solar.network.net.dispatcher.DefaultDispatcher;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.scheduler.*;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.net.listener.DefaultServerNetworkListener;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
@@ -39,13 +38,14 @@ public class GameContextBuilder {
         WorldManager<ClientWorld> worldManager = new WorldManager<>(new ClientWorld(0));
 
         ClientNetworkListener clientListener = new DefaultClientNetworkListener(worldManager);
-        Dispatcher dispatcher = new DefaultDispatcher();
+
+        ClientScheduler scheduler = new ClientScheduler();
 
         ClientClock clientClock = new ClientClock();
 
         PacketSyncLayer syncLayer = new PacketSyncLayer();
 
-        ClientNetwork clientNetwork = new NettyClientNetwork(host, port, clientListener, dispatcher, syncLayer, clientClock);
+        ClientNetwork clientNetwork = new NettyClientNetwork(host, port, clientListener, scheduler.main(), syncLayer, clientClock);
 
         PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch(), threadLayout);
 
@@ -58,7 +58,7 @@ public class GameContextBuilder {
         return new GameContextContainer(
             true,
             worldManager,
-            dispatcher,
+            scheduler,
             clientNetwork,
             clientListener,
             clientClock,
@@ -70,10 +70,11 @@ public class GameContextBuilder {
     }
 
     public static GameContextContainer buildClientLocalServer(ClientThreadLayout threadLayout) {
-        WorldManager<ClientWorld> worldManager = new WorldManager<>(new ClientWorld(0));
+        WorldManager<ClientWorld> worldManager = new WorldManager<>(new ClientWorld(0)); // TODO: remove EmptyWorld, no longer needed
 
         ClientNetworkListener clientListener = new DefaultClientNetworkListener(worldManager);
-        Dispatcher dispatcher = new DefaultDispatcher();
+
+        ClientScheduler scheduler = new ClientScheduler();
 
         PacketSyncLayer syncLayer = new PacketSyncLayer();
 
@@ -81,15 +82,15 @@ public class GameContextBuilder {
 
         ServerNetworkListener serverListener = new DefaultServerNetworkListener();
 
-        Dispatcher serverDispatcher = new DefaultDispatcher();
+        Scheduler serverDispatcher = new DefaultScheduler();
 
         ClientClock time = new ClientClock();
 
         BlockingQueue<Packet> toServer = new LinkedBlockingQueue<>(128);
         BlockingQueue<Packet> fromServer = new LinkedBlockingQueue<>(128);
 
-        clientNetwork = new LocalClientNetwork(toServer, fromServer, clientListener, dispatcher);
-        ServerNetwork serverNetwork = new LocalServerNetwork(toServer, fromServer, serverListener, serverDispatcher);
+        clientNetwork = new LocalClientNetwork(toServer, fromServer, clientListener, scheduler.main());
+        ServerNetwork serverNetwork = new LocalServerNetwork(toServer, fromServer, serverListener, serverDispatcher.main());
 
         Server server = LocalServer.create(serverNetwork, serverDispatcher, threadLayout.getSimulationContext());
         ServerContext.setContext(ServerContextBuilder.buildServerContext(server));
@@ -109,7 +110,7 @@ public class GameContextBuilder {
         return new GameContextContainer(
             false,
             worldManager,
-            dispatcher,
+            scheduler,
             clientNetwork,
             clientListener,
             time,

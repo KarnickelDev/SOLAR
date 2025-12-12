@@ -1,14 +1,9 @@
 package karnickeldev.solar.ui.screens;
 
-import karnickeldev.solar.context.GameContext;
-import karnickeldev.solar.context.GameContextBuilder;
-import karnickeldev.solar.context.GameContextContainer;
-import karnickeldev.solar.context.ServerContext;
+import karnickeldev.solar.context.*;
 import karnickeldev.solar.core.SimTestScreen;
 import karnickeldev.solar.core.SolarMain;
-import karnickeldev.solar.core.gamestates.GameState;
-import karnickeldev.solar.core.gamestates.GameStateID;
-import karnickeldev.solar.core.gamestates.GameStateManager;
+import karnickeldev.solar.core.gamestates.*;
 import karnickeldev.solar.ecs.components.ComponentType;
 import karnickeldev.solar.network.net.handlers.*;
 import karnickeldev.solar.network.packets.PacketTypes;
@@ -18,9 +13,11 @@ import karnickeldev.solar.ui.core.UIManager;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 
-import java.util.ArrayList;
+import java.net.ConnectException;
 import java.util.List;
-import java.util.function.BooleanSupplier;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author KarnickelDev
@@ -37,108 +34,110 @@ public final class GameplayLoadScreen implements GameState {
     }
 
     @Override
+    public LoadingPlan preEnterLoadingPlan() {
+        LoadingPlanBuilder plan = new LoadingPlanBuilder();
+
+        // IMPORTANT: MUST BE FIRST STEP!!!
+        if(multiplayer) {
+            ClientThreadLayout threadLayout = ClientThreadLayout.create(1,true, true);
+            GameContext.setContext(GameContextBuilder.buildClientDedicatedServer(ip, 25566, threadLayout));
+            Logger.log(Logger.STARTUP, "Using ThreadLayout: " + threadLayout);
+        } else {
+            ClientThreadLayout threadLayout = ClientThreadLayout.create(1,true, false);
+            GameContext.setContext(GameContextBuilder.buildClientLocalServer(threadLayout));
+            Logger.log(Logger.STARTUP, "Using ThreadLayout: " + threadLayout);
+        }
+
+        plan.syncTask(() -> {
+                if (multiplayer) PacketTypes.registerCommon();
+
+                PacketTypes.PONG.registerHandler(new PingPongHandler());
+                PacketTypes.TIMESTAMP.registerHandler(new TimestampHandler());
+                PacketTypes.ECS_UPDATE.registerHandler(new ECSUpdateHandler());
+                PacketTypes.ENTITY_LIFECYCLE.registerHandler(new EntityLifecycleHandler());
+                PacketTypes.WORLD_UPDATE.registerHandler(new WorldUpdateHandler());
+                PacketTypes.SERVER_PERFORMANCE_METRICS.registerHandler(new ServerPerformanceMetricsHandler());
+                PacketTypes.FULL_SNAPSHOT.registerHandler(new FullSnapshotHandler());
+            })
+            .syncTask(ComponentType::registerSnapshotDeserializers)
+            .syncTask((BackgroundStarRenderer::loadAssets))
+            .syncTask(() -> {
+                if (GameContext.get().isSingleplayer()) {
+                    ServerContext.get().getServer().start();
+                }
+            });
+//            .syncTask(() -> {
+//                boolean success = GameContext.get().getClientNetwork().connect();
+//                if (!success) {
+//                    throw new RuntimeException("Connection failed");
+//                }
+//            })
+
+        // connect task
+        plan.asyncTask(() -> {
+            if(!GameContext.get().getClientNetwork().connect()) throw new RuntimeException("Failed to connect to the server");
+        });
+
+        plan.waitUntil(() -> GameContext.get().getClientNetwork().isConnected())
+            .waitUntil(() -> {
+                GameContextContainer ctx = GameContext.get();
+                boolean worldReady = ctx.getWorldManager().containsWorld(1);
+                if (worldReady) return true;
+
+                ctx.getClock().updateFrameClockTime();
+
+                // do not use current here, we manually subtract PacketSyncDelay
+                ctx.getSyncLayer().update(ctx.getClock().getFrameClockTime());
+
+                // probably better to do after processing input
+                ctx.getScheduler().main().update();
+
+                OrbitUpdater p = ctx.getPlanetoidRenderSystem().orbitUpdater;
+                if (ctx.getWorldManager().containsWorld(1)) {
+                    p.prepare(GameContext.get().getWorldManager().getWorld(1).getECS());
+                    return true;
+                }
+
+                return false;
+            })
+            .waitUntil(() -> !GameContext.get().getPlanetoidRenderSystem().orbitUpdater.isWarmupActive())
+            ;
+
+        return plan.build();
+    }
+
+    @Override
     public void enter() {
-        List<Runnable> tasks = new ArrayList<>();
-
-        tasks.add(() -> {
-            if(multiplayer) {
-                ClientThreadLayout threadLayout = ClientThreadLayout.create(1,true, true);
-                GameContext.setContext(GameContextBuilder.buildClientDedicatedServer(ip, 25566, threadLayout));
-                Logger.log(Logger.STARTUP, "Using ThreadLayout: " + threadLayout);
-            } else {
-                ClientThreadLayout threadLayout = ClientThreadLayout.create(1,true, false);
-                GameContext.setContext(GameContextBuilder.buildClientLocalServer(threadLayout));
-                Logger.log(Logger.STARTUP, "Using ThreadLayout: " + threadLayout);
-            }
-        });
-
-        tasks.add(() -> {
-            if(multiplayer) PacketTypes.registerCommon();
-
-            PacketTypes.PONG.registerHandler(new PingPongHandler());
-            PacketTypes.TIMESTAMP.registerHandler(new TimestampHandler());
-            PacketTypes.ECS_UPDATE.registerHandler(new ECSUpdateHandler());
-            PacketTypes.ENTITY_LIFECYCLE.registerHandler(new EntityLifecycleHandler());
-            PacketTypes.WORLD_UPDATE.registerHandler(new WorldUpdateHandler());
-            PacketTypes.SERVER_PERFORMANCE_METRICS.registerHandler(new ServerPerformanceMetricsHandler());
-            PacketTypes.FULL_SNAPSHOT.registerHandler(new FullSnapshotHandler());
-        });
-
-        tasks.add(ComponentType::registerSnapshotDeserializers);
-
-        tasks.add(BackgroundStarRenderer::loadAssets);
-
-        tasks.add(() -> {
-            if(GameContext.get().isSingleplayer()) {
-                ServerContext.get().getServer().start();
-            }
-        });
-
-
-        tasks.add(() -> {
-            boolean success = GameContext.get().getClientNetwork().connect();
-            if(!success) {
-                SolarMain.getInstance().setScreen(
-                    new LoadingScreen(
-                        () -> GameStateManager.get().changeState(
-                            new MainMenuScreen(SolarMain.getInstance(), () -> UIManager.get().showMessage("Connection failed!"))
-                        ),
-                        null, null
-                    )
-                );
-            }
-        });
-
-        List<BooleanSupplier> conditions = new ArrayList<>();
-
-        conditions.add(() -> {
-            GameContextContainer ctx = GameContext.get();
-            boolean worldReady = ctx.getWorldManager().containsWorld(1);
-            if(worldReady) return true;
-
-            ctx.getClock().updateFrameClockTime();
-
-            // do not use current here, we manually subtract PacketSyncDelay
-            ctx.getSyncLayer().update(ctx.getClock().getFrameClockTime());
-
-            // probably better to do after processing input
-            ctx.getDispatcher().update();
-
-            OrbitUpdater p = ctx.getPlanetoidRenderSystem().orbitUpdater;
-            if(ctx.getWorldManager().containsWorld(1)) {
-                p.prepare(GameContext.get().getWorldManager().getWorld(1).getECS());
-                return true;
-            }
-
-            return false;
-        });
-
-        conditions.add(() -> !GameContext.get().getPlanetoidRenderSystem().orbitUpdater.isWarmupActive());
-
-        SolarMain.getInstance().setScreen(
-            new LoadingScreen(
-                () -> SolarMain.getInstance().setScreen(new SimTestScreen()),
-                tasks,
-                conditions
-            )
-        );
+        SolarMain.getInstance().setScreen(new SimTestScreen());
     }
 
     @Override
     public void exit() {
+
+    }
+
+    @Override
+    public LoadingPlan postExitLoadingPlan() {
+        LoadingPlanBuilder plan = new LoadingPlanBuilder();
+
         GameContextContainer gameCtx = GameContext.get();
+        plan.syncTask(() -> gameCtx.getPlanetoidRenderSystem().shutdown());
+        plan.asyncTask(() -> gameCtx.getClientNetwork().disconnect());
+        plan.syncTask(() -> {
+            gameCtx.getScheduler().shutdown();
+            gameCtx.getScheduler().main().update(30_000);
+            gameCtx.getScheduler().timer().update(System.currentTimeMillis());
+        });
 
-        gameCtx.getClientNetwork().disconnect();
+        plan.syncTask(() -> {
+            if(gameCtx.isSingleplayer()) {
+                ServerContext.get().getServer().stop();
+            }
+        });
 
-        gameCtx.getDispatcher().shutdown();
-        gameCtx.getDispatcher().update(30_000);
+        plan.syncTask(GameContext::clear);
 
-        if(gameCtx.isSingleplayer()) {
-            ServerContext.get().getServer().stop();
-        }
-
-
-        GameContext.clear();
+        return plan.build();
     }
 
     @Override

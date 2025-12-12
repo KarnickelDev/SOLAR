@@ -9,4 +9,8 @@ public interface SyncBarrier {
     void await();
 
     int getParties();
+
+    void forceTermination();
+
+    boolean isTerminated();
 }

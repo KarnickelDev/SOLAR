@@ -1,6 +1,6 @@
 package karnickeldev.solar.simulation.execution;
 
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.util.threadlayout.ThreadContext;

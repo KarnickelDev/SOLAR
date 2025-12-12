@@ -11,7 +11,6 @@ import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.ui.components.UIComponent;
 import karnickeldev.solar.ui.components.optionsmenu.OptionsMenu;
 import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.ui.screens.LoadingScreen;
 import karnickeldev.solar.ui.screens.MainMenuScreen;
 
 /**
@@ -80,10 +79,7 @@ public class EscapeMenu implements UIComponent {
 
         back.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                SolarMain.getInstance().setScreen(new LoadingScreen(
-                    () -> GameStateManager.get().changeState(new MainMenuScreen(SolarMain.getInstance())),
-                    null, null
-                ));
+                GameStateManager.get().requestStateLoading(new MainMenuScreen(SolarMain.getInstance()));
             }
         });
 

@@ -1,7 +1,7 @@
 package karnickeldev.solar.network.net.transport.local;
 
 import karnickeldev.solar.network.net.core.ServerNetwork;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
 import karnickeldev.solar.network.packets.Packet;

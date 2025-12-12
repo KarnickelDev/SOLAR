@@ -3,10 +3,13 @@ package karnickeldev.solar.network.server;
 import karnickeldev.solar.ecs.EntityFactory;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.network.net.core.ServerNetwork;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.physics.Units;
+import karnickeldev.solar.scheduler.Scheduler;
+import karnickeldev.solar.simulation.execution.SimulationManagerThread;
 import karnickeldev.solar.simulation.execution.SimulationTask;
 import karnickeldev.solar.util.MathUtil;
+import karnickeldev.solar.util.threadlayout.ThreadContext;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.WorldManager;
 
@@ -14,13 +17,14 @@ import java.util.Objects;
 
 public class DedicatedServer extends Server implements GameServer {
 
-    public static DedicatedServer create(ServerNetwork serverNetwork, Dispatcher dispatcher) {
+    public static DedicatedServer create(ServerNetwork serverNetwork, Scheduler scheduler, ThreadContext threadContext) {
         WorldManager<ServerWorld> worldManager = new WorldManager<>(ServerWorld.create(0, serverNetwork));
-        return new DedicatedServer(serverNetwork, worldManager, dispatcher);
+        SimulationManagerThread simThread = new SimulationManagerThread(threadContext.getThreadCount(), worldManager, scheduler.main(), threadContext);
+        return new DedicatedServer(serverNetwork, worldManager, simThread, scheduler);
     }
 
-    private DedicatedServer(ServerNetwork serverNetwork, WorldManager<ServerWorld> worldManager, Dispatcher dispatcher) {
-        super(serverNetwork, worldManager, dispatcher);
+    private DedicatedServer(ServerNetwork serverNetwork, WorldManager<ServerWorld> worldManager, SimulationManagerThread simThread, Scheduler scheduler) {
+        super(serverNetwork, worldManager, simThread, scheduler);
 
         Objects.requireNonNull(this.serverNetwork);
 

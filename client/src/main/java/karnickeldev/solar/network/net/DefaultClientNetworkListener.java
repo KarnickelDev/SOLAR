@@ -2,6 +2,8 @@ package karnickeldev.solar.network.net;
 
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.core.gamestates.GameState;
+import karnickeldev.solar.core.gamestates.GameStateID;
 import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.packets.FullSnapshotRequestPacket;
@@ -26,11 +28,10 @@ public class DefaultClientNetworkListener implements ClientNetworkListener {
     @Override
     public void onDisconnected() {
         Logger.log("disconnected from server");
-        SolarMain.getInstance().setScreen(new LoadingScreen(
-            () -> GameStateManager.get().changeState(
-                new MainMenuScreen(SolarMain.getInstance(), () -> UIManager.get().showMessage("Connection failed"))
-            ), null, null
-        ));
+
+        if(GameStateManager.get().getState().getID() == GameStateID.GAMEPLAY) {
+            GameStateManager.get().requestStateLoading(new MainMenuScreen(SolarMain.getInstance(), () -> UIManager.get().showMessage("Connection failed")));
+        }
     }
 
     @Override

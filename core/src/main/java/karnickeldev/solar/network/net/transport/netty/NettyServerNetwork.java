@@ -10,7 +10,7 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import karnickeldev.solar.network.net.core.ServerNetwork;
-import karnickeldev.solar.network.net.dispatcher.Dispatcher;
+import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
 import karnickeldev.solar.network.packets.HandshakePacket;
@@ -132,15 +132,7 @@ public class NettyServerNetwork implements ServerNetwork {
         }
     }
 
-    private static class PacketContext {
-        private final int clientId;
-        private final Packet packet;
-
-        protected PacketContext(int clientId, Packet pkt) {
-            this.clientId = clientId;
-            this.packet = pkt;
-        }
-    }
+    private record PacketContext(int clientId, Packet packet) {}
 
     private class ServerHandler extends SimpleChannelInboundHandler<Packet> {
         @Override

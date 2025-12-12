@@ -9,4 +9,9 @@ public enum GameStateID {
     MAIN_MENU,
     GAMEPLAY,
     ;
+
+    @Override
+    public String toString() {
+        return name();
+    }
 }
