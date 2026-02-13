@@ -2,6 +2,7 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -14,8 +15,12 @@ import karnickeldev.solar.network.packets.TestCamPacket;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.StarField;
+import karnickeldev.solar.render.background.BackgroundGridRenderer;
+import karnickeldev.solar.render.background.RingRenderer;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
+import karnickeldev.solar.render.core.RenderPipeline;
+import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.components.DebugToolTip;
 import karnickeldev.solar.ui.components.escapemenu.EscapeMenu;
 import karnickeldev.solar.ui.components.game.DateDisplay;
@@ -31,11 +36,19 @@ public class SimTestScreen implements Screen {
     private final Viewport backgroundViewport;
     private final Viewport screenViewport;
 
+    private final RenderPipeline renderPipeline;
+    private final RendererContext renderCtx;
+
     public SimTestScreen() {
         backgroundViewport = new ExtendViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT);
         screenViewport = new ScreenViewport();
 
         cameraInput = GameContext.get().getCameraInput();
+
+        renderCtx = new RendererContext(SolarMain.getInstance().getBatch(), new ShapeRenderer());
+        renderPipeline = new RenderPipeline();
+        renderPipeline.add(new BackgroundGridRenderer());
+        renderPipeline.add(new RingRenderer());
     }
 
     SimpleStarRenderer starRenderer;
@@ -86,7 +99,7 @@ public class SimTestScreen implements Screen {
 
         // camera
         gameContext.getCameraInput().processInputs();
-        clientWorldManager.getActiveWorld().getCamera().update();
+        clientWorldManager.getActiveWorld().getCamera().update(delta);
 
         gameContext.getClock().updateFrameClockTime();
 
@@ -102,9 +115,13 @@ public class SimTestScreen implements Screen {
         SolarMain.getInstance().getBatch().setProjectionMatrix(backgroundViewport.getCamera().combined);
         SolarMain.getInstance().getBatch().begin();
         SolarMain.getInstance().getBatch().draw(StarField.starFieldBuffer.getColorBufferTexture(),0,0);
-        //SolarMain.getInstance().getBatch().end();
+        SolarMain.getInstance().getBatch().end();
 
         screenViewport.apply();
+
+        renderPipeline.render(renderCtx, delta);
+
+        SolarMain.getInstance().getBatch().begin();
         gameContext.getPlanetoidRenderSystem().renderPlanetoids();
         SolarMain.getInstance().getBatch().end();
 

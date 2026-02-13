@@ -8,6 +8,8 @@ public class MathUtil {
 
     private static final Random random = new Random(System.currentTimeMillis());
 
+    private static final double PI_2 = Math.PI * 2;
+
     public static float clamp(float value, float min, float max) {
         return Math.min(Math.max(min, value), max);
     }
@@ -21,7 +23,7 @@ public class MathUtil {
     }
 
     public static float getStandardNormalDistribution(float x) {
-        return (float) ((1f / 2 * Math.sqrt(2f * Math.PI)) * Math.pow(Math.E, -0.5f * (x * x)));
+        return (float) ((1f / 2 * Math.sqrt(PI_2)) * Math.pow(Math.E, -0.5f * (x * x)));
     }
 
     public static float random(float min, float max) {
@@ -51,7 +53,13 @@ public class MathUtil {
 
     public static float normalizeRotationDeg(float degrees) {
         float angle = degrees % 360f;
-        if (angle < 0f) angle += 360f;
+        while(angle < 0f) angle += 360f;
+        return angle;
+    }
+
+    public static double normalizeRotationRad(double radians) {
+        double angle = radians % PI_2;
+        while(angle < 0f) angle += PI_2;
         return angle;
     }
 

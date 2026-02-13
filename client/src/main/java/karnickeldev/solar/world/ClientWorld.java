@@ -1,6 +1,5 @@
 package karnickeldev.solar.world;
 
-import com.badlogic.gdx.Gdx;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
@@ -14,7 +13,7 @@ public class ClientWorld extends World {
 
     public ClientWorld(int worldId) {
         this.worldId = worldId;
-        camera = new FloatingOriginCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), ecs.hcs);
+        camera = new FloatingOriginCamera();
     }
 
     @Override

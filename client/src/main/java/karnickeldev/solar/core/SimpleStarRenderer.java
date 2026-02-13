@@ -91,6 +91,7 @@ public class SimpleStarRenderer {
         fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,512, 512, false));
         fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,1024, 1024, false));
         fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,1024*4, 1024*4, false));
+        fboLODs.add(new FrameBuffer(Pixmap.Format.RGBA8888,1024*8, 1024*8, false));
     }
 
     private static double noise(double x, double y, double scale) {
@@ -169,7 +170,7 @@ public class SimpleStarRenderer {
         coronaShader.setUniformf("u_temperature", T);
         coronaShader.setUniformf("u_time", (float) elapsedTime);
         coronaShader.setUniformf("u_zoom",
-            (float) GameContext.get().getWorldManager().getActiveWorld().getCamera().getRenderZoom()
+            (float) GameContext.get().getWorldManager().getActiveWorld().getCamera().getZoom()
         );
 
         batch.draw(whiteTex, 0, 0, fbSize, fbSize);

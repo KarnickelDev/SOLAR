@@ -83,14 +83,21 @@ void main() {
     vec3 color = starColor(u_temperature, total);
 
     // smooth edge
-    float edgeAlpha = 1.0;
-    if(u_edgeSmoothing > 0.0) {
-        edgeAlpha = smoothstep(1.0, 1.0 - u_edgeSmoothing, dist);
-    }
+    float d = dist - 1.0;
+    // Screen-space AA width
+    float aa = fwidth(dist);
+    // 1 inside disk, smoothly falls to 0 just outside
+    float edgeAlpha = 1.0 - smoothstep(-aa, aa, d);
 
     float alpha = min(edgeAlpha, 0.7);
 
     vec3 corona = blackBody(u_temperature) * 1.1;
     color = mix(corona, color, alpha);
+
+    // limb darkening
+    float mu = sqrt(clamp(1.0 - dist*dist, 0.0, 1.0));
+    float limb = mix(0.85, 1.0, mu);
+    color *= limb;
+
     gl_FragColor = vec4(posterize(color, 10.0) * edgeAlpha, edgeAlpha);
 }

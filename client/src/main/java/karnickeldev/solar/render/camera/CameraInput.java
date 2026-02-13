@@ -3,35 +3,30 @@ package karnickeldev.solar.render.camera;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.utils.TimeUtils;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
+import karnickeldev.solar.render.background.BackgroundGridRenderer;
+import karnickeldev.solar.render.background.RingRenderer;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.core.UIManager;
-import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
 public class CameraInput extends InputAdapter {
 
-    private static final float ZOOM_SPEED = 0.04f;
-    private static final float ZOOM_ACCELERATION = 1.12f;
-    private static final float MIN_ZOOM = 1e-5f;
-    private static final float MAX_ZOOM = 1e12f;
-    private static final float ROTATION_SPEED = 50f;
-    private long lastScrollTime = 0;
-    private int scrollCount = 0;
+    private static final float ROTATION_SPEED = (float) Math.toRadians(90);
+    private static final float ZOOM_KEY_SPEED = 14f;
+    private static final float ZOOM_SCROLL_SPEED = 0.6f;
+
     private int lastMouseX = 0, lastMouseY = 0;
     private boolean dragging = false;
 
     private final WorldManager<ClientWorld> worldManager;
     private FloatingOriginCamera camera;
     private ClientECS ecs;
-
-    long lastKeyboardZoom = 0;
 
     public CameraInput(WorldManager<ClientWorld> worldManager) {
         this.worldManager = worldManager;
@@ -52,53 +47,25 @@ public class CameraInput extends InputAdapter {
 
         setWorld(worldManager.getActiveWorld());
 
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            camera.move(FloatingOriginCamera.UP);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            camera.move(FloatingOriginCamera.LEFT);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            camera.move(FloatingOriginCamera.DOWN);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            camera.move(FloatingOriginCamera.RIGHT);
-        }
+        CameraPlayerInput signal = camera.getPlayerInput();
+
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) signal.dirY = 1;
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) signal.dirY = -1;
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) signal.dirX = -1;
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) signal.dirX = 1;
 
         if (Gdx.input.isKeyPressed(Input.Keys.E)) {
-            camera.rotate(-ROTATION_SPEED);
+            signal.rotationRad = -ROTATION_SPEED * Gdx.graphics.getDeltaTime();
         }
         if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
-            camera.rotate(+ROTATION_SPEED);
+            signal.rotationRad = +ROTATION_SPEED * Gdx.graphics.getDeltaTime();
         }
 
-        Vector2D screenCenter = new Vector2D(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()).scale(0.5);
-        long now = System.nanoTime();
-
-        if(now - lastKeyboardZoom > 60_000_000) {
-            if(Gdx.input.isKeyPressed(Input.Keys.UP)) {
-                double currentZoom = camera.getTargetZoom();
-
-                float scrollDir = -1;
-                double factor = ZOOM_SPEED * currentZoom * Math.pow(ZOOM_ACCELERATION, 4);
-                double zoom = MathUtil.clamp(currentZoom + (scrollDir * factor), MIN_ZOOM, MAX_ZOOM);
-
-                camera.zoomToward(zoom, screenCenter);
-                lastKeyboardZoom = now;
-            }
-
-            if(Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-                double currentZoom = camera.getTargetZoom();
-
-                float scrollDir = +1;
-                double factor = ZOOM_SPEED * currentZoom * Math.pow(ZOOM_ACCELERATION, 4);
-                double zoom = MathUtil.clamp(currentZoom + (scrollDir * factor), MIN_ZOOM, MAX_ZOOM);
-
-                camera.zoomToward(zoom, screenCenter);
-                lastKeyboardZoom = now;
-            }
+        if(Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            float scrollDir = Gdx.input.isKeyPressed(Input.Keys.UP) ? -1 : +1;
+            signal.zoomImpulse += scrollDir * ZOOM_KEY_SPEED * Gdx.graphics.getDeltaTime();
+            signal.zoomCursor.set(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f);
         }
-
     }
 
     @Override
@@ -110,9 +77,18 @@ public class CameraInput extends InputAdapter {
                     GameContext.get().getShaderManager().reload();
                     return true;
                 }
-            } else {
-                camera.setPosition(0, 0);
-                return true;
+            }
+        }
+
+        if(keycode == Input.Keys.G) {
+            if(Gdx.input.isKeyPressed(Input.Keys.F3)) {
+                BackgroundGridRenderer.toggleRender();
+            }
+        }
+
+        if(keycode == Input.Keys.C) {
+            if(Gdx.input.isKeyPressed(Input.Keys.F3)) {
+                RingRenderer.toggleRender();
             }
         }
 
@@ -166,23 +142,11 @@ public class CameraInput extends InputAdapter {
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
-        long now = TimeUtils.millis();
+        CameraPlayerInput signal = camera.getPlayerInput();
 
-        if (now - lastScrollTime < 150) {
-            scrollCount++; // Fast consecutive scrolls
-        } else {
-            scrollCount = 1; // Reset if too slow
-        }
+        signal.zoomImpulse += amountY * ZOOM_SCROLL_SPEED;
+        signal.zoomCursor.set(Gdx.input.getX(), Gdx.input.getY());
 
-        lastScrollTime = now;
-
-        double currentZoom = camera.getTargetZoom();
-
-        float scrollDir = Math.signum(amountY);
-        double factor = ZOOM_SPEED * currentZoom * Math.pow(ZOOM_ACCELERATION, scrollCount);
-        double zoom = MathUtil.clamp(currentZoom + (scrollDir * factor), MIN_ZOOM, MAX_ZOOM);
-
-        camera.zoomToward(zoom, new Vector2D(Gdx.input.getX(), Gdx.input.getY()));
         return true;
     }
 
@@ -197,27 +161,18 @@ public class CameraInput extends InputAdapter {
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (dragging) {
-            int dx = screenX - lastMouseX;
-            int dy = screenY - lastMouseY;
+        if (!dragging) return false;
 
-            // Convert mouse delta to world-space direction
-            double cos = Math.cos(Math.toRadians(camera.getRotation()));
-            double sin = Math.sin(Math.toRadians(camera.getRotation()));
+        CameraPlayerInput signal = camera.getPlayerInput();
+        signal.clear();
+        signal.dirX = -(screenX - lastMouseX);
+        signal.dirY = screenY - lastMouseY;
+        signal.panning = true;
 
-            double worldDX = -dx * cos + dy * sin; // x axis mirrored, so formula is -(dx * cos - dy * sin)
-            double worldDY = dx * sin + dy * cos;
+        lastMouseX = screenX;
+        lastMouseY = screenY;
 
-            // Apply zoom scaling
-            Vector2D moveVec = new Vector2D(worldDX * camera.getZoom(), worldDY * camera.getZoom());
-
-            camera.move(moveVec);
-
-            lastMouseX = screenX;
-            lastMouseY = screenY;
-            return true;
-        }
-        return false;
+        return true;
     }
 
     @Override

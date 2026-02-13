@@ -8,6 +8,6 @@ import karnickeldev.solar.ecs.ClientECS;
  **/
 record OrbitFrameContext(
     ClientECS ecs,
-    double simTimeSec,
+    long simTimeMicros,
     OrbitUpdaterImpl.FrameData nextFrameData
 ) {}

@@ -99,7 +99,7 @@ public final class OrbitWorker implements Runnable {
                         orbitSoA.a[i] = orbitDataRef.getSemiMajorAxis(ent) * Units.toSU(1, Units.Length.AU);
                         orbitSoA.mu[i] = Units.G_KM_TON * mass.getMass(p);
                         orbitSoA.e[i] = orbitDataRef.eccentricity[ent];
-                        orbitSoA.t0[i] = orbitDataRef.t0[ent];
+                        orbitSoA.t0Micros[i] = orbitDataRef.t0[ent];
                         orbitSoA.omega[i] = orbitDataRef.omega[ent];
                     }
                 }
@@ -135,7 +135,7 @@ public final class OrbitWorker implements Runnable {
         int count = high - low;
         int vecLen = SPECIES.length();
 
-        double simTimeSec = parent.getOrbitFrameCtx().simTimeSec();
+        long simTimeMicros = parent.getOrbitFrameCtx().simTimeMicros();
 
         // Step 1: scalar Kepler solve (we compute E and theta into local arrays)
         for (int i = 0; i < count; i++) {
@@ -144,7 +144,7 @@ public final class OrbitWorker implements Runnable {
             double e = soa.e[idx];
             double mu = soa.mu[idx];
             double n = Math.sqrt(mu / (a * a * a));
-            double M = n * (simTimeSec - soa.t0[idx]);
+            double M = n * ((simTimeMicros - soa.t0Micros[idx]) / 1e6); // micros -> seconds
             double E = solveKepler(M, e);
             double theta = 2.0 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
             EArr[i] = E;

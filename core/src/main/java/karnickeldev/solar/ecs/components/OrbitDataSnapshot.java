@@ -13,7 +13,7 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
     public final float[] semiMajorAxis;
     public final float[] eccentricity;
     public final float[] omega;
-    public final float[] t0;
+    public final long[] t0;
     public final int[] centralBody;
 
 
@@ -29,11 +29,11 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
         semiMajorAxis = new float[size];
         eccentricity = new float[size];
         omega = new float[size];
-        t0 = new float[size];
+        t0 = new long[size];
         centralBody = new int[size];
     }
 
-    public void addChange(int entityId, float a, float e, float o, float to, int centralBody) {
+    public void addChange(int entityId, float a, float e, float o, long to, int centralBody) {
         if (count >= size)
             throw new RuntimeException("Error creating Snapshot (tried to add " + count + " entities, limit is " + size + ")");
 
@@ -69,7 +69,7 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
             out.writeFloat(semiMajorAxis[i]);
             out.writeFloat(eccentricity[i]);
             out.writeFloat(omega[i]);
-            out.writeFloat(t0[i]);
+            out.writeLong(t0[i]);
         }
     }
 
@@ -91,7 +91,7 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
             float a = in.readFloat();
             float e = in.readFloat();
             float o = in.readFloat();
-            float t0 = in.readFloat();
+            long t0 = in.readLong();
 
             snapshot.addChange(entity, a, e, o, t0, parent);
         }

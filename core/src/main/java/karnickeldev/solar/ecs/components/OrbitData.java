@@ -8,7 +8,7 @@ public class OrbitData {
     private final float semiMajorAxis;
     private final float eccentricity;
     private final float omega;        // Argument of periapsis (radians)
-    private final float t0;           // Time of periapsis passage
+    private final long t0;           // Time of periapsis passage
 
     private final EntityReference centralBody;
 
@@ -16,7 +16,7 @@ public class OrbitData {
         this(source.semiMajorAxis, source.eccentricity, source.omega, source.t0, source.centralBody);
     }
 
-    public OrbitData(float semiMajorAxis, float eccentricity, float omega, float t0, EntityReference centralBody) {
+    public OrbitData(float semiMajorAxis, float eccentricity, float omega, long t0, EntityReference centralBody) {
         this.semiMajorAxis = semiMajorAxis;
         this.eccentricity = eccentricity;
         this.omega = omega;
@@ -36,7 +36,7 @@ public class OrbitData {
         return omega;
     }
 
-    public float getT0() {
+    public long getT0() {
         return t0;
     }
 

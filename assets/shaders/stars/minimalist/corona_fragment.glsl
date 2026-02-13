@@ -41,9 +41,10 @@ void main() {
 
     float r = length(uv) * 2.0;
     if (r > 2.0) discard; // TWEAK if circle becomes visible
+    if(r < 0.9) discard;
 
     // Base exponential falloff
-    float falloff = 2.0 - r;
+    float falloff = 2.1 - r;
 
     // Add geometric poster rays
     //float angleGeo = atan(uv.y, uv.x);

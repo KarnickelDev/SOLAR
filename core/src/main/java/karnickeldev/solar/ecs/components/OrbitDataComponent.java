@@ -11,7 +11,7 @@ public class OrbitDataComponent extends DirtyFlagComponent implements ComponentS
     public final double[] semiMajorAxis = new double[EntityManager.MAX_ENTITIES];
     public final double[] eccentricity = new double[EntityManager.MAX_ENTITIES];
     public final double[] omega = new double[EntityManager.MAX_ENTITIES];        // Argument of periapsis (radians)
-    public final double[] t0 = new double[EntityManager.MAX_ENTITIES];           // Time of periapsis passage
+    public final long[] t0 = new long[EntityManager.MAX_ENTITIES];           // Time of periapsis passage
     public final int[] centralBody = new int[EntityManager.MAX_ENTITIES];
 
     @Override
@@ -19,7 +19,7 @@ public class OrbitDataComponent extends DirtyFlagComponent implements ComponentS
         // nop
     }
 
-    public void add(int entityId, float semiMajorAxis, float eccentricity, float omega, float t0,
+    public void add(int entityId, float semiMajorAxis, float eccentricity, float omega, long t0,
                     int centralBody) {
         ensureCapacity(entityId);
         int index = EntityManager.extractIndex(entityId);
@@ -59,9 +59,9 @@ public class OrbitDataComponent extends DirtyFlagComponent implements ComponentS
         return (float) omega[index];
     }
 
-    public float getT0(int entityId) {
+    public long getT0(int entityId) {
         int index = EntityManager.extractIndex(entityId);
-        return (float) t0[index];
+        return t0[index];
     }
 
     public int getCentralBody(int entityId) {

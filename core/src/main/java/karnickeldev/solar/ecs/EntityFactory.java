@@ -37,7 +37,7 @@ public class EntityFactory {
 
     public static int createStaticPlanetoidHCS(ServerECS ecs, String name, double mass, float radius,
                                                long sphereOfInfluence, float semiMajorAxis, float eccentricity, float omega,
-                                               float t0, int centralBody) {
+                                               long t0, int centralBody) {
         int entity = ecs.getEntityManager().create();
         ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tag.PLANET);
         ecs.getComponentRegistry().get(NameComponent.class).add(entity, name);

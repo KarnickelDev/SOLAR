@@ -97,7 +97,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         public double[] a;
         public double[] mu;
         public double[] e;
-        public double[] t0;
+        public long[] t0Micros;
         public double[] omega;
 
         public OrbitSoA(int capacity) {
@@ -105,7 +105,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
             a = new double[capacity];
             mu = new double[capacity];
             e = new double[capacity];
-            t0 = new double[capacity];
+            t0Micros = new long[capacity];
             omega = new double[capacity];
         }
 
@@ -130,7 +130,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         }
         nextFrameData.validCount = validCount;
 
-        orbitFrameCtx = new OrbitFrameContext(ecs, 0.0, nextFrameData);
+        orbitFrameCtx = new OrbitFrameContext(ecs, 0, nextFrameData);
 
         // Start warmup
         warmupCursor.set(0);
@@ -154,8 +154,6 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         // Preload ECS data references
         OrbitDataComponent orbitDataRef = ecs.getComponentRegistry().get(OrbitDataComponent.class);
 
-        double simTimeSec = time / 1e6;
-
         int validCount = 0;
         int total = ecs.getEntityManager().getCapacityUsed();
         for (int ent = orbitDataRef.hasComponent.nextSetBit(0); ent >= 0 && ent < total; ent = orbitDataRef.hasComponent.nextSetBit(ent + 1)) {
@@ -171,7 +169,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         orbitSoA.count = validCount;
 
         // set orbit frame context for workers
-        this.orbitFrameCtx = new OrbitFrameContext(ecs, simTimeSec, nextFrameData);
+        this.orbitFrameCtx = new OrbitFrameContext(ecs, time, nextFrameData);
 
         // Start workers for this frame
         // workers will wake, compute into their local buffers, then await again (to signal done)

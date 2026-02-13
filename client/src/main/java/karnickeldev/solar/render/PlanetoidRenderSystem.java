@@ -63,8 +63,8 @@ public class PlanetoidRenderSystem {
 
     private void updateFrustumCullingCircle() {
         FloatingOriginCamera cam = worldManager.getActiveWorld().getCamera();
-        double halfW = (cam.getViewportWidth() / 2.0) * cam.getRenderZoom();
-        double halfH = (cam.getViewportHeight() / 2.0) * cam.getRenderZoom();
+        double halfW = (cam.getViewportWidth() / 2.0) * cam.getZoom();
+        double halfH = (cam.getViewportHeight() / 2.0) * cam.getZoom();
 
         frustumCullingRadiusSquared = (halfW * halfW) + (halfH * halfH);
     }
@@ -86,7 +86,7 @@ public class PlanetoidRenderSystem {
         OrbitDataComponent orbitDataComponent = ecs.getComponentRegistry().get(OrbitDataComponent.class);
 
         FloatingOriginCamera camera = worldManager.getActiveWorld().getCamera();
-        double renderZoom = camera.getRenderZoom();
+        double renderZoom = camera.getZoom();
 
         double alpha = 1;
 
@@ -189,7 +189,7 @@ public class PlanetoidRenderSystem {
             batch.draw(texture, (float) (localX - 0.5 * size), (float) (localY - 0.5 * size), (float)size, (float)size);
         }
 
-        float tsize = (float) (16 * camera.getRenderZoom());
+        float tsize = (float) (16 * camera.getZoom());
         batch.setColor(Color.GREEN);
         for(Double[] camPos: DefaultClientNetworkListener.clientCamPos.values()) {
             Vector2D remotePos = new Vector2D(camPos[0], camPos[1]);

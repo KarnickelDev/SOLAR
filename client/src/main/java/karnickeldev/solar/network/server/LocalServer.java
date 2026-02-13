@@ -94,12 +94,18 @@ public class LocalServer extends Server implements GameServer {
             (float) Units.convert(7000, Units.Length.KILOMETER, Units.Length.AU),
             0.01f, 0, 2, earth);
 
+        int maxDistance = EntityFactory.createStaticPlanetoidHCS(worldManager.getWorld(1).getECS(), "maxDistance",
+            Units.toSU(100, Units.Mass.TON),
+            1e-3f, 1,
+            1e3f,
+            0, 0, 0, sun);
+
         simulationManagerThread.getSimulationManager().setPriority(world1, SimulationTask.Priority.LOW);
 
         for (int i = 0; i < (100_000); i++) {
             int e = EntityFactory.createStaticPlanetoidHCS(world1.getECS(), "",
                 Units.toSU(MathUtil.random(1, 1e10f), Units.Mass.TON),
-                1, 1,
+                1e-3f, 1,
                 (float) Units.convert(MathUtil.random(1e-2f, 100f), Units.Length.AU, Units.Length.AU),
                 MathUtil.random(0, 0.9f), MathUtil.random(0, (float) (2 * Math.PI)), 0, sun);
 
