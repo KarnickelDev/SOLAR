@@ -76,8 +76,8 @@ public final class OrbitWorker implements Runnable {
                 OrbitUpdaterImpl.FrameData fd = parent.nextFrameData;
                 // hopefully touch pages on this cpu core so they don't cause page faults
                 for (int i = start; i < end; i++) {
-                    fd.posX[i] = 0;
-                    fd.posY[i] = 0;
+                    fd.localX[i] = 0;
+                    fd.localY[i] = 0;
                     fd.entityIds[i] = 0;
                     fd.parentIds[i] = 0;
                 }
@@ -184,8 +184,8 @@ public final class OrbitWorker implements Runnable {
             DoubleVector vRotY = vSinW.mul(vX).add(vCosW.mul(vY));
 
 
-            vRotX.intoArray(parent.nextFrameData.posX, base);
-            vRotY.intoArray(parent.nextFrameData.posY, base);
+            vRotX.intoArray(parent.nextFrameData.localX, base);
+            vRotY.intoArray(parent.nextFrameData.localY, base);
 
         }
 
@@ -205,9 +205,24 @@ public final class OrbitWorker implements Runnable {
             double cosW = Math.cos(omega);
             double sinW = Math.sin(omega);
 
-            parent.nextFrameData.posX[idx] = cosW * ox - sinW * oy;
-            parent.nextFrameData.posY[idx] = sinW * ox + cosW * oy;
+            parent.nextFrameData.localX[idx] = cosW * ox - sinW * oy;
+            parent.nextFrameData.localY[idx] = sinW * ox + cosW * oy;
+        }
 
+        double AU = Units.toSU(1, Units.Length.AU);
+        double invAU = 1.0 / AU;
+
+        for(int i = 0; i < count; i++) {
+            int idx = low + i;
+
+            short sx = (short) (parent.nextFrameData.localX[idx] * invAU);
+            short sy = (short) (parent.nextFrameData.localY[idx] * invAU);
+
+            parent.nextFrameData.sectorX[idx] = sx;
+            parent.nextFrameData.sectorY[idx] = sy;
+
+            parent.nextFrameData.localX[idx] -= sx * AU;
+            parent.nextFrameData.localY[idx] -= sy * AU;
         }
     }
 

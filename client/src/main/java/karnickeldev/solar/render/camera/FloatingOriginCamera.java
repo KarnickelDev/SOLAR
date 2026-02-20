@@ -3,6 +3,8 @@ package karnickeldev.solar.render.camera;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Matrix4;
 import karnickeldev.solar.physics.Vector2D;
+import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.SplitCoordMath;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -12,9 +14,6 @@ import java.util.LinkedList;
  * @since 16.02.2026
  **/
 public final class FloatingOriginCamera {
-
-    public static final double MM_PER_WORLD_UNIT = 1e6;
-    public static final double WORLD_UNIT_PER_MM = 1d / MM_PER_WORLD_UNIT;
 
     public static final float MIN_ZOOM = 1e-6f;
     public static final float MAX_ZOOM = 2e9f;
@@ -84,11 +83,11 @@ public final class FloatingOriginCamera {
     //#########################
 
     public long getOriginXmm() {
-        return state.x_mm;
+        return state.pos.sx * 150_000_000_000_000L + Math.round(state.pos.lx * 1e6);
     }
 
     public long getOriginYmm() {
-        return state.y_mm;
+        return state.pos.sy * 150_000_000_000_000L + Math.round(state.pos.ly * 1e6);
     }
 
     public double getZoom() {
@@ -100,7 +99,7 @@ public final class FloatingOriginCamera {
     }
 
     public Vector2D getRenderOrigin() {
-        return new Vector2D(getOriginXmm() * WORLD_UNIT_PER_MM, getOriginYmm() * WORLD_UNIT_PER_MM);
+        return new Vector2D(SplitCoordMath.toDoubleX(state.pos), SplitCoordMath.toDoubleY(state.pos));
     }
 
     public Vector2D project(double worldX, double worldY, Vector2D vec, double zoom) {

@@ -10,8 +10,6 @@ import karnickeldev.solar.render.core.RenderPass;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.util.MathUtil;
 
-import static karnickeldev.solar.render.camera.FloatingOriginCamera.MM_PER_WORLD_UNIT;
-
 public class BackgroundGridRenderer implements RenderPass {
 
     private static final Color LINE_COLOR = new Color(28 / 255f, 28 / 255f, 32 / 255f, 1f);
@@ -59,8 +57,8 @@ public class BackgroundGridRenderer implements RenderPass {
         double minorWorld = Math.pow(10, baseExp);
         double majorWorld = minorWorld * 10.0;
 
-        long minorStep_mm = (long) (minorWorld * MM_PER_WORLD_UNIT);
-        long majorStep_mm = (long) (majorWorld * MM_PER_WORLD_UNIT);
+        long minorStep_mm = (long) (minorWorld * 1e6);
+        long majorStep_mm = (long) (majorWorld * 1e6);
 
         float minorAlpha = smoothstep(0.2f, 0.8f, 1f - (float) frac);
         float majorAlpha = smoothstep(0.2f, 0.8f, (float) frac);
@@ -94,8 +92,8 @@ public class BackgroundGridRenderer implements RenderPass {
 
         shapes.setColor(LINE_COLOR.r, LINE_COLOR.g, LINE_COLOR.b, alpha);
 
-        long halfW_mm = (long) (halfW * zoom * MM_PER_WORLD_UNIT);
-        long halfH_mm = (long) (halfH * zoom * MM_PER_WORLD_UNIT);
+        long halfW_mm = (long) (halfW * zoom * 1e6);
+        long halfH_mm = (long) (halfH * zoom * 1e6);
 
         long minX_mm = camX_mm - halfW_mm;
         long maxX_mm = camX_mm + halfW_mm;
@@ -109,13 +107,13 @@ public class BackgroundGridRenderer implements RenderPass {
 
         // vertical lines
         for (long x_mm = startX; x_mm <= endX; x_mm += step_mm) {
-            float px = (float) (halfW + (x_mm - camX_mm) / zoom / MM_PER_WORLD_UNIT);
+            float px = (float) (halfW + (x_mm - camX_mm) / zoom / 1e6);
             shapes.rect(px, 0, GRID_THICKNESS_PX, screenH);
         }
 
         // horizontal lines
         for (long y_mm = startY; y_mm <= endY; y_mm += step_mm) {
-            float py = (float) (halfH + (y_mm - camY_mm) / zoom / MM_PER_WORLD_UNIT);
+            float py = (float) (halfH + (y_mm - camY_mm) / zoom / 1e6);
             shapes.rect(0, py, screenW, GRID_THICKNESS_PX);
         }
     }

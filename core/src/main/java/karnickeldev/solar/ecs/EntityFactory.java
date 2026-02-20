@@ -3,27 +3,30 @@ package karnickeldev.solar.ecs;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.ecs.components.*;
 import karnickeldev.solar.physics.PhysicsUtil;
+import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.SplitCoordMath;
 
 public class EntityFactory {
 
-    public static int createGhostObject(ServerECS ecs, String name, double x, double y) {
+    public static int createGhostObject(ServerECS ecs, String name, short sectorX, double localX, short sectorY, double localY) {
         int entity = ecs.getEntityManager().create();
         ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tag.GHOST_OBJECT);
         ecs.getComponentRegistry().get(NameComponent.class).add(entity, name);
-        ecs.hcs.add(entity, EntityManager.NO_ENTITY, x, y);
+        ecs.hcs.add(entity, EntityManager.NO_ENTITY, sectorX, localX, sectorY, localY);
         return entity;
     }
 
 
-    public static int createStar(ServerECS ecs, String name, double x, double y, double mass, float radius,
-                                 long sphereOfInfluence) {
+    public static int createStar(ServerECS ecs, String name, double x, double y, double mass, float radius, long sphereOfInfluence) {
         int entity = ecs.getEntityManager().create();
         ecs.getComponentRegistry().get(TagComponent.class).add(entity, Tag.STAR);
         ecs.getComponentRegistry().get(NameComponent.class).add(entity, name);
         ecs.getComponentRegistry().get(MassComponent.class).add(entity, mass);
         ecs.getComponentRegistry().get(RadiusComponent.class).add(entity, radius);
         ecs.getComponentRegistry().get(SphereOfInfluenceComponent.class).add(entity, sphereOfInfluence);
-        ecs.hcs.add(entity, EntityManager.NO_ENTITY, x, y);
+        SplitCoord c = new SplitCoord();
+        SplitCoordMath.split(c, x, y);
+        ecs.hcs.add(entity, EntityManager.NO_ENTITY, c.sx, c.lx, c.sy, c.ly);
 
         // texture
         ecs.getComponentRegistry().get(AppearanceComponent.class).add(entity, (short) Asset.DEBUG_CIRCLE.ordinal(), (short)0, "");

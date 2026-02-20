@@ -71,8 +71,19 @@ public final class OrbitUpdaterSimple implements OrbitUpdater {
             frameData.entityIds[validCount] = ent;
             frameData.parentIds[validCount] = parent;
 
-            frameData.posX[validCount] = cosW * ox - sinW * oy;
-            frameData.posY[validCount] = sinW * ox + cosW * oy;
+            double worldX = cosW * ox - sinW * oy;
+            double worldY = sinW * ox + cosW * oy;
+
+            short sx = (short) Math.floor(worldX);
+            double lx = worldX - sx;
+
+            short sy = (short) Math.floor(worldY);
+            double ly = worldY - sy;
+
+            frameData.sectorX[validCount] = sx;
+            frameData.localX[validCount] = lx;
+            frameData.sectorY[validCount] = sy;
+            frameData.localY[validCount] = ly;
 
             validCount++;
         }

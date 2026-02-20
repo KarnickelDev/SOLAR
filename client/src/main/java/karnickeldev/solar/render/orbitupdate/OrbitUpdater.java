@@ -59,8 +59,10 @@ public interface OrbitUpdater {
      * Storage class holding data that is needed for computations every frame
      */
     final class FrameData {
-        public final double[] posX = new double[EntityManager.MAX_ENTITIES];
-        public final double[] posY = new double[EntityManager.MAX_ENTITIES];
+        public final short[] sectorX = new  short[EntityManager.MAX_ENTITIES];
+        public final double[] localX = new double[EntityManager.MAX_ENTITIES];
+        public final short[] sectorY = new  short[EntityManager.MAX_ENTITIES];
+        public final double[] localY = new double[EntityManager.MAX_ENTITIES];
         public final int[] entityIds = new int[EntityManager.MAX_ENTITIES];
         public final int[] parentIds = new int[EntityManager.MAX_ENTITIES];
         public int validCount = 0;

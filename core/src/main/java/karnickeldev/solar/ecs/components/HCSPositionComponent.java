@@ -1,6 +1,9 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.physics.Units;
+import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.SplitCoordMath;
 
 import java.util.BitSet;
 
@@ -10,6 +13,8 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
     public final int[] parentIds = new int[EntityManager.MAX_ENTITIES];
     public final double[] localX = new double[EntityManager.MAX_ENTITIES];
     public final double[] localY = new double[EntityManager.MAX_ENTITIES];
+    public final short[] sectorX = new short[EntityManager.MAX_ENTITIES];
+    public final short[] sectorY = new short[EntityManager.MAX_ENTITIES];
 
     @Override
     public void ensureCapacity(int index) {
@@ -20,17 +25,26 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
         return parentIds.length;
     }
 
-    public void add(int entityId, int parentId, double localX, double localY) {
+    public void add(int entityId, int parentId, short sectorX, double localX, short sectorY, double localY) {
         int index = EntityManager.extractIndex(entityId);
         ensureCapacity(index);
 
         parentIds[index] = parentId;
+
+        this.sectorX[index] = sectorX;
+        this.sectorY[index] = sectorY;
 
         this.localX[index] = localX;
         this.localY[index] = localY;
 
         dirty.set(index);
         hasComponent.set(index);
+    }
+
+    public void addAndSplit(int entityId, int parentId, double x, double y) {
+        SplitCoord c = new SplitCoord();
+        SplitCoordMath.split(c, x, y);
+        add(entityId, parentId, c.sx, c.lx, c.sy, c.ly);
     }
 
     public void remove(int entityId) {
@@ -47,6 +61,16 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
         return parentIds[index];
     }
 
+    public short getSectorX(int entityId) {
+        int index = EntityManager.extractIndex(entityId);
+        return sectorX[index];
+    }
+
+    public short getSectorY(int entityId) {
+        int index = EntityManager.extractIndex(entityId);
+        return sectorY[index];
+    }
+
     public double getLocalX(int entityId) {
         int index = EntityManager.extractIndex(entityId);
         return localX[index];
@@ -55,6 +79,16 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
     public double getLocalY(int entityId) {
         int index = EntityManager.extractIndex(entityId);
         return localY[index];
+    }
+
+    public double getTotalX(int entityId) {
+        int index = EntityManager.extractIndex(entityId);
+        return SplitCoordMath.combine(sectorX[index], localX[index]);
+    }
+
+    public double getTotalY(int entityId) {
+        int index = EntityManager.extractIndex(entityId);
+        return SplitCoordMath.combine(sectorY[index], localY[index]);
     }
 
     @Override
@@ -70,7 +104,8 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
             snapshot.addChange(
                 entity,
                 getParent(entity),
-                getLocalX(entity), getLocalY(entity)
+                getSectorX(entity), getLocalX(entity),
+                getSectorY(entity), getLocalY(entity)
             );
         }
         return snapshot;
@@ -89,7 +124,8 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
             snapshot.addChange(
                 entity,
                 getParent(entity),
-                getLocalX(entity), getLocalY(entity)
+                getSectorX(entity), getLocalX(entity),
+                getSectorY(entity), getLocalY(entity)
             );
         }
         return snapshot;
@@ -99,7 +135,10 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
     public void applySnapshot(HCSPositionSnapshot snapshot) {
         for (int i = 0; i < snapshot.getChangedCount(); i++) {
             int entity = snapshot.entities[i];
-            add(entity, snapshot.parent[i], snapshot.position[2 * i], snapshot.position[2 * i + 1]);
+            add(entity, snapshot.parent[i],
+                snapshot.sectorX[i], snapshot.localX[i],
+                snapshot.sectorY[i], snapshot.localY[i]
+            );
         }
     }
 
@@ -108,7 +147,10 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
         StringBuilder builder = new StringBuilder();
 
         for(int i = 0; i < hasComponent.length(); i++) {
-            builder.append(i).append(": ").append(localX[i]).append(", ").append(localY[i]).append(", ").append(parentIds[i]).append("\n");
+            builder.append(i).append(": ")
+                .append(sectorX[i]).append(':').append(localX[i]).append(", ")
+                .append(sectorY[i]).append(':').append(localY[i]).append(", ")
+                .append(parentIds[i]).append("\n");
         }
 
         return builder.toString();

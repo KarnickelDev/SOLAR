@@ -7,7 +7,10 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
 
 
     public final int[] entities;
-    public final double[] position;
+    public final short[] sectorX;
+    public final short[] sectorY;
+    public final double[] localX;
+    public final double[] localY;
     public final int[] parent;
     public final long simTimeMicros;
     private final int size;
@@ -18,18 +21,24 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
 
         this.simTimeMicros = tick;
         entities = new int[size];
-        position = new double[2 * size];
+        sectorX = new short[size];
+        sectorY = new short[size];
+        localX = new double[size];
+        localY = new double[size];
         parent = new int[size];
     }
 
-    public void addChange(int entityId, int parentId, double newX, double newY) {
+    public void addChange(int entityId, int parentId, short sectorX, double localX, short sectorY, double localY) {
         if (count >= size)
             throw new RuntimeException("Error creating Snapshot (tried to add " + count + " entities, limit is " + size + ")");
 
         entities[count] = entityId;
         parent[count] = parentId;
-        position[2 * count] = newX;
-        position[2 * count + 1] = newY;
+
+        this.sectorX[count] = sectorX;
+        this.sectorY[count] = sectorY;
+        this.localX[count] = localX;
+        this.localY[count] = localY;
 
         count++;
     }
@@ -39,7 +48,9 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
         StringBuilder builder = new StringBuilder();
         builder.append('[');
         for(int i = 0; i < count; i++) {
-            builder.append(entities[i]).append(", ").append(parent[i]).append(", ").append(position[2 * i]).append(", ").append(position[2 * i + 1]);
+            builder.append(entities[i]).append(", ").append(parent[i]).append(", ")
+                .append(sectorX[i]).append(':').append(localX[i]).append(", ")
+                .append(sectorY[i]).append(':').append(localY[i]);
             if(i != count-1) builder.append(", ");
         }
         builder.append(']');
@@ -57,8 +68,10 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
         for (int i = 0; i < c.size; i++) {
             c.entities[i] = entities[i];
             c.parent[i] = parent[i];
-            c.position[2 * i] = position[2 * i];
-            c.position[2 * i + 1] = position[2 * i + 1];
+            c.sectorX[i] = sectorX[i];
+            c.sectorY[i] = sectorY[i];
+            c.localX[i] = localX[i];
+            c.localY[i] = localY[i];
         }
 
         return c;
@@ -79,8 +92,11 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
             NettyUtil.writeVarInt(out, parent[i] - lastParent);
             lastParent = parent[i];
 
-            out.writeDouble(position[2 * i]);
-            out.writeDouble(position[2 * i + 1]);
+            out.writeShort(sectorX[i]);
+            out.writeShort(sectorY[i]);
+
+            out.writeDouble(localX[i]);
+            out.writeDouble(localY[i]);
         }
     }
 
@@ -99,10 +115,13 @@ public class HCSPositionSnapshot implements ComponentSnapshot {
             int parent = lastParent + NettyUtil.readVarInt(in);
             lastParent = parent;
 
-            double x = in.readDouble();
-            double y = in.readDouble();
+            short sectorX = in.readShort();
+            short sectorY = in.readShort();
 
-            snapshot.addChange(entity, parent, x, y);
+            double localX = in.readDouble();
+            double localY = in.readDouble();
+
+            snapshot.addChange(entity, parent, sectorX, localX, sectorY, localY);
         }
 
         return snapshot;

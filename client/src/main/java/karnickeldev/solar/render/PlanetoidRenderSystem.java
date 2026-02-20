@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.sun.jna.ptr.DoubleByReference;
+import com.sun.jna.ptr.ShortByReference;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.context.GameContext;
@@ -19,6 +21,8 @@ import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
 import karnickeldev.solar.render.orbitupdate.OrbitUpdaterImpl;
+import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.SplitCoordMath;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
@@ -88,8 +92,6 @@ public class PlanetoidRenderSystem {
         FloatingOriginCamera camera = worldManager.getActiveWorld().getCamera();
         double renderZoom = camera.getZoom();
 
-        double alpha = 1;
-
         Vector2D ePos = new Vector2D();
         Vector2D screenPos = new Vector2D();
 
@@ -101,8 +103,27 @@ public class PlanetoidRenderSystem {
         orbitUpdater.startCompute(GameContext.get().getClock().getFrameClockTime(), ecs);
 
         Vector2D camOrigin = camera.getRenderOrigin();
+        SplitCoord camCoord = new SplitCoord();
+        SplitCoordMath.split(camCoord, camOrigin.getX(), camOrigin.getY());
+        short tsx = (short)(camera.getOriginXmm() / 150000000000000L);
+        short tsy = (short)(camera.getOriginYmm() / 150000000000000L);
+        camCoord.set(
+            tsx,
+            (camera.getOriginXmm() - (tsx * 150000000000000L)) / 1e6,
+            tsy,
+            (camera.getOriginYmm() - (tsy * 150000000000000L)) / 1e6
+        );
 
-        Vector2D trackPos = ecs.toWorldSpace(track, alpha).add(camOrigin);
+        //Vector2D trackPos = ecs.toWorldSpace(track, alpha).add(camOrigin);
+
+        SplitCoord trackPos = new SplitCoord();
+        trackPos.setFromArray(
+            orbitUpdater.getFrameData().sectorX, orbitUpdater.getFrameData().localX,
+            orbitUpdater.getFrameData().sectorY, orbitUpdater.getFrameData().localY,
+            track
+        );
+        trackPos = SplitCoordMath.add(trackPos, camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly);
+        trackPos.set(camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly);
 
         Color drawColor = Color.WHITE;
         Color lastColor = batch.getColor();
@@ -111,6 +132,8 @@ public class PlanetoidRenderSystem {
         short textureID = 0;
 
         float maxZoom = (float) renderZoom * 16;
+
+        SplitCoord reuse = new SplitCoord();
 
         for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !orbitDataComponent.has(entity) || !renderComponent.has(entity)) {
@@ -122,9 +145,18 @@ public class PlanetoidRenderSystem {
             ePos.zero();
 
             //ecs.toWorldSpace(ePos, entity, alpha);
-            ePos.add(orbitUpdater.getFrameData().posX[entity], orbitUpdater.getFrameData().posY[entity]);
+            //ePos.add(orbitUpdater.getFrameData().posX[entity], orbitUpdater.getFrameData().posY[entity]);
 
-            ePos.subtract(trackPos);
+            //ePos.subtract(trackPos);
+
+            reuse.set(
+                orbitUpdater.getFrameData().sectorX[entity], orbitUpdater.getFrameData().localX[entity],
+                orbitUpdater.getFrameData().sectorY[entity], orbitUpdater.getFrameData().localY[entity]
+            );
+
+            SplitCoordMath.sub(reuse, trackPos.sx,  trackPos.lx, trackPos.sy, trackPos.ly);
+
+            ePos.set(SplitCoordMath.toDoubleX(reuse), SplitCoordMath.toDoubleY(reuse));
 
             double localX = ePos.getX();
             double localY = ePos.getY();
@@ -250,7 +282,7 @@ public class PlanetoidRenderSystem {
             double rotatedX = cosW * orbitX - sinW * orbitY;
             double rotatedY = sinW * orbitX + cosW * orbitY;
 
-            hcs.getCurrent().add(entity, centralBodyId, rotatedX, rotatedY);
+            hcs.getCurrent().addAndSplit(entity, centralBodyId, rotatedX, rotatedY);
         }
     }
 

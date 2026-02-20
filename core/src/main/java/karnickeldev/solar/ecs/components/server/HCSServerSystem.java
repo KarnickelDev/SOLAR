@@ -1,6 +1,9 @@
 package karnickeldev.solar.ecs.components.server;
 
+import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
+import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.SplitCoordMath;
 
 public class HCSServerSystem {
 
@@ -50,7 +53,9 @@ public class HCSServerSystem {
                     componentBuffer[i].add(
                         e,
                         getCurrent().getParent(e),
+                        getCurrent().getSectorX(e),
                         getCurrent().getLocalX(e),
+                        getCurrent().getSectorY(e),
                         getCurrent().getLocalY(e)
                     );
                 }
@@ -66,8 +71,14 @@ public class HCSServerSystem {
         return componentBuffer[curr].getLocalY(entityId);
     }
 
+    public void add(int entityId, int parentId, short sectorX, double localX, short sectorY, double localY) {
+        componentBuffer[next].add(entityId, parentId, sectorX, localX, sectorY, localY);
+    }
+
     public void add(int entityId, int parentId, double x, double y) {
-        componentBuffer[next].add(entityId, parentId, x, y);
+        SplitCoord c = new SplitCoord();
+        SplitCoordMath.split(c, x, y);
+        componentBuffer[next].add(entityId, parentId, c.sx, c.lx, c.sy, c.ly);
     }
 
 }

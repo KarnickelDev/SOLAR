@@ -10,9 +10,9 @@ import karnickeldev.solar.util.NettyUtil;
 public class OrbitDataSnapshot implements ComponentSnapshot {
 
     public final int[] entities;
-    public final float[] semiMajorAxis;
-    public final float[] eccentricity;
-    public final float[] omega;
+    public final double[] semiMajorAxis;
+    public final double[] eccentricity;
+    public final double[] omega;
     public final long[] t0;
     public final int[] centralBody;
 
@@ -26,14 +26,14 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
 
         this.simTimeMicros = simTimeMicros;
         entities = new int[size];
-        semiMajorAxis = new float[size];
-        eccentricity = new float[size];
-        omega = new float[size];
+        semiMajorAxis = new double[size];
+        eccentricity = new double[size];
+        omega = new double[size];
         t0 = new long[size];
         centralBody = new int[size];
     }
 
-    public void addChange(int entityId, float a, float e, float o, long to, int centralBody) {
+    public void addChange(int entityId, double a, double e, double o, long to, int centralBody) {
         if (count >= size)
             throw new RuntimeException("Error creating Snapshot (tried to add " + count + " entities, limit is " + size + ")");
 
@@ -57,6 +57,7 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
         out.writeLong(simTimeMicros);
         out.writeInt(count);
 
+        // use delta encoding + var-int for entityId / parentId
         int lastId = 0;
         int lastParent = 0;
         for (int i = 0; i < count; i++) {
@@ -66,9 +67,9 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
             NettyUtil.writeVarInt(out, centralBody[i] - lastParent);
             lastParent = centralBody[i];
 
-            out.writeFloat(semiMajorAxis[i]);
-            out.writeFloat(eccentricity[i]);
-            out.writeFloat(omega[i]);
+            out.writeDouble(semiMajorAxis[i]);
+            out.writeDouble(eccentricity[i]);
+            out.writeDouble(omega[i]);
             out.writeLong(t0[i]);
         }
     }
@@ -79,6 +80,7 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
 
         OrbitDataSnapshot snapshot = new OrbitDataSnapshot(count, tick);
 
+        // use delta encoding + var-int for entityId / parentId
         int lastId = 0;
         int lastParent = 0;
         for (int i = 0; i < count; i++) {
@@ -88,9 +90,9 @@ public class OrbitDataSnapshot implements ComponentSnapshot {
             int parent = lastParent + NettyUtil.readVarInt(in);
             lastParent = parent;
 
-            float a = in.readFloat();
-            float e = in.readFloat();
-            float o = in.readFloat();
+            double a = in.readDouble();
+            double e = in.readDouble();
+            double o = in.readDouble();
             long t0 = in.readLong();
 
             snapshot.addChange(entity, a, e, o, t0, parent);

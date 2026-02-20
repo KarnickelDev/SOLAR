@@ -1,7 +1,10 @@
 package karnickeldev.solar.render.camera;
 
+import com.badlogic.gdx.Gdx;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.util.MathUtil;
+import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.SplitCoordMath;
 
 /**
  * @author KarnickelDev
@@ -32,8 +35,8 @@ public final class PlayerMode implements CameraMode {
 
         double dx, dy;
         if(ctx.playerInput().panning) {
-            dx = ctx.playerInput().dirX * ctx.state().zoom * FloatingOriginCamera.MM_PER_WORLD_UNIT;
-            dy = ctx.playerInput().dirY * ctx.state().zoom * FloatingOriginCamera.MM_PER_WORLD_UNIT;
+            dx = ctx.playerInput().dirX * ctx.state().zoom;
+            dy = ctx.playerInput().dirY * ctx.state().zoom;
         } else {
             // direction
             targetDir.set(ctx.playerInput().dirX, ctx.playerInput().dirY);
@@ -42,7 +45,7 @@ public final class PlayerMode implements CameraMode {
             smoothDir.lerp(targetDir, 7.5f * dt);
 
             // move
-            float viewportSizePx = (float)Math.sqrt(ctx.viewportWidth() * ctx.viewportWidth() + ctx.viewportHeight() * ctx.viewportHeight());
+            float viewportSizePx = (float) Math.hypot(ctx.viewportWidth(), ctx.viewportHeight());
             double speed = computePlayerSpeed(ctx.state(), dt, !targetDir.isZero(), viewportSizePx);
 
             dx = smoothDir.getX() * speed * dt;
@@ -52,20 +55,18 @@ public final class PlayerMode implements CameraMode {
         double cos = ctx.projector().cos_minus;
         double sin = ctx.projector().sin_minus;
 
-        ctx.state().x_mm += Math.round(dx * cos - dy * sin);
-        ctx.state().y_mm += Math.round(dx * sin + dy * cos);
+        ctx.state().pos.lx += (dx * cos - dy * sin);
+        ctx.state().pos.ly += (dx * sin + dy * cos);
+
+        SplitCoordMath.normalize(ctx.state().pos);
 
         updateZoom(ctx.playerInput(), ctx.state(), ctx.projector(), dt);
     }
 
     private void updateZoom(CameraPlayerInput signal, CameraState state, CameraProjector projector, double delta) {
-
-        // only significant input (=> dead-zone)
-        if (Math.abs(signal.zoomImpulse) > 1e-6) {
-            state.zoomAnchorPx.set(signal.zoomCursor);
-
+        if (Math.abs(signal.zoomImpulse) > 1e-12) {
+            state.zoomAnchorPx.set((int)signal.zoomCursor.getX(), (int)signal.zoomCursor.getY());
             state.targetLogZoom += signal.zoomImpulse * ZOOM_STEP;
-
             state.targetLogZoom = MathUtil.clamp(
                 state.targetLogZoom,
                 Math.log(FloatingOriginCamera.MIN_ZOOM),
@@ -73,24 +74,27 @@ public final class PlayerMode implements CameraMode {
             );
         }
 
-        // smooth convergence (frame-rate independent)
         double response = 1.0 - Math.exp(-ZOOM_RESPONSE * delta);
-
         double oldZoom = state.zoom;
-
         state.logZoom += (state.targetLogZoom - state.logZoom) * response;
         state.zoom = Math.exp(state.logZoom);
 
-        // nothing changed, early return
-        if (Math.abs(state.zoom - oldZoom) < 1e-9) return;
+        if (Math.abs(state.zoom - oldZoom) < 1e-12) return;
 
-        // cursor-anchored correction
-        Vector2D before = projector.unproject(state.zoomAnchorPx.getX(), state.zoomAnchorPx.getY(), new Vector2D(), oldZoom);
-        Vector2D after = projector.unproject(state.zoomAnchorPx.getX(), state.zoomAnchorPx.getY(), new Vector2D(), state.zoom);
-        Vector2D diff = after.subtract(before);
+        double dxScreen = state.zoomAnchorPx.getX() - Gdx.graphics.getWidth() / 2.0;
+        double dyScreen = state.zoomAnchorPx.getY() - Gdx.graphics.getHeight() / 2.0;
 
-        state.x_mm -= (long) (diff.getX() * FloatingOriginCamera.MM_PER_WORLD_UNIT);
-        state.y_mm -= (long) (diff.getY() * FloatingOriginCamera.MM_PER_WORLD_UNIT);
+        double dZoom = state.zoom - oldZoom;
+        double deltaX = dxScreen * dZoom;
+        double deltaY = -dyScreen * dZoom;
+
+        double rdx = deltaX * projector.cos_minus - deltaY * projector.sin_minus;
+        double rdy = deltaX * projector.sin_minus + deltaY * projector.cos_minus;
+
+        state.pos.lx -= rdx;
+        state.pos.ly -= rdy;
+
+        SplitCoordMath.normalize(state.pos);
     }
 
 
@@ -103,10 +107,7 @@ public final class PlayerMode implements CameraMode {
         }
 
         // convert screen -> world
-        double pixelsPerSecond = speed_screen_per_s * viewportSizePx;
-        double worldUnitsPerSecond = pixelsPerSecond * state.zoom;
-
-        return worldUnitsPerSecond * FloatingOriginCamera.MM_PER_WORLD_UNIT;
+        return speed_screen_per_s * viewportSizePx * state.zoom;
     }
 
     @Override

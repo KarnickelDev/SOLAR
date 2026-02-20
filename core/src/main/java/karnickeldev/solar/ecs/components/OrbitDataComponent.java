@@ -19,8 +19,7 @@ public class OrbitDataComponent extends DirtyFlagComponent implements ComponentS
         // nop
     }
 
-    public void add(int entityId, float semiMajorAxis, float eccentricity, float omega, long t0,
-                    int centralBody) {
+    public void add(int entityId, double semiMajorAxis, double eccentricity, double omega, long t0, int centralBody) {
         ensureCapacity(entityId);
         int index = EntityManager.extractIndex(entityId);
         this.semiMajorAxis[index] = semiMajorAxis;

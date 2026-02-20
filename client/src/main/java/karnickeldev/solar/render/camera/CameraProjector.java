@@ -1,7 +1,10 @@
 package karnickeldev.solar.render.camera;
 
 import com.badlogic.gdx.math.Matrix4;
+import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.physics.Vector2D;
+import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.SplitCoordMath;
 
 /**
  * @author KarnickelDev
@@ -10,6 +13,7 @@ import karnickeldev.solar.physics.Vector2D;
 public final class CameraProjector {
 
     private final Vector2D renderOrigin = new Vector2D().zero();
+    private final SplitCoord renderPos = new SplitCoord();
 
     private final Matrix4 projectionMatrix = new Matrix4();
 
@@ -26,17 +30,16 @@ public final class CameraProjector {
     public double cos_minus = 1;
 
     public void update(CameraState state, float viewportWidth, float viewportHeight) {
-        this.renderOrigin.set(
-            state.x_mm * FloatingOriginCamera.WORLD_UNIT_PER_MM,
-            state.y_mm * FloatingOriginCamera.WORLD_UNIT_PER_MM
-        );
+        this.renderOrigin.set(SplitCoordMath.toDoubleX(state.pos), SplitCoordMath.toDoubleY(state.pos));
         this.viewportWidthHalf = viewportWidth * 0.5;
         this.viewportHeightHalf = viewportHeight * 0.5;
 
+        renderPos.set(state.pos.sx, state.pos.lx, state.pos.sy, state.pos.ly);
+
         sin = Math.sin(state.rotationRad);
         cos = Math.cos(state.rotationRad);
-        sin_minus = Math.sin(-state.rotationRad);
-        cos_minus = Math.cos(-state.rotationRad);
+        sin_minus = -sin;
+        cos_minus = cos;
 
         float halfWidth = (float)(viewportWidthHalf * state.zoom);
         float halfHeight = (float)(viewportHeightHalf * state.zoom);

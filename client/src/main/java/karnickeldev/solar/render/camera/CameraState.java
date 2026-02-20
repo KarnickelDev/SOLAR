@@ -1,6 +1,7 @@
 package karnickeldev.solar.render.camera;
 
 import karnickeldev.solar.physics.Vector2D;
+import karnickeldev.solar.util.SplitCoord;
 
 /**
  * @author KarnickelDev
@@ -9,8 +10,7 @@ import karnickeldev.solar.physics.Vector2D;
 public final class CameraState {
 
     // cam position in mm
-    public long x_mm = 0;
-    public long y_mm = 0;
+    public final SplitCoord pos = new SplitCoord();
 
     // rotation in radians
     public float rotationRad = 0f;
