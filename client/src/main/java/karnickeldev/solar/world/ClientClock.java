@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class ClientClock {
 
     private static final double MAX_DRIFT_MICROS = 300_000;
-    private static final long SOFT_CATCHUP_MICROS = 5_000;
+    private static final long SOFT_CATCHUP_MICROS = 5_000; // TODO: BAD IDEA, more work needed (pause / unpause causes visible jumps)
 
     private record ClockSnapshot(long simTimeAnchor, long realTimeAnchor, double simSpeed) {}
 

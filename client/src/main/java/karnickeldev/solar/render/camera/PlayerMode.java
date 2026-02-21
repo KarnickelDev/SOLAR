@@ -1,9 +1,7 @@
 package karnickeldev.solar.render.camera;
 
-import com.badlogic.gdx.Gdx;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.util.MathUtil;
-import karnickeldev.solar.util.SplitCoord;
 import karnickeldev.solar.util.SplitCoordMath;
 
 /**
@@ -13,14 +11,14 @@ import karnickeldev.solar.util.SplitCoordMath;
 public final class PlayerMode implements CameraMode {
 
     // screen speed in screen-sizes per second
-    private static final float MAX_SPEED = 0.6f;
+    private static final float MAX_SPEED = 0.55f;
     private static final float MIN_SPEED = 0.01f;
-    private static final float ACCEL = 0.42f;
+    private static final float ACCEL = 0.38f;
     private static final float DECEL = 0.8f;
 
     // zoom tuning
     private static final double ZOOM_STEP = 0.15;     // per scroll notch
-    private static final double ZOOM_RESPONSE = 12.0; // higher = snappier
+    private static final double ZOOM_RESPONSE = 20.0; // higher = snappier
 
     // state
     private final Vector2D targetDir = new Vector2D();
@@ -31,7 +29,7 @@ public final class PlayerMode implements CameraMode {
     @Override
     public void onUpdate(FloatingOriginCamera.CameraContext ctx, float dt) {
         // rotation
-        ctx.state().rotationRad = (float) MathUtil.normalizeRotationRad(ctx.state().rotationRad + ctx.playerInput().rotationRad);
+        ctx.state().rotationRad = MathUtil.normalizeRotationRad(ctx.state().rotationRad + ctx.playerInput().rotationRad);
 
         double dx, dy;
         if(ctx.playerInput().panning) {
@@ -58,14 +56,21 @@ public final class PlayerMode implements CameraMode {
         ctx.state().pos.lx += (dx * cos - dy * sin);
         ctx.state().pos.ly += (dx * sin + dy * cos);
 
-        SplitCoordMath.normalize(ctx.state().pos);
+        SplitCoordMath.normalizeAbsolutePos(ctx.state().pos);
 
-        updateZoom(ctx.playerInput(), ctx.state(), ctx.projector(), dt);
+        updateZoom(ctx, dt);
     }
 
-    private void updateZoom(CameraPlayerInput signal, CameraState state, CameraProjector projector, double delta) {
+    private void updateZoom(FloatingOriginCamera.CameraContext ctx, double delta) {
+        CameraPlayerInput signal = ctx.playerInput();
+        CameraState state  = ctx.state();
+        CameraProjector projector = ctx.projector();
+
         if (Math.abs(signal.zoomImpulse) > 1e-12) {
-            state.zoomAnchorPx.set((int)signal.zoomCursor.getX(), (int)signal.zoomCursor.getY());
+            // lerp toward instead of just setting seems to prevent micro stutters from zoomCursor changes
+            // also, limit to at least 15 pixels change
+            state.zoomAnchorPx.lerp(signal.zoomCursor.div(15).mul(15), 0.9f);
+
             state.targetLogZoom += signal.zoomImpulse * ZOOM_STEP;
             state.targetLogZoom = MathUtil.clamp(
                 state.targetLogZoom,
@@ -81,8 +86,8 @@ public final class PlayerMode implements CameraMode {
 
         if (Math.abs(state.zoom - oldZoom) < 1e-12) return;
 
-        double dxScreen = state.zoomAnchorPx.getX() - Gdx.graphics.getWidth() / 2.0;
-        double dyScreen = state.zoomAnchorPx.getY() - Gdx.graphics.getHeight() / 2.0;
+        double dxScreen = state.zoomAnchorPx.getX() - (ctx.viewportWidth() * 0.5);
+        double dyScreen = state.zoomAnchorPx.getY() - (ctx.viewportHeight() * 0.5);
 
         double dZoom = state.zoom - oldZoom;
         double deltaX = dxScreen * dZoom;
@@ -94,7 +99,7 @@ public final class PlayerMode implements CameraMode {
         state.pos.lx -= rdx;
         state.pos.ly -= rdy;
 
-        SplitCoordMath.normalize(state.pos);
+        SplitCoordMath.normalizeAbsolutePos(state.pos);
     }
 
 

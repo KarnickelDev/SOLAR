@@ -1,8 +1,7 @@
 package karnickeldev.solar.ecs.components.server;
 
-import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
-import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
 
 public class HCSServerSystem {
@@ -76,7 +75,7 @@ public class HCSServerSystem {
     }
 
     public void add(int entityId, int parentId, double x, double y) {
-        SplitCoord c = new SplitCoord();
+        WorldPos c = new WorldPos();
         SplitCoordMath.split(c, x, y);
         componentBuffer[next].add(entityId, parentId, c.sx, c.lx, c.sy, c.ly);
     }

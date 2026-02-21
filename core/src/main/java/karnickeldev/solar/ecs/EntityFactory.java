@@ -3,7 +3,7 @@ package karnickeldev.solar.ecs;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.ecs.components.*;
 import karnickeldev.solar.physics.PhysicsUtil;
-import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
 
 public class EntityFactory {
@@ -24,7 +24,7 @@ public class EntityFactory {
         ecs.getComponentRegistry().get(MassComponent.class).add(entity, mass);
         ecs.getComponentRegistry().get(RadiusComponent.class).add(entity, radius);
         ecs.getComponentRegistry().get(SphereOfInfluenceComponent.class).add(entity, sphereOfInfluence);
-        SplitCoord c = new SplitCoord();
+        WorldPos c = new WorldPos();
         SplitCoordMath.split(c, x, y);
         ecs.hcs.add(entity, EntityManager.NO_ENTITY, c.sx, c.lx, c.sy, c.ly);
 

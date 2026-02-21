@@ -23,13 +23,14 @@ public final class OrbitUpdaterSimple implements OrbitUpdater {
     public void prepare(ClientECS ecs) {}
 
     @Override
-    public boolean isWarmupActive() {return false;}
+    public boolean isWarmupActive() {
+        return false;
+    }
 
     @Override
-    public int warmupProgress() {return 0;}
-
-    @Override
-    public int warmupTarget() {return 0;}
+    public int warmupTarget() {
+        return 0;
+    }
 
     private final FrameData frameData = new FrameData();
 
@@ -44,7 +45,6 @@ public final class OrbitUpdaterSimple implements OrbitUpdater {
 
         OrbitDataComponent orbitData = ecs.getComponentRegistry().get(OrbitDataComponent.class);
         MassComponent mass = ecs.getComponentRegistry().get(MassComponent.class);
-        double simTimeSec = time / 1e6;
 
         int validCount = 0;
         for (int ent = orbitData.hasComponent.nextSetBit(0); ent >= 0 && ent < total; ent = orbitData.hasComponent.nextSetBit(ent + 1)) {
@@ -56,7 +56,7 @@ public final class OrbitUpdaterSimple implements OrbitUpdater {
             double e = orbitData.getEccentricity(ent);
             double mu = Units.G_KM_TON * mass.getMass(parent);
             double n = Math.sqrt(mu / (a * a * a));
-            double M = n * (simTimeSec - orbitData.getT0(ent));
+            double M = n * ((time - orbitData.getT0(ent)) / 1e6);
             double E = solveKepler(M, e);
             double theta = 2.0 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
 
@@ -75,10 +75,10 @@ public final class OrbitUpdaterSimple implements OrbitUpdater {
             double worldY = sinW * ox + cosW * oy;
 
             short sx = (short) Math.floor(worldX);
-            double lx = worldX - sx;
+            double lx = worldX - sx * Units.Length.AU.getBaseFactor();
 
             short sy = (short) Math.floor(worldY);
-            double ly = worldY - sy;
+            double ly = worldY - sy * Units.Length.AU.getBaseFactor();
 
             frameData.sectorX[validCount] = sx;
             frameData.localX[validCount] = lx;

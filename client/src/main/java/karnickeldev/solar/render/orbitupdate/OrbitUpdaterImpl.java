@@ -81,6 +81,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         return orbitFrameCtx;
     }
 
+    @Override
     public FrameData getFrameData() {
         return currFrameData;
     }
@@ -117,6 +118,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         nextFrameData = tmp;
     }
 
+    @Override
     public void prepare(ClientECS ecs) {
         OrbitDataComponent orbitData = ecs.getComponentRegistry().get(OrbitDataComponent.class);
         int total = ecs.getEntityManager().getCapacityUsed();
@@ -150,6 +152,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         return start;
     }
 
+    @Override
     public void startCompute(long time, ClientECS ecs) {
         // Preload ECS data references
         OrbitDataComponent orbitDataRef = ecs.getComponentRegistry().get(OrbitDataComponent.class);
@@ -178,6 +181,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         // main thread may proceed to render while workers compute
     }
 
+    @Override
     public void waitAndSwap() {
         // wait for workers to finish computing localOut buffers
         barrier.await();
@@ -186,6 +190,7 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         swapFrameData();
     }
 
+    @Override
     public void shutdown() {
         if(!running) return;
         running = false;
@@ -235,14 +240,12 @@ public final class OrbitUpdaterImpl implements OrbitUpdater {
         if(ok) Logger.log("[OrbitUpdater] ", "shutdown complete");
     }
 
+    @Override
     public boolean isWarmupActive() {
         return warmupActive;
     }
 
-    public int warmupProgress() {
-        return warmupCursor.get();
-    }
-
+    @Override
     public int warmupTarget() {
         return nextFrameData.validCount;
     }

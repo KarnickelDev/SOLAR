@@ -21,15 +21,15 @@ public final class SplitCoordMath {
         return local + sector * AU;
     }
 
-    public static double toDoubleX(SplitCoord c) {
+    public static double toDoubleX(WorldPos c) {
         return c.lx + c.sx * AU;
     }
 
-    public static double toDoubleY(SplitCoord c) {
+    public static double toDoubleY(WorldPos c) {
         return c.ly + c.sy * AU;
     }
 
-    public static SplitCoord sub(SplitCoord a, short bsx, double blx, short bsy, double bly) {
+    public static WorldPos subInPlace(WorldPos a, short bsx, double blx, short bsy, double bly) {
         a.lx -= blx;
         a.ly -= bly;
         a.sx -= bsx;
@@ -37,7 +37,7 @@ public final class SplitCoordMath {
         return a;
     }
 
-    public static SplitCoord add(SplitCoord a, short bsx, double blx, short bsy, double bly) {
+    public static WorldPos addInPlace(WorldPos a, short bsx, double blx, short bsy, double bly) {
         a.lx += blx;
         a.ly += bly;
         a.sx += bsx;
@@ -45,7 +45,7 @@ public final class SplitCoordMath {
         return a;
     }
 
-    public static SplitCoord split(SplitCoord c, double x, double y) {
+    public static WorldPos split(WorldPos c, double x, double y) {
         short sx = (short) Math.floor(x * invAU);
         double lx = x - sx * AU;
         short sy = (short) Math.floor(y * invAU);
@@ -53,7 +53,7 @@ public final class SplitCoordMath {
         return c.set(sx, lx, sy, ly);
     }
 
-    public static void normalize(SplitCoord a) {
+    public static void normalizeAbsolutePos(WorldPos a) {
         while(a.lx >= AU) {
             a.lx -= AU;
             a.sx++;

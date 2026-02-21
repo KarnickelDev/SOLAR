@@ -215,8 +215,8 @@ public final class OrbitWorker implements Runnable {
         for(int i = 0; i < count; i++) {
             int idx = low + i;
 
-            short sx = (short) (parent.nextFrameData.localX[idx] * invAU);
-            short sy = (short) (parent.nextFrameData.localY[idx] * invAU);
+            short sx = (short) Math.floor(parent.nextFrameData.localX[idx] * invAU);
+            short sy = (short) Math.floor(parent.nextFrameData.localY[idx] * invAU);
 
             parent.nextFrameData.sectorX[idx] = sx;
             parent.nextFrameData.sectorY[idx] = sy;

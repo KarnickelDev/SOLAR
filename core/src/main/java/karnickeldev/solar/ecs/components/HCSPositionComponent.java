@@ -1,8 +1,7 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
-import karnickeldev.solar.physics.Units;
-import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
 
 import java.util.BitSet;
@@ -42,7 +41,7 @@ public class HCSPositionComponent extends DirtyFlagComponent implements Componen
     }
 
     public void addAndSplit(int entityId, int parentId, double x, double y) {
-        SplitCoord c = new SplitCoord();
+        WorldPos c = new WorldPos();
         SplitCoordMath.split(c, x, y);
         add(entityId, parentId, c.sx, c.lx, c.sy, c.ly);
     }

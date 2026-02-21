@@ -73,6 +73,16 @@ public final class Vector2D {
         return this;
     }
 
+    public Vector2D mul(double a) {
+        return scale(a);
+    }
+
+    public Vector2D div(double a) {
+        x /= a;
+        y /= a;
+        return this;
+    }
+
     public double len() {
         return Math.sqrt((x * x) + (y * y));
     }

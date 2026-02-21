@@ -3,7 +3,7 @@ package karnickeldev.solar.render.camera;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Matrix4;
 import karnickeldev.solar.physics.Vector2D;
-import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
 
 import java.util.Deque;
@@ -94,8 +94,12 @@ public final class FloatingOriginCamera {
         return state.zoom;
     }
 
-    public float getRotation() {
+    public double getRotation() {
         return state.rotationRad;
+    }
+
+    public WorldPos getOrigin() {
+        return state.pos;
     }
 
     public Vector2D getRenderOrigin() {

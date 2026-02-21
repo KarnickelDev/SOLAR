@@ -46,11 +46,6 @@ public interface OrbitUpdater {
     boolean isWarmupActive();
 
     /**
-     * Returns the number of finished warmup tasks
-     */
-    int warmupProgress();
-
-    /**
      * Returns the number of necessary warmup tasks
      */
     int warmupTarget();

@@ -5,8 +5,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.sun.jna.ptr.DoubleByReference;
-import com.sun.jna.ptr.ShortByReference;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.context.GameContext;
@@ -21,7 +19,8 @@ import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
 import karnickeldev.solar.render.orbitupdate.OrbitUpdaterImpl;
-import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.WorldDelta;
+import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.world.ClientWorld;
@@ -103,27 +102,18 @@ public class PlanetoidRenderSystem {
         orbitUpdater.startCompute(GameContext.get().getClock().getFrameClockTime(), ecs);
 
         Vector2D camOrigin = camera.getRenderOrigin();
-        SplitCoord camCoord = new SplitCoord();
-        SplitCoordMath.split(camCoord, camOrigin.getX(), camOrigin.getY());
-        short tsx = (short)(camera.getOriginXmm() / 150000000000000L);
-        short tsy = (short)(camera.getOriginYmm() / 150000000000000L);
-        camCoord.set(
-            tsx,
-            (camera.getOriginXmm() - (tsx * 150000000000000L)) / 1e6,
-            tsy,
-            (camera.getOriginYmm() - (tsy * 150000000000000L)) / 1e6
-        );
+        WorldPos camCoord = camera.getOrigin();
 
         //Vector2D trackPos = ecs.toWorldSpace(track, alpha).add(camOrigin);
 
-        SplitCoord trackPos = new SplitCoord();
+        WorldPos trackPos = new WorldPos();
         trackPos.setFromArray(
             orbitUpdater.getFrameData().sectorX, orbitUpdater.getFrameData().localX,
             orbitUpdater.getFrameData().sectorY, orbitUpdater.getFrameData().localY,
             track
         );
-        trackPos = SplitCoordMath.add(trackPos, camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly);
-        trackPos.set(camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly);
+        SplitCoordMath.addInPlace(trackPos, camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly);
+        trackPos.set(camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly); // TODO: fix track pos
 
         Color drawColor = Color.WHITE;
         Color lastColor = batch.getColor();
@@ -133,7 +123,8 @@ public class PlanetoidRenderSystem {
 
         float maxZoom = (float) renderZoom * 16;
 
-        SplitCoord reuse = new SplitCoord();
+        WorldPos worldPosReuse = new WorldPos();
+        WorldDelta deltaReuse = new WorldDelta();
 
         for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
             if (!ecs.getEntityManager().isValid(entity) || !orbitDataComponent.has(entity) || !renderComponent.has(entity)) {
@@ -149,14 +140,15 @@ public class PlanetoidRenderSystem {
 
             //ePos.subtract(trackPos);
 
-            reuse.set(
-                orbitUpdater.getFrameData().sectorX[entity], orbitUpdater.getFrameData().localX[entity],
-                orbitUpdater.getFrameData().sectorY[entity], orbitUpdater.getFrameData().localY[entity]
+            worldPosReuse.setFromArray(
+                orbitUpdater.getFrameData().sectorX, orbitUpdater.getFrameData().localX,
+                orbitUpdater.getFrameData().sectorY, orbitUpdater.getFrameData().localY,
+                entity
             );
 
-            SplitCoordMath.sub(reuse, trackPos.sx,  trackPos.lx, trackPos.sy, trackPos.ly);
+            WorldDelta.delta(deltaReuse, worldPosReuse, trackPos);
 
-            ePos.set(SplitCoordMath.toDoubleX(reuse), SplitCoordMath.toDoubleY(reuse));
+            ePos.set(deltaReuse.toDoubleX(), deltaReuse.toDoubleY());
 
             double localX = ePos.getX();
             double localY = ePos.getY();

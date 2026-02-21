@@ -1,9 +1,8 @@
 package karnickeldev.solar.render.camera;
 
 import com.badlogic.gdx.math.Matrix4;
-import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.physics.Vector2D;
-import karnickeldev.solar.util.SplitCoord;
+import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
 
 /**
@@ -13,7 +12,7 @@ import karnickeldev.solar.util.SplitCoordMath;
 public final class CameraProjector {
 
     private final Vector2D renderOrigin = new Vector2D().zero();
-    private final SplitCoord renderPos = new SplitCoord();
+    private final WorldPos renderPos = new WorldPos();
 
     private final Matrix4 projectionMatrix = new Matrix4();
 
@@ -44,7 +43,7 @@ public final class CameraProjector {
         float halfWidth = (float)(viewportWidthHalf * state.zoom);
         float halfHeight = (float)(viewportHeightHalf * state.zoom);
         projectionMatrix.setToOrtho2D(-halfWidth, -halfHeight, halfWidth * 2, halfHeight * 2);
-        projectionMatrix.rotateRad(0, 0, 1, state.rotationRad);
+        projectionMatrix.rotateRad(0, 0, 1, (float)state.rotationRad);
     }
 
     public Matrix4 getProjectionMatrix() {
