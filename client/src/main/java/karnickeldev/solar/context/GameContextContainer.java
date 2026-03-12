@@ -9,9 +9,11 @@ import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
 import karnickeldev.solar.scheduler.Scheduler;
+import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
+import karnickeldev.solar.worldview.orbitsolver.OrbitSolver;
 
 /**
  * @author KarnickelDev
@@ -26,8 +28,9 @@ public class GameContextContainer {
     private final ClientNetworkListener clientListener;
 
     private final ClientClock clientClock;
-    private final PlanetoidRenderSystem rs;
     private final CameraInput cameraInput;
+
+    private final OrbitSolver orbitSolver;
 
     private final PacketSyncLayer syncLayer;
 
@@ -35,19 +38,23 @@ public class GameContextContainer {
 
     private final ShaderManager shaderManager;
 
+    private final ClientThreadLayout clientThreadLayout;
+
     public GameContextContainer(boolean multiplayer, WorldManager<ClientWorld> worldManager, ClientScheduler scheduler,
                                 ClientNetwork clientNetwork, ClientNetworkListener clientListener,
-                                ClientClock clientClock, PlanetoidRenderSystem rs, CameraInput cameraInput, PacketSyncLayer syncLayer, ShaderManager shaderManager) {
+                                ClientClock clientClock, OrbitSolver orbitSolver, CameraInput cameraInput, PacketSyncLayer syncLayer, ShaderManager shaderManager,
+                                ClientThreadLayout clientThreadLayout) {
         this.multiplayer = multiplayer;
         this.worldManager = worldManager;
         this.scheduler = scheduler;
         this.clientNetwork = clientNetwork;
         this.clientListener = clientListener;
         this.clientClock = clientClock;
-        this.rs = rs;
+        this.orbitSolver = orbitSolver;
         this.cameraInput = cameraInput;
         this.syncLayer = syncLayer;
         this.shaderManager = shaderManager;
+        this.clientThreadLayout = clientThreadLayout;
     }
 
     public boolean isMultiplayer() {
@@ -82,8 +89,8 @@ public class GameContextContainer {
         return cameraInput;
     }
 
-    public PlanetoidRenderSystem getPlanetoidRenderSystem() {
-        return rs;
+    public OrbitSolver getOrbitSolver() {
+        return orbitSolver;
     }
 
     public PacketSyncLayer getSyncLayer() {
@@ -92,5 +99,9 @@ public class GameContextContainer {
 
     public ShaderManager getShaderManager() {
         return shaderManager;
+    }
+
+    public ClientThreadLayout getThreadLayout() {
+        return clientThreadLayout;
     }
 }

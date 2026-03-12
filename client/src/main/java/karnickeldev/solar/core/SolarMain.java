@@ -144,7 +144,7 @@ public class SolarMain extends Game {
                     }
                 }
 
-                ctx.getPlanetoidRenderSystem().shutdown();
+                ctx.getOrbitSolver().shutdown();
 
                 ctx.getScheduler().shutdown();
 

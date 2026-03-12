@@ -47,6 +47,8 @@ public class LocalServer extends Server implements GameServer {
         int sun = EntityFactory.createStar(worldManager.getWorld(1).getECS(), "sun", 0, 0,
             Units.toSU(1, Units.Mass.SOLAR_MASS), Units.toSU(600000f, Units.Length.KILOMETER));
 
+        world1.getECS().getComponentRegistry().get(OrbitDataComponent.class).add(sun, 0.001,0,0,0,0);
+
         int mercury = EntityFactory.createStaticPlanetoidHCS(worldManager.getWorld(1).getECS(), "mercury",
             Units.toSU(0.055f, Units.Mass.EARTH_MASS),
             Units.toSU(2439.7f, Units.Length.KILOMETER), 1,
@@ -92,7 +94,7 @@ public class LocalServer extends Server implements GameServer {
             Units.toSU(100, Units.Mass.TON),
             1e-3f, 1,
             (float) Units.convert(7000, Units.Length.KILOMETER, Units.Length.AU),
-            0.01f, 0, 2, earth);
+            0.01f, 0, 1_000_000, earth);
 
         int maxDistance = EntityFactory.createStaticPlanetoidHCS(worldManager.getWorld(1).getECS(), "maxDistance",
             Units.toSU(100, Units.Mass.TON),

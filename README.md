@@ -1,6 +1,6 @@
 # SOLAR
 
-**Strategic Orbital Logistics and Astrophysical Realism**
+**Strategic Orbital Logistics with Astrophysical Realism**
 
 *SOLAR is a futuristic space-themed multiplayer strategy game where players take command of fleets, manage resources,
 and engage in dynamic combat across multiple Solar System, backed by realistic astronomic simulations,

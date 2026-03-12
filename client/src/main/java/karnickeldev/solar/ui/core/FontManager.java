@@ -60,6 +60,7 @@ public class FontManager {
         fontCache.clear();
     }
 
+    // TODO: DONT scale by window height, just based on DPI (Gdx.graphics.getDensity)
     public BitmapFont generateFont(Fonts font, int size, int appHeight, boolean bold) {
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
         param.size = Math.max(3, Math.round(size * (appHeight / (float)UI.VIRTUAL_HEIGHT)));

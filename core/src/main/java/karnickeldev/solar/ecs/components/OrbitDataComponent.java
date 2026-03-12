@@ -22,12 +22,21 @@ public class OrbitDataComponent extends DirtyFlagComponent implements ComponentS
     public void add(int entityId, double semiMajorAxis, double eccentricity, double omega, long t0, int centralBody) {
         ensureCapacity(entityId);
         int index = EntityManager.extractIndex(entityId);
+
+        if(this.semiMajorAxis[index] == semiMajorAxis && this.eccentricity[index] == eccentricity
+            && this.omega[index] == omega && this.t0[index] == t0 && this.centralBody[index] == centralBody
+            && hasComponent.get(index)) {
+            return;
+        }
+
         this.semiMajorAxis[index] = semiMajorAxis;
         this.eccentricity[index] = eccentricity;
         this.omega[index] = omega;
         this.t0[index] = t0;
         this.centralBody[index] = centralBody;
         hasComponent.set(index);
+
+        //markDirty(entityId);
     }
 
     public void add(int entityId, OrbitData orbitData) {

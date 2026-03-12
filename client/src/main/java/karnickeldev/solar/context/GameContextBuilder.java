@@ -1,6 +1,5 @@
 package karnickeldev.solar.context;
 
-import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
 import karnickeldev.solar.network.net.core.ClientNetwork;
@@ -16,7 +15,6 @@ import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.server.LocalServer;
 import karnickeldev.solar.network.server.Server;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
-import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
 import karnickeldev.solar.util.threadlayout.ThreadAffinity;
@@ -24,6 +22,8 @@ import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
+import karnickeldev.solar.worldview.orbitsolver.ClientOrbitSolveSystem;
+import karnickeldev.solar.worldview.orbitsolver.OrbitSolver;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -47,7 +47,7 @@ public class GameContextBuilder {
 
         ClientNetwork clientNetwork = new NettyClientNetwork(host, port, clientListener, scheduler.main(), syncLayer, clientClock);
 
-        PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch(), threadLayout);
+        OrbitSolver orbitSolver = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, threadLayout);
 
         CameraInput cameraInput = new CameraInput(worldManager);
 
@@ -62,10 +62,11 @@ public class GameContextBuilder {
             clientNetwork,
             clientListener,
             clientClock,
-            rs,
+            orbitSolver,
             cameraInput,
             syncLayer,
-            shaderManager
+            shaderManager,
+            threadLayout
         );
     }
 
@@ -99,7 +100,7 @@ public class GameContextBuilder {
             server.getWorldManager().getWorld(1).getECS().hcs.add(i,0,0,0);
         }
 
-        PlanetoidRenderSystem rs = new PlanetoidRenderSystem(worldManager, SolarMain.getInstance().getBatch(), threadLayout);
+        OrbitSolver orbitSolver = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, threadLayout);
 
         CameraInput cameraInput = new CameraInput(worldManager);
 
@@ -114,10 +115,11 @@ public class GameContextBuilder {
             clientNetwork,
             clientListener,
             time,
-            rs,
+            orbitSolver,
             cameraInput,
             syncLayer,
-            shaderManager
+            shaderManager,
+            threadLayout
             );
     }
 

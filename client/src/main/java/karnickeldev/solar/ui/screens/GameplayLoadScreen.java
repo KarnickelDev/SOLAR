@@ -8,16 +8,9 @@ import karnickeldev.solar.ecs.components.ComponentType;
 import karnickeldev.solar.network.net.handlers.*;
 import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.render.BackgroundStarRenderer;
-import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
-import karnickeldev.solar.ui.core.UIManager;
 import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 
-import java.net.ConnectException;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author KarnickelDev
@@ -92,15 +85,8 @@ public final class GameplayLoadScreen implements GameState {
                 // probably better to do after processing input
                 ctx.getScheduler().main().update();
 
-                OrbitUpdater p = ctx.getPlanetoidRenderSystem().orbitUpdater;
-                if (ctx.getWorldManager().containsWorld(1)) {
-                    p.prepare(GameContext.get().getWorldManager().getWorld(1).getECS());
-                    return true;
-                }
-
-                return false;
+                return ctx.getWorldManager().containsWorld(1);
             })
-            .waitUntil(() -> !GameContext.get().getPlanetoidRenderSystem().orbitUpdater.isWarmupActive())
             ;
 
         return plan.build();
@@ -121,7 +107,7 @@ public final class GameplayLoadScreen implements GameState {
         LoadingPlanBuilder plan = new LoadingPlanBuilder();
 
         GameContextContainer gameCtx = GameContext.get();
-        plan.syncTask(() -> gameCtx.getPlanetoidRenderSystem().shutdown());
+        plan.syncTask(() -> gameCtx.getOrbitSolver().shutdown());
         plan.asyncTask(() -> gameCtx.getClientNetwork().disconnect());
         plan.syncTask(() -> {
             gameCtx.getScheduler().shutdown();

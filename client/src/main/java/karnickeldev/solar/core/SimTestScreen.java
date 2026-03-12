@@ -8,17 +8,18 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.GameContext;
+import karnickeldev.solar.context.GameContextBuilder;
 import karnickeldev.solar.context.GameContextContainer;
-import karnickeldev.solar.ecs.components.RadiusComponent;
+import karnickeldev.solar.ecs.EntityManager;
+import karnickeldev.solar.ecs.components.MassComponent;
+import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.TestCamPacket;
-import karnickeldev.solar.physics.Vector2D;
-import karnickeldev.solar.render.PlanetoidRenderSystem;
+import karnickeldev.solar.render.EntityRenderer;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.render.background.BackgroundGridRenderer;
 import karnickeldev.solar.render.background.RingRenderer;
 import karnickeldev.solar.render.camera.CameraInput;
-import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.render.core.RenderPipeline;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.components.DebugToolTip;
@@ -27,7 +28,15 @@ import karnickeldev.solar.ui.components.game.DateDisplay;
 import karnickeldev.solar.ui.components.game.TimeControl;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.world.ClientWorld;
+import karnickeldev.solar.world.World;
 import karnickeldev.solar.world.WorldManager;
+import karnickeldev.solar.worldview.orbitgraph.OrbitGraphData;
+import karnickeldev.solar.worldview.orbitgraph.OrbitGraphSystem;
+import karnickeldev.solar.worldview.orbitsolver.ClientOrbitSolveSystem;
+import karnickeldev.solar.worldview.orbitsolver.OrbitSolveInput;
+import karnickeldev.solar.worldview.orbitsolver.OrbitSolver;
+import karnickeldev.solar.worldview.transform.WorldTransformData;
+import karnickeldev.solar.worldview.transform.WorldTransformSystem;
 
 public class SimTestScreen implements Screen {
 
@@ -47,11 +56,14 @@ public class SimTestScreen implements Screen {
 
         renderCtx = new RendererContext(SolarMain.getInstance().getBatch(), new ShapeRenderer());
         renderPipeline = new RenderPipeline();
+
         renderPipeline.add(new BackgroundGridRenderer());
         renderPipeline.add(new RingRenderer());
+
+        renderPipeline.add(new EntityRenderer(GameContext.get().getWorldManager()));
     }
 
-    SimpleStarRenderer starRenderer;
+    public static SimpleStarRenderer starRenderer;
 
     @Override
     public void show() {
@@ -110,6 +122,28 @@ public class SimTestScreen implements Screen {
         gameContext.getScheduler().main().update();
         gameContext.getScheduler().timer().update(System.currentTimeMillis());
 
+        ClientWorld activeWorld = clientWorldManager.getActiveWorld();
+
+        // update orbitgraph and solve orbits
+        OrbitGraphSystem orbitNodes = activeWorld.getOrbitGraphSystem();
+        orbitNodes.rebuildIfNecessary(activeWorld.getECS());
+
+        OrbitGraphData orbitGraph = orbitNodes.getOrbitGraph();
+        OrbitSolver orbitSolver = GameContext.get().getOrbitSolver();
+
+        orbitSolver.beginNextFrame(new OrbitSolveInput(
+            orbitGraph.getAnchorCount(),
+            GameContext.get().getClock().getFrameClockTime(),
+            activeWorld.getECS().getComponentRegistry().get(OrbitDataComponent.class),
+            activeWorld.getECS().getComponentRegistry().get(MassComponent.class),
+            orbitGraph
+        ));
+
+        // resolve absolute world pos
+        WorldTransformData worldTransform = activeWorld.getWorldTransform();
+        WorldTransformSystem.transformToGlobalPos(orbitGraph, orbitSolver.getCurrentFrame(), worldTransform);
+
+        // rendering
         backgroundViewport.apply();
         SolarMain.getInstance().getBatch().setColor(1,1,1,1);
         SolarMain.getInstance().getBatch().setProjectionMatrix(backgroundViewport.getCamera().combined);
@@ -121,30 +155,11 @@ public class SimTestScreen implements Screen {
 
         renderPipeline.render(renderCtx, delta);
 
-        SolarMain.getInstance().getBatch().begin();
-        gameContext.getPlanetoidRenderSystem().renderPlanetoids();
-        SolarMain.getInstance().getBatch().end();
-
-        FloatingOriginCamera camera = clientWorldManager.getActiveWorld().getCamera();
-        Vector2D ePos = new Vector2D();
-        double alpha = clientWorldManager.getActiveWorld().getECS().hcs.getAlpha();
-
-        // render (each frame)
-        Vector2D camOrigin = camera.getRenderOrigin();
-
-        Vector2D trackPos = clientWorldManager.getActiveWorld().getECS().toWorldSpace(PlanetoidRenderSystem.track, alpha).add(camOrigin);
-        ePos.zero();
-
-        clientWorldManager.getActiveWorld().getECS().toWorldSpace(ePos, 1, alpha);
-
-        ePos.subtract(trackPos);
-
-
-        double starRadiusWorld = clientWorldManager.getActiveWorld().getECS().getComponentRegistry().get(RadiusComponent.class).getRadius(1);
-        starRenderer.renderStar(ePos.getX(), ePos.getY(), starRadiusWorld);
-
         UI.getUIManager().act(delta);
         UI.getUIManager().draw();
+
+        // finish next orbitsolve frame
+        GameContext.get().getOrbitSolver().finishFrame();
     }
 
     @Override

@@ -28,4 +28,8 @@ public abstract class DirtyFlagComponent {
         return dirty.cardinality();
     }
 
+    public boolean isDirty() {
+        return dirty.nextSetBit(0) != -1;
+    }
+
 }

@@ -12,19 +12,21 @@ import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.Tag;
 import karnickeldev.solar.ecs.components.*;
-import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.network.net.DefaultClientNetworkListener;
-import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
-import karnickeldev.solar.render.orbitupdate.OrbitUpdater;
-import karnickeldev.solar.render.orbitupdate.OrbitUpdaterImpl;
+import karnickeldev.solar.worldview.orbitgraph.OrbitGraphSystem;
+import karnickeldev.solar.worldview.orbitgraph.OrbitGraphData;
+import karnickeldev.solar.worldview.orbitsolver.ClientOrbitSolveSystem;
+import karnickeldev.solar.worldview.orbitsolver.OrbitSolveInput;
 import karnickeldev.solar.util.WorldDelta;
 import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
+import karnickeldev.solar.worldview.transform.WorldTransformData;
+import karnickeldev.solar.worldview.transform.WorldTransformSystem;
 
 public class PlanetoidRenderSystem {
 
@@ -35,12 +37,17 @@ public class PlanetoidRenderSystem {
 
     private final WorldManager<ClientWorld> worldManager;
 
-    public final OrbitUpdater orbitUpdater;
+    public final ClientOrbitSolveSystem orbitUpdater;
+
+    short[] anchorSx = new short[EntityManager.MAX_ENTITIES];
+    double[] anchorLx = new double[EntityManager.MAX_ENTITIES];
+    short[] anchorSy = new short[EntityManager.MAX_ENTITIES];
+    double[] anchorLy = new double[EntityManager.MAX_ENTITIES];
 
     public PlanetoidRenderSystem(WorldManager<ClientWorld> worldManager, SpriteBatch batch, ClientThreadLayout threadLayout) {
         this.worldManager = worldManager;
         this.batch = batch;
-        this.orbitUpdater = new OrbitUpdaterImpl(threadLayout);
+        this.orbitUpdater = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, threadLayout);
 
         int size = 256;
         int r = (size / 2) - 1;
@@ -66,14 +73,16 @@ public class PlanetoidRenderSystem {
 
     private void updateFrustumCullingCircle() {
         FloatingOriginCamera cam = worldManager.getActiveWorld().getCamera();
-        double halfW = (cam.getViewportWidth() / 2.0) * cam.getZoom();
-        double halfH = (cam.getViewportHeight() / 2.0) * cam.getZoom();
+        double halfW = (cam.getViewportWidth() * 0.5) * cam.getZoom();
+        double halfH = (cam.getViewportHeight() * 0.5) * cam.getZoom();
 
         frustumCullingRadiusSquared = (halfW * halfW) + (halfH * halfH);
     }
 
     private final double[] worldX = new double[EntityManager.MAX_ENTITIES];
     private final double[] worldY = new double[EntityManager.MAX_ENTITIES];
+
+    private final OrbitGraphSystem orbitNodes = new OrbitGraphSystem();
 
     public void renderPlanetoids() {
         int width = Gdx.graphics.getWidth();
@@ -82,7 +91,6 @@ public class PlanetoidRenderSystem {
         updateFrustumCullingCircle();
 
         ClientECS ecs = worldManager.getActiveWorld().getECS();
-        HCSClientSystem hcs = ecs.hcs;
         TagComponent tags = ecs.getComponentRegistry().get(TagComponent.class);
         RadiusComponent radius = ecs.getComponentRegistry().get(RadiusComponent.class);
         RenderComponent renderComponent = ecs.getComponentRegistry().get(RenderComponent.class);
@@ -90,6 +98,23 @@ public class PlanetoidRenderSystem {
 
         FloatingOriginCamera camera = worldManager.getActiveWorld().getCamera();
         double renderZoom = camera.getZoom();
+
+        if(orbitNodes.getOrbitGraph().getAnchorCount() == 0) {
+            orbitNodes.rebuild(ecs);
+
+            int anchorCount = orbitNodes.getOrbitGraph().getAnchorCount();
+            OrbitGraphData frame = orbitNodes.getOrbitGraph();
+            for(int i = 0; i < anchorCount; i++) {
+                int a = frame.getDfsOrder()[i];
+                if(frame.getParent()[a] == -1) {
+                    System.out.println("anchor: " + a + ", e: " + frame.getAnchorToEntity()[a] + ", p: -1");
+                } else {
+                    System.out.println("anchor: " + a + ", e: " + frame.getAnchorToEntity()[a] + ", p: " + frame.getAnchorToEntity()[frame.getParent()[a]]);
+                }
+            }
+        }
+
+        OrbitGraphData orbitGraph = orbitNodes.getOrbitGraph();
 
         Vector2D ePos = new Vector2D();
         Vector2D screenPos = new Vector2D();
@@ -99,21 +124,17 @@ public class PlanetoidRenderSystem {
 
         //update(GameContext.get().getClock().getFrameClockTime(), ecs);
         //hcs.swapBuffers();
-        orbitUpdater.startCompute(GameContext.get().getClock().getFrameClockTime(), ecs);
+
+        orbitUpdater.beginNextFrame(new OrbitSolveInput(
+            orbitGraph.getAnchorCount(),
+            GameContext.get().getClock().getFrameClockTime(),
+            orbitDataComponent,
+            ecs.getComponentRegistry().get(MassComponent.class),
+            orbitGraph
+        ));
 
         Vector2D camOrigin = camera.getRenderOrigin();
         WorldPos camCoord = camera.getOrigin();
-
-        //Vector2D trackPos = ecs.toWorldSpace(track, alpha).add(camOrigin);
-
-        WorldPos trackPos = new WorldPos();
-        trackPos.setFromArray(
-            orbitUpdater.getFrameData().sectorX, orbitUpdater.getFrameData().localX,
-            orbitUpdater.getFrameData().sectorY, orbitUpdater.getFrameData().localY,
-            track
-        );
-        SplitCoordMath.addInPlace(trackPos, camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly);
-        trackPos.set(camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly); // TODO: fix track pos
 
         Color drawColor = Color.WHITE;
         Color lastColor = batch.getColor();
@@ -126,7 +147,18 @@ public class PlanetoidRenderSystem {
         WorldPos worldPosReuse = new WorldPos();
         WorldDelta deltaReuse = new WorldDelta();
 
-        for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
+        // resolve absolute world pos
+        WorldTransformData worldTransform = worldManager.getActiveWorld().getWorldTransform();
+        WorldTransformSystem.transformToGlobalPos(orbitGraph, orbitUpdater.getCurrentFrame(), worldTransform);
+
+        int trackAnchor = orbitGraph.getEntityToAnchor()[track];
+        WorldPos trackPos = new WorldPos();
+        trackPos.set(anchorSx[trackAnchor], anchorLx[trackAnchor], anchorSy[trackAnchor], anchorLy[trackAnchor]);
+        SplitCoordMath.addInPlace(trackPos, camCoord.sx, camCoord.lx, camCoord.sy, camCoord.ly);
+
+        for (int i = 0; i < orbitGraph.getAnchorCount(); i++) {
+            int anchor = orbitGraph.getDfsOrder()[i];
+            int entity = orbitGraph.getAnchorToEntity()[anchor];
             if (!ecs.getEntityManager().isValid(entity) || !orbitDataComponent.has(entity) || !renderComponent.has(entity)) {
                 worldX[entity] = Double.MAX_VALUE;
                 worldY[entity] = Double.MAX_VALUE;
@@ -140,11 +172,7 @@ public class PlanetoidRenderSystem {
 
             //ePos.subtract(trackPos);
 
-            worldPosReuse.setFromArray(
-                orbitUpdater.getFrameData().sectorX, orbitUpdater.getFrameData().localX,
-                orbitUpdater.getFrameData().sectorY, orbitUpdater.getFrameData().localY,
-                entity
-            );
+            worldPosReuse.setFromArray(worldTransform.getAnchorSX(), worldTransform.getAnchorLX(), worldTransform.getAnchorSY(), worldTransform.getAnchorLY(), anchor);
 
             WorldDelta.delta(deltaReuse, worldPosReuse, trackPos);
 
@@ -178,7 +206,9 @@ public class PlanetoidRenderSystem {
             worldY[entity] = localY;
         }
 
-        for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
+        for (int i = 0; i < orbitGraph.getAnchorCount(); i++) {
+            int anchor = orbitGraph.getDfsOrder()[i];
+            int entity = orbitGraph.getAnchorToEntity()[anchor];
 
             double localX = worldX[entity];
             double localY = worldY[entity];
@@ -223,7 +253,7 @@ public class PlanetoidRenderSystem {
             batch.draw(testTex, (float)pos.getX() - 0.5f*tsize, (float)pos.getY() - 0.5f*tsize, tsize, tsize);
         }
 
-        orbitUpdater.waitAndSwap();
+        orbitUpdater.finishFrame();
 
         batch.setColor(1,1,1,1);
         //batch.end();
@@ -231,64 +261,6 @@ public class PlanetoidRenderSystem {
 
     public void shutdown() {
         orbitUpdater.shutdown();
-    }
-
-    public void update(long time, ClientECS ecs) {
-        HCSClientSystem hcs = ecs.hcs;
-        OrbitDataComponent orbitData = ecs.getComponentRegistry().get(OrbitDataComponent.class);
-        MassComponent massComponent = ecs.getComponentRegistry().get(MassComponent.class);
-
-        double simTimeSec = time / 1e6;
-
-        for (int entity = 1; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
-            if (!ecs.getEntityManager().isValid(entity) || !orbitData.has(entity)) continue;
-
-            double a = orbitData.getSemiMajorAxis(entity) * Units.toSU(1, Units.Length.AU);
-
-            float e = orbitData.getEccentricity(entity);
-            float omega = orbitData.getOmega(entity);
-            float t0 = orbitData.getT0(entity);
-
-            int centralBodyId = orbitData.getCentralBody(entity);
-
-            double mu = Units.G_KM_TON * massComponent.getMass(centralBodyId); // G * M
-
-            double n = Math.sqrt(mu / (a * a * a));     // mean motion
-            double M = (n * ((simTimeSec) - t0));       // mean anomaly
-
-            double E = solveKepler((double) M, e);       // eccentric anomaly
-            double theta = 2 * Math.atan2(
-                Math.sqrt(1 + e) * Math.sin(E / 2),
-                Math.sqrt(1 - e) * Math.cos(E / 2)
-            );
-
-            double r = a * (1 - e * Math.cos(E));
-
-            double orbitX = r * Math.cos(theta);
-            double orbitY = r * Math.sin(theta);
-
-            // Rotate by omega
-            double cosW = Math.cos(omega);
-            double sinW = Math.sin(omega);
-
-            double rotatedX = cosW * orbitX - sinW * orbitY;
-            double rotatedY = sinW * orbitX + cosW * orbitY;
-
-            hcs.getCurrent().addAndSplit(entity, centralBodyId, rotatedX, rotatedY);
-        }
-    }
-
-    private static double solveKepler(double M, double e) {
-        double E = M;
-        double epsilon = 1e-5f;
-        for (int i = 0; i < 5; i++) {
-            double f = E - e * Math.sin(E) - M;
-            double fPrime = 1 - e * Math.cos(E);
-            double delta = f / fPrime;
-            E -= delta;
-            if (Math.abs(delta) < epsilon) break;
-        }
-        return E;
     }
 
 }
