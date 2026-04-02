@@ -17,6 +17,7 @@ public final class OrbitGraphSystem {
     private int anchorCount;
 
     private boolean rebuildNecessary = false;
+    private boolean wasRebuild = false;
 
     public OrbitGraphData getOrbitGraph() {
         return graph;
@@ -26,7 +27,12 @@ public final class OrbitGraphSystem {
         rebuildNecessary = true;
     }
 
+    public boolean wasRebuildThisFrame() {
+        return wasRebuild;
+    }
+
     public void rebuildIfNecessary(ECSContext ecs) {
+        wasRebuild = false;
         if(rebuildNecessary) {
             rebuildNecessary = false;
             rebuild(ecs);
@@ -38,6 +44,7 @@ public final class OrbitGraphSystem {
         collectParents(ecs);
 
         OrbitGraphBuilder.build(anchorCount, graph.anchorToEntity, graph.entityToAnchor, tmpParentEntity, graph);
+        wasRebuild = true;
     }
 
     public void collectAnchors(ECSContext ecs) {

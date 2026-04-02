@@ -1,5 +1,6 @@
 package karnickeldev.solar.network.packets;
 
+import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
 import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
@@ -29,7 +30,7 @@ public class PacketFactory {
         for(int i = 0; i < count; i++) {
             if(world.getECS().getEntityManager().isValid(i)) {
                 created.add(i);
-            } else {
+            } else if(i != EntityManager.NO_ENTITY) {
                 destroyed.add(i);
             }
         }

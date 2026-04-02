@@ -10,11 +10,14 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.context.GameContextBuilder;
 import karnickeldev.solar.context.GameContextContainer;
+import karnickeldev.solar.context.ServerContext;
+import karnickeldev.solar.ecs.EntityFactory;
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.MassComponent;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.TestCamPacket;
+import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.render.EntityRenderer;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.render.background.BackgroundGridRenderer;
@@ -27,7 +30,9 @@ import karnickeldev.solar.ui.components.escapemenu.EscapeMenu;
 import karnickeldev.solar.ui.components.game.DateDisplay;
 import karnickeldev.solar.ui.components.game.TimeControl;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.world.ClientWorld;
+import karnickeldev.solar.world.ServerWorld;
 import karnickeldev.solar.world.World;
 import karnickeldev.solar.world.WorldManager;
 import karnickeldev.solar.worldview.orbitgraph.OrbitGraphData;
@@ -131,13 +136,19 @@ public class SimTestScreen implements Screen {
         OrbitGraphData orbitGraph = orbitNodes.getOrbitGraph();
         OrbitSolver orbitSolver = GameContext.get().getOrbitSolver();
 
-        orbitSolver.beginNextFrame(new OrbitSolveInput(
-            orbitGraph.getAnchorCount(),
+        OrbitSolveInput orbitSolveInput = new OrbitSolveInput(
             GameContext.get().getClock().getFrameClockTime(),
+            orbitGraph,
             activeWorld.getECS().getComponentRegistry().get(OrbitDataComponent.class),
-            activeWorld.getECS().getComponentRegistry().get(MassComponent.class),
-            orbitGraph
-        ));
+            activeWorld.getECS().getComponentRegistry().get(MassComponent.class)
+        );
+
+        // THIS IS VERY IMPORTANT
+        // without this we have stale references to anchors in OrbitSolver!!!
+        if(orbitNodes.wasRebuildThisFrame()) {
+            GameContext.get().getOrbitSolver().onOrbitGraphRebuild(orbitSolveInput);
+        }
+        orbitSolver.beginNextFrame(orbitSolveInput);
 
         // resolve absolute world pos
         WorldTransformData worldTransform = activeWorld.getWorldTransform();

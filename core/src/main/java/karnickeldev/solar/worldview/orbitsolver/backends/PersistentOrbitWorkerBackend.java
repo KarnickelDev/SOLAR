@@ -84,11 +84,6 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
 
     @Override
     public void startExecute(OrbitJob[] jobs, OrbitLocalFrame out, long simTimeMicros) {
-        if(jobs.length < 1 || jobs[0].soa.getCount() < 1) {
-            Logger.error("[PersistentOrbitWorkerBackend] ", "count smaller than 1 (no entities?)");
-            return;
-        }
-
         this.jobs = jobs;
         this.jobCount = jobs.length;
 
@@ -165,17 +160,18 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
             for(int j = 0; j < localJobCount; j++) {
                 OrbitJob job = localJobs[j];
 
-                int count = job.count;
                 OrbitDataSoA soa = job.soa;
                 OrbitMathKernel kernel = job.kernel;
 
-                // interleaved chunk scheduling
-                int stride = workerCount * chunkSize;
-                int start = workerId * chunkSize;
+                int start = job.start;
+                int end = job.end;
 
-                for (int base = start; base < count; base += stride) {
-                    int high = Math.min(base + chunkSize, count);
-                    if(base >= high) break;
+                int stride = workerCount * chunkSize;
+                int workerStart = start + workerId * chunkSize;
+
+                for (int base = workerStart; base < end; base += stride) {
+                    int high = Math.min(base + chunkSize, end);
+                    if (base >= high) break;
 
                     kernel.computeRange(soa, localOut, localTime, base, high);
                 }

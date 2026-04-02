@@ -1,11 +1,16 @@
 package karnickeldev.solar.simulation.execution;
 
 import karnickeldev.solar.context.ServerContext;
+import karnickeldev.solar.ecs.EntityFactory;
+import karnickeldev.solar.ecs.components.OrbitDataComponent;
+import karnickeldev.solar.network.packets.EntityLifecyclePacket;
+import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
 import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.util.threadlayout.ThreadAffinity;
 import karnickeldev.solar.util.threadlayout.ThreadContext;
@@ -131,6 +136,33 @@ public class SimulationManager implements Runnable {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 3);
         if(threadContext.useCoreAffinity()) ThreadAffinity.pinToCore(threadContext.nextCpuId());
 
+        ServerContext.get().getServer().getScheduler().schedule(() -> {
+            Logger.log("SERVER ADDING NEW ENTITIES");
+
+
+            ServerWorld world1 = ServerContext.get().getServer().getWorldManager().getWorld(1);
+
+            for (int i = 0; i < (100_000); i++) {
+                int e = EntityFactory.createStaticPlanetoidHCS(world1.getECS(), "",
+                    Units.toSU(MathUtil.random(1, 1e10f), Units.Mass.TON),
+                    1e-3f, 1,
+                    (float) Units.convert(MathUtil.random(1e-2f, 100f), Units.Length.AU, Units.Length.AU),
+                    MathUtil.random(0, 0.9f), MathUtil.random(0, (float) (2 * Math.PI)), 0, 1);
+
+                if(Math.random() > 0.3) {
+                    world1.getECS().getComponentRegistry().get(OrbitDataComponent.class).remove(e);
+                }
+            }
+
+            Packet p = PacketFactory.createFullSnapshotPacket(world1);
+            ServerContext.get().getServer().getServerNetwork().broadcast(p);
+
+            ServerContext.get().getServer().getServerNetwork().flush();
+
+
+
+        }, 1000 * 3);
+
         while(running.get()) {
             /*
             Simulate one "simulation time tick" (actual world ticks executed depend on sim speed and world TickRate)
@@ -138,6 +170,9 @@ public class SimulationManager implements Runnable {
             tickStart = System.nanoTime();
 
             dispatcher.update();
+
+            ServerContext.get().getServer().getScheduler().main().update();
+            ServerContext.get().getServer().getScheduler().timer().update(System.currentTimeMillis());
 
             List<SimulationTask> tasks;
             synchronized (schedulerLock) {

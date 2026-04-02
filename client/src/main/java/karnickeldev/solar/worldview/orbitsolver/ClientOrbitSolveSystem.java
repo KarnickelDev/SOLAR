@@ -1,20 +1,15 @@
 package karnickeldev.solar.worldview.orbitsolver;
 
+import com.badlogic.gdx.Gdx;
 import jdk.incubator.vector.DoubleVector;
-import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.worldview.orbitsolver.backends.PersistentOrbitWorkerBackend;
-import karnickeldev.solar.worldview.orbitsolver.mathkernel.OrbitDataSoA;
-import karnickeldev.solar.worldview.orbitsolver.mathkernel.OrbitMathKernelSIMDCritical;
-import karnickeldev.solar.worldview.orbitsolver.mathkernel.OrbitMathKernelSIMDSlow;
-
-import java.util.Arrays;
 
 /**
  * @author KarnickelDev
  * @since 03.03.2026
  **/
-public class ClientOrbitSolveSystem implements OrbitSolver{
+public class ClientOrbitSolveSystem implements OrbitSolver {
 
     private static final int DEFAULT_CHUNK_SIZE;
     static {
@@ -25,58 +20,47 @@ public class ClientOrbitSolveSystem implements OrbitSolver{
     }
 
     private final OrbitExecutionBackend backend;
-    private final OrbitMathKernel kernel;
 
-    private OrbitMathKernel slowKernel = new OrbitMathKernelSIMDSlow();
-
-    private final OrbitDataSoA soa;
     private final OrbitLocalFrame frameA;
     private final OrbitLocalFrame frameB;
 
-    private final OrbitPrecisionManager precisionManager;
+    public final ClientOrbitPrecisionManager precisionManager;
 
     private OrbitLocalFrame currentFrame;
     private OrbitLocalFrame nextFrame;
 
     public ClientOrbitSolveSystem(int capacity, ClientThreadLayout layout) {
-        this.soa = new OrbitDataSoA(capacity);
-
         this.frameA = new OrbitLocalFrame();
         this.frameB = new OrbitLocalFrame();
         this.currentFrame = frameA;
         this.nextFrame = frameB;
 
         this.backend = new PersistentOrbitWorkerBackend(layout, DEFAULT_CHUNK_SIZE);
-        this.kernel = new OrbitMathKernelSIMDCritical();
 
-        this.precisionManager = new OrbitPrecisionManager(EntityManager.MAX_ENTITIES);
+        this.precisionManager = new ClientOrbitPrecisionManager(capacity);
     }
 
     public ClientOrbitSolveSystem(int capacity, int workerCount) {
-        this.soa = new OrbitDataSoA(capacity);
-
         this.frameA = new OrbitLocalFrame();
         this.frameB = new OrbitLocalFrame();
         this.currentFrame = frameA;
         this.nextFrame = frameB;
 
         this.backend = new PersistentOrbitWorkerBackend(workerCount, DEFAULT_CHUNK_SIZE);
-        this.kernel = new OrbitMathKernelSIMDCritical();
 
-        this.precisionManager = new OrbitPrecisionManager(EntityManager.MAX_ENTITIES);
+        this.precisionManager = new ClientOrbitPrecisionManager(capacity);
     }
 
     public void beginNextFrame(OrbitSolveInput input) {
-        //OrbitDataSoA.build(input, soa);
-        //OrbitJob[] jobs = new OrbitJob[]{new OrbitJob(soa, kernel, soa.getCount())};
-
         precisionManager.updateContext(input);
-        OrbitJob[] jobs = new OrbitJob[]{
-            new OrbitJob(precisionManager.getTiers()[0], kernel),
-            new OrbitJob(precisionManager.getTiers()[1], slowKernel)
-        };
+        OrbitJob[] jobs = precisionManager.buildJobs(Gdx.graphics.getDeltaTime());
 
         backend.startExecute(jobs, nextFrame, input.simTimeMicros());
+    }
+
+    @Override
+    public void onOrbitGraphRebuild(OrbitSolveInput input) {
+        precisionManager.rebuild(input);
     }
 
     public void finishFrame() {
@@ -85,6 +69,12 @@ public class ClientOrbitSolveSystem implements OrbitSolver{
         OrbitLocalFrame tmp = currentFrame;
         currentFrame = nextFrame;
         nextFrame = tmp;
+
+        // TODO: THIS VERY BAD!!!
+        System.arraycopy(currentFrame.sectorX, 0, nextFrame.sectorX, 0, currentFrame.sectorX.length);
+        System.arraycopy(currentFrame.localX, 0, nextFrame.localX, 0, currentFrame.localX.length);
+        System.arraycopy(currentFrame.sectorY, 0, nextFrame.sectorY, 0, currentFrame.sectorY.length);
+        System.arraycopy(currentFrame.localY, 0, nextFrame.localY, 0, currentFrame.localY.length);
     }
 
     public void shutdown() {

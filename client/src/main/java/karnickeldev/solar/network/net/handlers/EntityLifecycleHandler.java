@@ -7,6 +7,8 @@ import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
 
+import java.util.Arrays;
+
 /**
  * @author KarnickelDev
  * @since 03.07.2025
@@ -21,6 +23,9 @@ public class EntityLifecycleHandler implements PacketHandler<EntityLifecyclePack
             Logger.error("Error handling EntityLifecyclePacket: unknown WorldId " + worldId);
             return;
         }
+
+        Logger.log("Received EntityLifecyclePacket for world " + worldId
+            + " (created: " + packet.createdEntityIds.length + ", destroyed: "  + packet.destroyedEntityIds.length + ")");
 
         ClientECS ecs = worldManager.getWorld(worldId).getECS();
 

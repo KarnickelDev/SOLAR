@@ -100,7 +100,7 @@ public class GameContextBuilder {
             server.getWorldManager().getWorld(1).getECS().hcs.add(i,0,0,0);
         }
 
-        OrbitSolver orbitSolver = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, threadLayout);
+        OrbitSolver orbitSolver = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, 1);
 
         CameraInput cameraInput = new CameraInput(worldManager);
 

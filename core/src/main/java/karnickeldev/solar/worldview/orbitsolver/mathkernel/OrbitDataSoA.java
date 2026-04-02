@@ -2,6 +2,7 @@ package karnickeldev.solar.worldview.orbitsolver.mathkernel;
 
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
 import karnickeldev.solar.physics.Units;
+import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.worldview.orbitsolver.OrbitSolveInput;
 
 import java.util.Arrays;
@@ -47,8 +48,20 @@ public final class OrbitDataSoA {
         return count;
     }
 
+    public void clear() {
+        for (int i = 0; i < count; i++) {
+            int anchor = anchorIds[i];
+            anchorToIndex[anchor] = -1;
+        }
+        count = 0;
+    }
+
     public void addEntity(int anchor, OrbitSolveInput input) {
         int idx = count++;
+
+        if (anchorToIndex[anchor] != -1) {
+            throw new IllegalStateException("Entity already in SoA: " + anchor);
+        }
 
         anchorIds[idx] = anchor;
         anchorToIndex[anchor] = idx;
@@ -60,6 +73,11 @@ public final class OrbitDataSoA {
         if(count <= 0) throw new RuntimeException("Can't remove from empty " + this.getClass().getSimpleName());
 
         int idx = anchorToIndex[anchor];
+        if (idx == -1) {
+            Logger.error("Tried removing invalid anchor -1 from " + this.getClass().getSimpleName());
+            return;
+        }
+
         int last = count - 1;
 
         if(idx != last) {

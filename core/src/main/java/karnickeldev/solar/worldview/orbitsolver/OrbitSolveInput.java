@@ -9,9 +9,12 @@ import karnickeldev.solar.worldview.orbitgraph.OrbitGraphData;
  * @since 22.02.2026
  **/
 public record OrbitSolveInput(
-    int usedCapacity,
     long simTimeMicros,
+    OrbitGraphData orbitGraph,
     OrbitDataComponent orbitData,
-    MassComponent mass,
-    OrbitGraphData orbitGraph
-) {}
+    MassComponent mass
+) {
+    public int usedCapacity() {
+        return orbitGraph.getAnchorCount();
+    }
+}

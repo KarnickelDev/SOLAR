@@ -6,19 +6,28 @@ import jdk.incubator.vector.VectorSpecies;
 import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.worldview.orbitsolver.OrbitLocalFrame;
 import karnickeldev.solar.worldview.orbitsolver.OrbitMathKernel;
-import org.bouncycastle.util.test.SimpleTest;
 
 /**
  * @author KarnickelDev
  * @since 03.03.2026
  **/
-public final class OrbitMathKernelSIMDCritical implements OrbitMathKernel {
+public final class OrbitMathKernelSIMD implements OrbitMathKernel {
 
     private static final VectorSpecies<Double> SPECIES = DoubleVector.SPECIES_PREFERRED;
     private static final DoubleVector ONE = DoubleVector.broadcast(SPECIES, 1.0);
 
     private static final ThreadLocal<double[]> SCRATCH_X = ThreadLocal.withInitial(() -> new double[SPECIES.length()]);
     private static final ThreadLocal<double[]> SCRATCH_Y = ThreadLocal.withInitial(() -> new double[SPECIES.length()]);
+
+    private final byte newtonIterations;
+
+    public OrbitMathKernelSIMD() {
+        this(4);
+    }
+
+    public OrbitMathKernelSIMD(int newtonIterations) {
+        this.newtonIterations = (byte) Math.min(newtonIterations, 16);
+    }
 
     public void computeRange(OrbitDataSoA soa, OrbitLocalFrame out, long simTimeMicros, int low, int high) {
         int vecLen = SPECIES.length();
@@ -50,7 +59,7 @@ public final class OrbitMathKernelSIMDCritical implements OrbitMathKernel {
             DoubleVector cosE;
 
             // Newton iterations
-            for(int iter = 0; iter < 4; iter++) {
+            for(int iter = 0; iter < newtonIterations; iter++) {
                 sinE = vEcc.lanewise(VectorOperators.SIN);
                 cosE = vEcc.lanewise(VectorOperators.COS);
 

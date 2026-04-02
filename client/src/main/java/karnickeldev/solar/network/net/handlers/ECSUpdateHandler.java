@@ -28,6 +28,8 @@ public class ECSUpdateHandler implements PacketHandler<ECSUpdatePacket> {
             return;
         }
 
+        Logger.log("Received ECS Update for World " + worldId + "(changed components: " + packet.getSnapshots().length + ")");
+
         worldManager.getWorld(worldId).getECS().getComponentRegistry().applyAllSnapshots(snapshots);
 
         // TODO: there should be a better way

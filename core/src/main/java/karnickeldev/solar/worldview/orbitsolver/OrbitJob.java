@@ -10,12 +10,13 @@ public final class OrbitJob {
 
     public OrbitDataSoA soa;
     public OrbitMathKernel kernel;
-    public int count;
+    public int start, end;
 
-    public OrbitJob(OrbitDataSoA soa, OrbitMathKernel kernel) {
+    public OrbitJob(OrbitDataSoA soa, OrbitMathKernel kernel, int start, int end) {
         this.soa = soa;
         this.kernel = kernel;
-        this.count = soa.getCount();
+        this.start = start;
+        this.end = end;
     }
 
 }

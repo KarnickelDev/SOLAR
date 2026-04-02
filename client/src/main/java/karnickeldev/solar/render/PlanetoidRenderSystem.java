@@ -126,11 +126,10 @@ public class PlanetoidRenderSystem {
         //hcs.swapBuffers();
 
         orbitUpdater.beginNextFrame(new OrbitSolveInput(
-            orbitGraph.getAnchorCount(),
             GameContext.get().getClock().getFrameClockTime(),
+            orbitGraph,
             orbitDataComponent,
-            ecs.getComponentRegistry().get(MassComponent.class),
-            orbitGraph
+            ecs.getComponentRegistry().get(MassComponent.class)
         ));
 
         Vector2D camOrigin = camera.getRenderOrigin();

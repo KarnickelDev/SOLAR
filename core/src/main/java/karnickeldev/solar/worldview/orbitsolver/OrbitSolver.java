@@ -12,5 +12,7 @@ public interface OrbitSolver {
 
     OrbitLocalFrame getCurrentFrame();
 
+    void onOrbitGraphRebuild(OrbitSolveInput input);
+
     void shutdown();
 }
