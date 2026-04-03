@@ -81,7 +81,7 @@ public class OptionsMenu implements UIComponent {
         categories.setSize(150, table.getHeight());
         categories.pad(0);
 
-        Label settings = new Label("Settings", new Label.LabelStyle(UI.getFontManager().getFont(25, true), UI.WHITE));
+        Label settings = new Label("Settings", new Label.LabelStyle(UI.getFontManager().getFont(50, true), UI.WHITE));
 
         TextButton general = new TextButton("General", UI.skin(),"bold");
         TextButton video = new TextButton("Video", UI.skin(),"bold");

@@ -90,7 +90,7 @@ public class DateDisplay implements UIComponent {
         group.center().pad(10).padBottom(2).padTop(2);
 
         TextButton.TextButtonStyle toggleStyle = new TextButton.TextButtonStyle(UI.skin().get("default", TextButton.TextButtonStyle.class));
-        toggleStyle.font = UI.getFontManager().getFont(FontManager.Fonts.FONT_AWESOME, 22, false);
+        toggleStyle.font = UI.getFontManager().getFont(FontManager.Fonts.FONT_AWESOME, 42, false);
         toggleStyle.checked = null;
         toggleStyle.up = null;
         toggleStyle.down = null;
@@ -104,7 +104,7 @@ public class DateDisplay implements UIComponent {
 
         group.add(pauseButton).expand().fill().width(40).height(40);
 
-        Label.LabelStyle style = new Label.LabelStyle(UI.getFontManager().getFont(10, false), UI.WHITE);
+        Label.LabelStyle style = new Label.LabelStyle(UI.getFontManager().getFont(20, false), UI.WHITE);
 
         dateLabel = new Label(getDateText(), style);
         dateLabel.setAlignment(Align.center);
@@ -125,7 +125,7 @@ public class DateDisplay implements UIComponent {
         timeSubGroup.add(new Label(":", style)).padLeft(4).padRight(4);
         timeSubGroup.add(minuteLabel).width(timeWidth);
 
-        speedLabel = new Label("normal", new Label.LabelStyle(UI.getFontManager().getFont(10), UI.WHITE));
+        speedLabel = new Label("normal", new Label.LabelStyle(UI.getFontManager().getFont(20), UI.WHITE));
         speedLabel.setAlignment(Align.center);
 
         VerticalGroup timeDateGroup = new VerticalGroup();

@@ -38,7 +38,7 @@ public class ServerListEntry extends Table {
         nameLabel = new Label(name, skin);
 
         Label.LabelStyle small = new Label.LabelStyle(nameLabel.getStyle());
-        small.font = UI.getFontManager().getFont(10, false);
+        small.font = UI.getFontManager().getFont(20, false);
         ipLabel = new Label('[' + ip + ']', small);
 
         connect = new TextButton("Join", skin);

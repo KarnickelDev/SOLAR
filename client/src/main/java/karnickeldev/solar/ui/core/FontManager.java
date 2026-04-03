@@ -32,15 +32,17 @@ public class FontManager {
 
     private final Map<String, BitmapFont> fontCache = new HashMap<>(8);
 
-    protected FontManager() {
+    private float density;
 
+    protected FontManager() {
+        density = Gdx.graphics.getDensity();
     }
 
     public BitmapFont getFont(Fonts font, int size, boolean bold) {
         String key = font.name + "-" + size + (bold ? "-bold" : "-reg");
 
         if(!fontCache.containsKey(key)) {
-            fontCache.put(key, generateFont(font, size, Gdx.graphics.getHeight(), bold));
+            fontCache.put(key, generateFont(font, size, bold));
         }
         return fontCache.get(key);
     }
@@ -58,12 +60,12 @@ public class FontManager {
             font.dispose();
         }
         fontCache.clear();
+        density = Gdx.graphics.getDensity();
     }
 
-    // TODO: DONT scale by window height, just based on DPI (Gdx.graphics.getDensity)
-    public BitmapFont generateFont(Fonts font, int size, int appHeight, boolean bold) {
+    protected BitmapFont generateFont(Fonts font, int size, boolean bold) {
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        param.size = Math.max(3, Math.round(size * (appHeight / (float)UI.VIRTUAL_HEIGHT)));
+        param.size = Math.max(3, Math.round(size * density));
         param.minFilter = Texture.TextureFilter.Linear;
         param.magFilter = Texture.TextureFilter.Linear;
         param.incremental = false;

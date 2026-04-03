@@ -48,7 +48,7 @@ public class MainMenu implements UIComponent {
         table.top().left();
 
         TextButton.TextButtonStyle menuButtonStyle = new TextButton.TextButtonStyle(UI.skin().get("default", TextButton.TextButtonStyle.class));
-        menuButtonStyle.font = UI.getFontManager().getFont(22, true);
+        menuButtonStyle.font = UI.getFontManager().getFont(44, true);
         menuButtonStyle.up = null;
         menuButtonStyle.down = null;
         menuButtonStyle.overFontColor = menuButtonStyle.fontColor.cpy().mul(1.25f);
@@ -108,7 +108,7 @@ public class MainMenu implements UIComponent {
         float padTop = 15;
         float padBottom = 15;
 
-        BitmapFont titleFont = UI.getFontManager().getFont(50, true);
+        BitmapFont titleFont = UI.getFontManager().getFont(100, true);
         Label titleLabel = new Label(Metadata.APP_NAME, new Label.LabelStyle(titleFont, UI.WHITE));
         titleLabel.setAlignment(Align.left);
 

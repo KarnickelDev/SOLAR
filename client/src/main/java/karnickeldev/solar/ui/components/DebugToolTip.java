@@ -73,7 +73,7 @@ public class DebugToolTip implements UIComponent {
     }
 
     public void resize(int width, int height) {
-        Label.LabelStyle labelStyle = new Label.LabelStyle(UI.getFontManager().getFont(10, false), Color.WHITE);
+        Label.LabelStyle labelStyle = new Label.LabelStyle(UI.getFontManager().getFont(20, false), Color.WHITE);
         fps = new Label("FPS: 9999", labelStyle);
         tps = new Label("TPS: 999", labelStyle);
         ping = new Label("Ping: 999ms", labelStyle);

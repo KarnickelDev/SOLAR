@@ -64,8 +64,8 @@ public class SkinManager implements Disposable {
 
         fontManager.clearCache();
 
-        BitmapFont regular = fontManager.getFont(14, false);
-        BitmapFont bold = fontManager.getFont(14, true);
+        BitmapFont regular = fontManager.getFont(28, false);
+        BitmapFont bold = fontManager.getFont(28, true);
 
         // Textures
         skin.addRegions(skinAtlas);

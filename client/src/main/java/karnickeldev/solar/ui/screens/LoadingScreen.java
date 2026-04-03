@@ -174,7 +174,7 @@ public class LoadingScreen implements Screen {
         SolarMain.getInstance().getBatch().draw(StarField.starFieldBuffer.getColorBufferTexture(),0,0);
 
         if(SkinManager.isInit()) {
-            BitmapFont font = UI.getFontManager().getFont(14, false);
+            BitmapFont font = UI.getFontManager().getFont(28, false);
             versionGlyphLayout.setText(font, Metadata.APP_NAME + " v" + Metadata.VERSION);
             font.draw(SolarMain.getInstance().getBatch(), versionGlyphLayout,5,versionGlyphLayout.height + 5);
         }

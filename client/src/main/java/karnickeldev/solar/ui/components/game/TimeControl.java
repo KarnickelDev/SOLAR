@@ -61,7 +61,7 @@ public class TimeControl implements UIComponent {
         speedButtons.setUncheckLast(true);
 
         TextButton.TextButtonStyle style = new TextButton.TextButtonStyle(UI.skin().get("toggle", TextButton.TextButtonStyle.class));
-        style.font = UI.getFontManager().getFont(8, false);
+        style.font = UI.getFontManager().getFont(16, false);
 
         for(byte i = 0; i < SimSpeedController.SPEED_PRESETS.length; i++) {
             byte speedIndex = i;
