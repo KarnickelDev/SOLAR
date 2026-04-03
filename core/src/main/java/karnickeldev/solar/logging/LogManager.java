@@ -1,5 +1,7 @@
 package karnickeldev.solar.logging;
 
+import karnickeldev.solar.logging.appender.ConsoleAppender;
+
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -31,6 +33,8 @@ public class LogManager {
         worker = Thread.ofPlatform().daemon().priority(Thread.NORM_PRIORITY)
             .name("Logging-Thread")
             .start(LogManager::processLoop);
+
+        printHostSpecs();
     }
 
     public static void shutdown() {
@@ -48,7 +52,7 @@ public class LogManager {
         return level.ordinal() >= currentLevel.ordinal();
     }
 
-    static void addAppender(LogAppender appender) {
+    public static void addAppender(LogAppender appender) {
         appenders.add(appender);
     }
 
@@ -81,6 +85,49 @@ public class LogManager {
                 appender.append(event);
             }
         }
+        for(LogAppender appender : appenders) {
+            appender.close();
+        }
+    }
+
+    private static void printHostSpecs() {
+        String template = """
+            Host specs {
+            OS:\s
+              Name: {}
+              Version: {}
+              Architecture: {}
+            Java:\s
+              Version: {}
+              Vendor: {}
+              JVMName: {}
+            \s
+              Memory: {}
+              Processors: {}
+            }
+            """;
+
+        Object[] args = {
+            System.getProperty("os.name"),
+            System.getProperty("os.version"),
+            System.getProperty("os.arch"),
+
+            System.getProperty("java.version"),
+            System.getProperty("java.vendor"),
+            System.getProperty("java.vm.name"),
+
+            getMemoryMB() + " MB",
+            Runtime.getRuntime().availableProcessors()
+        };
+
+        enqueue(new LogEvent(LogLevel.INFO, LogTag.GENERAL.toString(), template, args, null));
+    }
+
+    private static long getMemoryMB() {
+        long max =  Runtime.getRuntime().maxMemory();
+        if(max == Long.MAX_VALUE) {
+            return -1;
+        } else return max / 1_000_000;
     }
 
 }

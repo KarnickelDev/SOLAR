@@ -129,7 +129,7 @@ public final class ClientOrbitPrecisionManager implements OrbitPrecisionManager 
     public void rebuild(OrbitSolveInput input) {
         if(!initialized) return;
 
-        System.out.println("Rebuild:");
+        logger.debug("Rebuilding OrbitTiers");
 
         // clear everything
         for (OrbitTier tier : tiers) {
@@ -152,8 +152,6 @@ public final class ClientOrbitPrecisionManager implements OrbitPrecisionManager 
             currentTier[anchor] = tier;
 
             tiers[tier].orbitSoA.addEntity(anchor, input);
-
-            System.out.println("anchor " + anchor + " -> tier " + tier);
         }
         justRebuilt = true;
     }

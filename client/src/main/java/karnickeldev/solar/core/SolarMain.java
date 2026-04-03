@@ -11,6 +11,7 @@ import karnickeldev.solar.context.GameContextContainer;
 import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.core.gamestates.LoadingPlanBuilder;
+import karnickeldev.solar.logging.LogManager;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.settings.Settings;
@@ -169,6 +170,7 @@ public class SolarMain extends Game {
             }
 
             Logger.get(LogTag.SHUTDOWN).info("Shutdown complete, bye!");
+            LogManager.shutdown();
 
         } catch (Exception e) {
             Logger.get(LogTag.SHUTDOWN).error("Error during shutdown: " + e.getMessage(), e);

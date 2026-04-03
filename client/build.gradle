@@ -4,12 +4,12 @@ buildscript {
   }
   dependencies {
     if (enableGraalNative == 'true') {
-      classpath "org.graalvm.buildtools.native:org.graalvm.buildtools.native.gradle.plugin:0.9.28"
+      classpath "org.graalvm.buildtools.native:org.graalvm.buildtools.native.gradle.plugin:0.11.1"
     }
   }
 }
 plugins {
-  id "io.github.fourlastor.construo" version "1.4.1"
+  id "io.github.fourlastor.construo" version "2.1.0"
   id "application"
 }
 
@@ -81,7 +81,7 @@ jar {
 construo {
   name.set(appName)
   humanName.set(appName)
-  version.set("$rootProject.version")
+  version = rootProject.version
 
   targets.configure {
     create("linuxX64", Target.Linux) {

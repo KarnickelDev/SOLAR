@@ -1,12 +1,12 @@
-package karnickeldev.solar.logging;
+package karnickeldev.solar.logging.appender;
 
 /**
  * @author KarnickelDev
  * @since 03.04.2026
  **/
-final class Formatter {
+public final class LogFormatter {
 
-    static String format(String template, Object[] args) {
+    public static String format(String template, Object[] args) {
         if(args == null) return template;
 
         StringBuilder sb = new StringBuilder();

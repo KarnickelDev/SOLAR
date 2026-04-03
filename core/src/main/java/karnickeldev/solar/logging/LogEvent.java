@@ -7,12 +7,12 @@ package karnickeldev.solar.logging;
  **/
 public final class LogEvent {
 
-    final long time;
-    final LogLevel level;
-    final String tag;
-    final String template;
-    final Object[] args;
-    final Throwable throwable;
+    public final long time;
+    public final LogLevel level;
+    public final String tag;
+    public final String template;
+    public final Object[] args;
+    public final Throwable throwable;
 
     LogEvent(LogLevel level, String tag, String template, Object[] args, Throwable throwable) {
         this.time = System.currentTimeMillis();

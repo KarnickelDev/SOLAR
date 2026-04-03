@@ -4,9 +4,11 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import karnickeldev.solar.Metadata;
 import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.logging.LogAppender;
 import karnickeldev.solar.logging.LogLevel;
 import karnickeldev.solar.logging.LogManager;
 import karnickeldev.solar.logging.Logger;
+import karnickeldev.solar.logging.appender.FileAppender;
 import karnickeldev.solar.settings.Resolution;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.ui.ErrorTextbox;
@@ -23,31 +25,38 @@ public class Lwjgl3Launcher {
     public static void main(String[] args) {
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
 
-        LogManager.init();
-        LogManager.setLevel(LogLevel.INFO);
-
-        StartupCommands.handleStartupCommands(args);
-
-        Logger logger = Logger.get("Startup");
-        logger.info("loading");
-
+        // PREPARE GAME DIRECTORY
         if (!Metadata.loadVersionData()) {
-            logger.error("Unable to load version data");
+            System.err.println("Unable to load version data");
             new ErrorTextbox("Unable to load version data");
             return;
         }
 
         if (!Metadata.ROOT_DIR.exists()) {
-            logger.info("Creating Folder {}", Metadata.ROOT_DIR);
+            System.out.println("Creating Folder" + Metadata.ROOT_DIR);
             if (Metadata.ROOT_DIR.mkdir()) {
-                logger.info("Folder created");
+                System.out.println("Folder created");
             } else {
-                logger.error("Unable to create folder " + Metadata.ROOT_DIR);
+                System.err.println("Unable to create folder " + Metadata.ROOT_DIR);
                 new ErrorTextbox("Unable to create folder " + Metadata.ROOT_DIR);
                 return;
             }
         }
 
+        // STARTUP
+        Logger logger = Logger.get("Startup");
+        logger.info("loading");
+
+        try {
+            LogManager.addAppender(new FileAppender(new File(Metadata.ROOT_DIR, "log.txt")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        LogManager.setLevel(LogLevel.DEBUG);
+        LogManager.init();
+
+        StartupCommands.handleStartupCommands(args);
 
         File cfg = new File(Metadata.ROOT_DIR.getAbsolutePath(), "settings.properties");
         Settings settings = new Settings(cfg);

@@ -1,10 +1,12 @@
-package karnickeldev.solar.logging;
+package karnickeldev.solar.logging.appender;
+
+import karnickeldev.solar.logging.*;
 
 /**
  * @author KarnickelDev
  * @since 03.04.2026
  **/
-final class ConsoleAppender implements LogAppender {
+public final class ConsoleAppender implements LogAppender {
 
     @Override
     public void append(LogEvent e) {
@@ -18,7 +20,7 @@ final class ConsoleAppender implements LogAppender {
         appendPadded(sb, e.tag, LogTag.getMaxWidth());
         sb.append("] ");
 
-        String msg = e.args == null ? e.template : Formatter.format(e.template, e.args);
+        String msg = LogFormatter.format(e.template, e.args);
         if(e.level == LogLevel.INFO) sb.append(Ansi.RESET);
         sb.append(msg).append(Ansi.RESET);
 
@@ -30,6 +32,11 @@ final class ConsoleAppender implements LogAppender {
         if(e.throwable != null) {
             e.throwable.printStackTrace(System.out);
         }
+    }
+
+    @Override
+    public void close() {
+        // nop
     }
 
     private static void appendPadded(StringBuilder sb, String text, int width) {
