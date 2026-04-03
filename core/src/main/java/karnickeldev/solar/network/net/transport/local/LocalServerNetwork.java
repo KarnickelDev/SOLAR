@@ -1,16 +1,19 @@
 package karnickeldev.solar.network.net.transport.local;
 
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
 import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.util.Logger;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LocalServerNetwork implements ServerNetwork {
+
+    private final Logger logger;
 
     private final BlockingQueue<Packet> loopbackToServerQueue;
     private final BlockingQueue<Packet> loopbackFromServerQueue;
@@ -28,6 +31,8 @@ public class LocalServerNetwork implements ServerNetwork {
         BlockingQueue<Packet> loopbackFromServerQueue,
         ServerNetworkListener listener,
         Dispatcher dispatcher) {
+        this.logger = Logger.get(LogTag.NETWORK);
+
         this.loopbackToServerQueue = loopbackToServerQueue;
         this.loopbackFromServerQueue = loopbackFromServerQueue;
         this.listener = listener;
@@ -51,7 +56,7 @@ public class LocalServerNetwork implements ServerNetwork {
         Packet pkt;
         while((pkt = outgoingPacketQueue.poll()) != null) {
             if(!loopbackFromServerQueue.offer(pkt)) {
-                Logger.log(Logger.NETWORK, "Packet dropped: " + pkt);
+                logger.warn("Packet dropped: " + pkt);
             }
         }
     }
@@ -84,7 +89,7 @@ public class LocalServerNetwork implements ServerNetwork {
 
         workers.submit(this::runLoop);
 
-        Logger.log(Logger.SERVER, "Server-Network started");
+        logger.info("Server-Network started");
 
         dispatcher.dispatch(() -> listener.onClientConnected(0));
 
@@ -104,13 +109,13 @@ public class LocalServerNetwork implements ServerNetwork {
         try {
             shutdown = workers.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            Logger.error(Logger.NETWORK, "Error in ServerNetwork shutdown", e);
+            logger.error("Error in ServerNetwork shutdown", e);
             Thread.currentThread().interrupt();
         }
 
         if(!shutdown) workers.shutdownNow();
 
-        Logger.log(Logger.SERVER, "Server-Network shutdown");
+        logger.info("Server-Network shutdown");
     }
 
 }

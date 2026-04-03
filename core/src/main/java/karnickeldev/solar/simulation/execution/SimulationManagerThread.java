@@ -1,7 +1,8 @@
 package karnickeldev.solar.simulation.execution;
 
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.scheduler.Dispatcher;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.util.threadlayout.ThreadContext;
 import karnickeldev.solar.world.ServerWorld;
@@ -38,7 +39,7 @@ public class SimulationManagerThread {
         try {
             thread.join();
         } catch (InterruptedException e) {
-            Logger.error(Logger.SERVER, "Error stopping " + thread.getName());
+            Logger.get(LogTag.SERVER).error(null, "Error stopping {}", thread.getName());
             throw new RuntimeException(e);
         }
     }

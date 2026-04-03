@@ -1,7 +1,5 @@
 package karnickeldev.solar.scheduler;
 
-import karnickeldev.solar.util.Logger;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;

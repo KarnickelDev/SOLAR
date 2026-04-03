@@ -2,7 +2,8 @@ package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.Tag;
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 public class TagComponent extends DirtyFlagComponent implements ComponentSnapshotProvider<TagSnapshot> {
 
@@ -22,7 +23,7 @@ public class TagComponent extends DirtyFlagComponent implements ComponentSnapsho
             for(Tag t: Tag.values()) {
                 if(has(entityId, t) && t.category.equals(tag.category)) {
                     change =  false;
-                    Logger.error(Logger.ENTITY, "Tried to overwrite exclusive Tag");
+                    Logger.get(LogTag.ENTITY).warn("Tried to overwrite exclusive Tag");
                     break;
                 }
             }

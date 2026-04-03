@@ -3,9 +3,10 @@ package karnickeldev.solar.network.net.transport.netty;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.transport.NetworkTracker;
 import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.util.Logger;
 
 /**
  * @author KarnickelDev
@@ -30,7 +31,7 @@ public class PacketEncoder extends MessageToByteEncoder<Packet> {
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Packet packet, ByteBuf out) throws Exception {
         if(packet == null) {
-            Logger.error(Logger.NETWORK, "Tried to send null packet");
+            Logger.get(LogTag.NETWORK).error("Tried to send null packet");
         } else {
             int before = out.writerIndex();
 

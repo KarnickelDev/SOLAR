@@ -1,7 +1,8 @@
 package karnickeldev.solar.settings;
 
 import com.badlogic.gdx.Gdx;
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 import java.awt.*;
 import java.io.IOException;
@@ -54,10 +55,10 @@ public class SettingsManager {
         try {
             settings.save();
         } catch (IOException e) {
-            Logger.error(Logger.GENERAL, "Error saving settings to disk", e);
-            throw new RuntimeException(e);
+            Logger.get(LogTag.GENERAL).warn("Error saving settings to disk", e);
+            return;
         }
-        Logger.log(Logger.GENERAL, "Settings saved!");
+        Logger.get(LogTag.GENERAL).info("Settings saved!");
     }
 
     private void updateFPS(Settings currSettings) {

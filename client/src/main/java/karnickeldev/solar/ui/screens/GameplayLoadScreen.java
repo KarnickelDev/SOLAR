@@ -5,10 +5,11 @@ import karnickeldev.solar.core.SimTestScreen;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.*;
 import karnickeldev.solar.ecs.components.ComponentType;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.handlers.*;
 import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.render.BackgroundStarRenderer;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 
 
@@ -18,10 +19,14 @@ import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
  **/
 public final class GameplayLoadScreen implements GameState {
 
+    private final Logger logger;
+
     private final boolean multiplayer;
     private final String ip;
 
     public GameplayLoadScreen(boolean multiplayer, String ip) {
+        this.logger = Logger.get(LogTag.STARTUP);
+
         this.multiplayer = multiplayer;
         this.ip = ip;
     }
@@ -34,11 +39,11 @@ public final class GameplayLoadScreen implements GameState {
         if(multiplayer) {
             ClientThreadLayout threadLayout = ClientThreadLayout.create(1,true, true);
             GameContext.setContext(GameContextBuilder.buildClientDedicatedServer(ip, 25566, threadLayout));
-            Logger.log(Logger.STARTUP, "Using ThreadLayout: " + threadLayout);
+            logger.info("Using ThreadLayout: " + threadLayout);
         } else {
             ClientThreadLayout threadLayout = ClientThreadLayout.create(1,true, false);
             GameContext.setContext(GameContextBuilder.buildClientLocalServer(threadLayout));
-            Logger.log(Logger.STARTUP, "Using ThreadLayout: " + threadLayout);
+            logger.info("Using ThreadLayout: " + threadLayout);
         }
 
         plan.syncTask(() -> {

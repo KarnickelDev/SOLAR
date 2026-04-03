@@ -1,10 +1,11 @@
 package karnickeldev.solar.network.sync;
 
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.handlers.PacketHandler;
 import karnickeldev.solar.network.packets.GameStatePacket;
 import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.util.Logger;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
@@ -47,7 +48,7 @@ public final class PacketSyncLayer {
                     PacketHandler<Packet> handler = HandlerRegistry.getHandler(entry.pkt);
                     handler.handle(0, entry.pkt);
                 } catch (Throwable t) {
-                    Logger.error(Logger.SYNC, "Exception handling buffered packet", t);
+                    Logger.get(LogTag.SYNC).error("Exception handling buffered packet", t);
                 }
             }
         }

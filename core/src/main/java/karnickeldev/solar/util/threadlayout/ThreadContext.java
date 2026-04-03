@@ -1,6 +1,7 @@
 package karnickeldev.solar.util.threadlayout;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,7 +47,7 @@ public final class ThreadContext {
 
     public int nextCpuId() {
         if (cpuIds.isEmpty()) {
-            Logger.error(Logger.GENERAL, "empty list of CPU cores, using defaults");
+            Logger.get(LogTag.GENERAL).error("empty list of CPU cores, using defaults");
             return 0;
         }
         int idx = Math.abs(roundRobin.getAndIncrement());

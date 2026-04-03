@@ -1,7 +1,8 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.util.MathUtil;
 
 import java.util.Arrays;
@@ -61,7 +62,7 @@ public class RenderComponent implements ComponentSnapshotProvider<AppearanceSnap
 
     @Override
     public void applySnapshot(AppearanceSnapshot snapshot) {
-        Logger.log("Applied AppearanceSnapshot to RenderComponent");
+        Logger.get(LogTag.ECS).info("Applied AppearanceSnapshot to RenderComponent");
         for(int i = 0; i < snapshot.getChangedCount(); i++) {
             add(snapshot.entityIds[i], snapshot.entityTypes[i]);
         }

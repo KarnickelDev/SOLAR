@@ -4,10 +4,12 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import karnickeldev.solar.Metadata;
 import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.logging.LogLevel;
+import karnickeldev.solar.logging.LogManager;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.settings.Resolution;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.ui.ErrorTextbox;
-import karnickeldev.solar.util.Logger;
 
 import java.awt.*;
 import java.io.File;
@@ -21,22 +23,27 @@ public class Lwjgl3Launcher {
     public static void main(String[] args) {
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
 
+        LogManager.init();
+        LogManager.setLevel(LogLevel.INFO);
+
         StartupCommands.handleStartupCommands(args);
 
-        Logger.log(Logger.STARTUP, "loading");
+        Logger logger = Logger.get("Startup");
+        logger.info("loading");
 
         if (!Metadata.loadVersionData()) {
-            Logger.error(Logger.STARTUP, "Unable to load version data");
+            logger.error("Unable to load version data");
             new ErrorTextbox("Unable to load version data");
             return;
         }
 
         if (!Metadata.ROOT_DIR.exists()) {
-            System.out.println("Creating Folder " + Metadata.ROOT_DIR);
+            logger.info("Creating Folder {}", Metadata.ROOT_DIR);
             if (Metadata.ROOT_DIR.mkdir()) {
-                System.out.println("Folder created");
+                logger.info("Folder created");
             } else {
-                Logger.error(Logger.STARTUP, "Unable to create folder " + Metadata.ROOT_DIR);
+                logger.error("Unable to create folder " + Metadata.ROOT_DIR);
+                new ErrorTextbox("Unable to create folder " + Metadata.ROOT_DIR);
                 return;
             }
         }
@@ -46,7 +53,7 @@ public class Lwjgl3Launcher {
         Settings settings = new Settings(cfg);
 
         if (!cfg.exists()) {
-            Logger.log(Logger.STARTUP, "Creating File settings.properties");
+            logger.info("Creating File {}", cfg.getName());
             try {
                 if (!cfg.createNewFile()) System.exit(1);
             } catch (IOException e) {
@@ -64,11 +71,11 @@ public class Lwjgl3Launcher {
             int height = gd.getDisplayMode().getHeight();
 
             Resolution bestResolution = Resolution.matchResolution(width, height);
-            Logger.log(Logger.STARTUP, "Detected Resolution: " + Resolution.resolutionToString(width, height) + ", best match is: " + bestResolution);
+            logger.info("Detected Resolution: {}, best match is: {}",Resolution.resolutionToString(width, height), bestResolution);
 
             if (bestResolution == Resolution.FALLBACK_RESOLUTION) {
-                if (bestResolution.getWidth() > width || bestResolution.getHeight() > height) {
-                    Logger.error(Logger.STARTUP, "Unable to detect resolution");
+                if (Resolution.FALLBACK_RESOLUTION.getWidth() > width || Resolution.FALLBACK_RESOLUTION.getHeight() > height) {
+                    logger.error("Unable to detect resolution");
                     System.exit(1);
                 }
             }
@@ -82,17 +89,17 @@ public class Lwjgl3Launcher {
                 System.exit(1);
             }
 
-            Logger.log(Logger.STARTUP, "File settings.properties created");
+            logger.info("File {} created", cfg.getName());
         }
 
 
         try {
             settings.load();
         } catch (IOException e) {
-            Logger.error(Logger.STARTUP, "Unable to load settings.properties");
+            logger.error(null, "Unable to load {}", cfg.getName());
             System.exit(1);
         }
-        Logger.log(Logger.STARTUP, "Settings loaded");
+        logger.info("Settings loaded");
 
         createApplication(settings);
     }
@@ -107,7 +114,7 @@ public class Lwjgl3Launcher {
 
         configuration.setTitle(Metadata.APP_NAME + " v" + Metadata.VERSION);
         configuration.setForegroundFPS(90);
-        configuration.useVsync(true);
+        configuration.useVsync(false);
 
         configuration.setDecorated(!settings.isFullscreen() && !settings.isBorderless());
         configuration.setWindowedMode(settings.getScreenWidth(), settings.getScreenHeight());

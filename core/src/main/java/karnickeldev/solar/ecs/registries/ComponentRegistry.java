@@ -3,7 +3,7 @@ package karnickeldev.solar.ecs.registries;
 import karnickeldev.solar.ecs.components.Component;
 import karnickeldev.solar.ecs.components.ComponentSnapshot;
 import karnickeldev.solar.ecs.components.ComponentSnapshotProvider;
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.Logger;
 
 import java.util.*;
 
@@ -24,7 +24,7 @@ public class ComponentRegistry {
         try {
             return type.cast(components.get(type));
         } catch (ClassCastException e) {
-            Logger.log("Class can't be cast to Component");
+            Logger.get("ComponentRegistry").info("Class can't be cast to Component");
             return null;
         }
     }
@@ -63,7 +63,7 @@ public class ComponentRegistry {
     @SuppressWarnings("unchecked")
     public void applyAllSnapshots(ComponentSnapshot... snaps) {
         if(snaps == null) {
-            Logger.log("empty snapshot");
+            Logger.get("ComponentRegistry").warn("empty snapshot");
             return;
         }
         for (ComponentSnapshot snap : snaps) {

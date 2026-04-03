@@ -11,14 +11,14 @@ import karnickeldev.solar.context.GameContextContainer;
 import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.core.gamestates.LoadingPlanBuilder;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.settings.Settings;
 import karnickeldev.solar.settings.SettingsManager;
 import karnickeldev.solar.ui.core.SkinManager;
 import karnickeldev.solar.ui.screens.LoadingScreen;
 import karnickeldev.solar.ui.screens.MainMenuScreen;
-import karnickeldev.solar.util.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -105,7 +105,7 @@ public class SolarMain extends Game {
             () -> GameStateManager.get().requestStateLoading(new MainMenuScreen(this)),
             List.of(b.build())));
 
-        Logger.log(Logger.STARTUP, "Startup complete");
+        Logger.get(LogTag.STARTUP).info("Startup complete");
     }
 
     @Override
@@ -132,7 +132,7 @@ public class SolarMain extends Game {
         if (shuttingDown) return;
         shuttingDown = true;
 
-        Logger.log(Logger.SHUTDOWN, "Shutting down game...");
+        Logger.get(LogTag.SHUTDOWN).info("Shutting down game...");
 
         try {
             if(GameContext.isSet()) {
@@ -168,10 +168,10 @@ public class SolarMain extends Game {
                 Gdx.app.exit();
             }
 
-            Logger.log(Logger.SHUTDOWN, "Shutdown complete, bye!");
+            Logger.get(LogTag.SHUTDOWN).info("Shutdown complete, bye!");
 
         } catch (Exception e) {
-            Logger.error(Logger.SHUTDOWN, "Error during shutdown: " + e.getMessage(), e);
+            Logger.get(LogTag.SHUTDOWN).error("Error during shutdown: " + e.getMessage(), e);
         }
     }
 

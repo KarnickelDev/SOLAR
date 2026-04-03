@@ -1,6 +1,7 @@
 package karnickeldev.solar.lwjgl3;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogLevel;
+import karnickeldev.solar.logging.LogManager;
 
 /**
  * Project: SOLAR
@@ -15,11 +16,9 @@ public class StartupCommands {
             String cmd = args[i];
 
             if (cmd.equals("--verbose")) {
-                Logger.setVerbose(true);
-                Logger.log("Set Logging to VERBOSE");
+                // TODO: add verbose mode
             } else if(cmd.equals("--debug")) {
-                Logger.setLogLevel(Logger.LOG_DEBUG);
-                Logger.log("Set Logging Level to DEBUG");
+                LogManager.setLevel(LogLevel.DEBUG);
             }
 
         }

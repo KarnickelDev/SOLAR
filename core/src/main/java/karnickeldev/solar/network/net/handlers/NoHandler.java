@@ -1,7 +1,8 @@
 package karnickeldev.solar.network.net.handlers;
 
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.util.Logger;
 
 /**
  * @author KarnickelDev
@@ -18,7 +19,7 @@ public class NoHandler implements PacketHandler<Packet> {
 
     @Override
     public void handle(int clientId, Packet packet) {
-        Logger.error(Logger.NETWORK, "No Handler defined for packet type: " + packet.getType());
+        Logger.get(LogTag.NETWORK).error(null, "No Handler defined for packet type: {}", packet.getType());
     }
 
     @Override

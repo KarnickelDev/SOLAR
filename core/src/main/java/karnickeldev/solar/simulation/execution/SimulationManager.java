@@ -3,13 +3,13 @@ package karnickeldev.solar.simulation.execution;
 import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.ecs.EntityFactory;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
-import karnickeldev.solar.network.packets.EntityLifecyclePacket;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.ServerPerformanceMetricsPacket;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.MathUtil;
 import karnickeldev.solar.util.datastructures.BitMask;
 import karnickeldev.solar.util.threadlayout.ThreadAffinity;
@@ -132,12 +132,14 @@ public class SimulationManager implements Runnable {
         long tickEnd;
         long tickStart;
 
+        Logger logger = Logger.get(LogTag.SERVER);
+
         long simulationStartTime = System.nanoTime();
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 3);
         if(threadContext.useCoreAffinity()) ThreadAffinity.pinToCore(threadContext.nextCpuId());
 
         ServerContext.get().getServer().getScheduler().schedule(() -> {
-            Logger.log("SERVER ADDING NEW ENTITIES");
+            logger.info("SERVER ADDING NEW ENTITIES");
 
 
             ServerWorld world1 = ServerContext.get().getServer().getWorldManager().getWorld(1);
@@ -256,7 +258,7 @@ public class SimulationManager implements Runnable {
                 try {
                     scheduledTasks.addAll(tasks);
                 } catch (Exception e) {
-                    Logger.error("Scheduling error: " + e.getMessage());
+                    logger.error("Scheduling error: " + e.getMessage());
                     errno.set(EXCEPTION_IN_SCHEDULE);
                     Thread.currentThread().interrupt();
                     break;
@@ -273,7 +275,7 @@ public class SimulationManager implements Runnable {
                     Thread.sleep(sleepMS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    Logger.log(Logger.SERVER, "Interrupted while passive waiting, going to active wait!");
+                    logger.info("Interrupted while passive waiting, going to active wait!");
                 }
             }
 
@@ -288,7 +290,7 @@ public class SimulationManager implements Runnable {
         try {
             boolean orderlyShutdown = simulationThreadPool.awaitTermination(3, TimeUnit.SECONDS);
             if (!orderlyShutdown) {
-                Logger.log(Thread.currentThread().getName() + " did not shutdown in time");
+                logger.info(Thread.currentThread().getName() + " did not shutdown in time");
                 errno.set(SHUTDOWN_TIMEOUT);
                 simulationThreadPool.shutdownNow();
             }
@@ -309,8 +311,10 @@ public class SimulationManager implements Runnable {
      * @param errno Contains error codes
      */
     private static void logShutdown(BitMask errno) {
+        Logger logger = Logger.get(LogTag.SERVER);
+
         if (errno.getMask() == 0) {
-            Logger.log(Logger.SERVER, Thread.currentThread().getName() + " shutdown gracefully");
+            logger.info(Thread.currentThread().getName() + " shutdown gracefully");
         } else {
             StringBuilder error = new StringBuilder();
             if(errno.test(INTERRUPT)) {
@@ -330,8 +334,8 @@ public class SimulationManager implements Runnable {
             }
             if(error.length() == 0) error.append("UNKNOWN");
 
-            Logger.error(Logger.SERVER, Thread.currentThread().getName() + "crashed from " + error);
-            Logger.log(Logger.SERVER, Thread.currentThread().getName() + " shutdown because of " + error);
+            logger.error(Thread.currentThread().getName() + "crashed from " + error);
+            logger.info(Thread.currentThread().getName() + " shutdown because of " + error);
         }
     }
 

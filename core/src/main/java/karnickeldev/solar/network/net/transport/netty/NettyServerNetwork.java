@@ -9,6 +9,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
@@ -17,7 +19,6 @@ import karnickeldev.solar.network.packets.HandshakePacket;
 import karnickeldev.solar.network.packets.HandshakeResponsePacket;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketTypes;
-import karnickeldev.solar.util.Logger;
 
 import java.util.Map;
 import java.util.Queue;
@@ -30,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 26.06.2025
  **/
 public class NettyServerNetwork implements ServerNetwork {
+
+    private final Logger logger;
 
     private final int port;
 
@@ -48,6 +51,8 @@ public class NettyServerNetwork implements ServerNetwork {
     private Channel serverChannel;
 
     public NettyServerNetwork(int port, ServerNetworkListener listener, Dispatcher dispatcher) {
+        this.logger = Logger.get(LogTag.NETWORK);
+
         this.port = port;
         this.listener = listener;
         this.dispatcher = dispatcher;
@@ -76,7 +81,7 @@ public class NettyServerNetwork implements ServerNetwork {
             serverChannel = b.bind(port).sync().channel();
             serverChannel.config().setOption(ChannelOption.TCP_NODELAY, true);
         } catch (Exception e) {
-            Logger.error(Logger.NETWORK, "Error starting Server", e);
+            logger.error("Error starting Netty Server", e);
             return false;
         }
 
@@ -95,12 +100,12 @@ public class NettyServerNetwork implements ServerNetwork {
             workerGroup.shutdownGracefully().sync();
             bossGroup.shutdownGracefully().sync();
 
-            Logger.error(Logger.SERVER, "Server shutdown, bye!");
+            logger.error("Netty Server shutdown, bye!");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Logger.error(Logger.SERVER, "Interrupted during shutdown", e);
+            logger.error("Interrupted during shutdown", e);
         } catch (Exception e) {
-            Logger.error(Logger.SERVER, "Error during shutdown", e);
+            logger.error("Error during shutdown", e);
         }
     }
 
@@ -118,7 +123,7 @@ public class NettyServerNetwork implements ServerNetwork {
 //        }
         //Logger.log("packet queue: " + outgoing.size());
         if(!clientIdMap.get(clientId).isHandshake() || !outgoing.offer(new PacketContext(clientId, packet))) {
-            Logger.error(Logger.NETWORK + "Packet dropped: " + packet);
+            logger.warn("Packet dropped: " + packet);
         }
     }
 
@@ -166,11 +171,11 @@ public class NettyServerNetwork implements ServerNetwork {
                     HandshakePacket pkt = (HandshakePacket) msg;
 
                     if(!pkt.getPassword().equals("password")) {
-                        Logger.error(Logger.NETWORK, "Client " + session.getClientId() + " failed handshake");
+                        logger.error("Client " + session.getClientId() + " failed handshake");
                         ctx.channel().writeAndFlush(new HandshakeResponsePacket(HandshakeResponsePacket.FAILURE))
                             .addListener(ChannelFutureListener.CLOSE);
                     } else {
-                        Logger.log(Logger.NETWORK, "Handshake accepted for client " + session.getClientId());
+                        logger.info("Handshake accepted for client " + session.getClientId());
                         session.completeHandshake();
                         ctx.channel().writeAndFlush(new HandshakeResponsePacket(HandshakeResponsePacket.SUCCESS));
                     }
@@ -184,16 +189,16 @@ public class NettyServerNetwork implements ServerNetwork {
                         dispatcher.dispatch(() -> HandlerRegistry.getHandler(msg).handle(session.getClientId(), msg));
                     }
                 } else {
-                    Logger.error(Logger.NETWORK, "Packet dropped: incomplete handshake" + msg);
+                    logger.error("Packet dropped: incomplete handshake" + msg);
                 }
             } else {
-                Logger.error(Logger.NETWORK, "channelRead0 with null ChannelHandlerContext or Packet");
+                logger.error("channelRead0 with null ChannelHandlerContext or Packet");
             }
         }
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            Logger.error(cause.getMessage());
+            logger.error(cause.getMessage());
             ctx.close();
         }
 
@@ -202,7 +207,7 @@ public class NettyServerNetwork implements ServerNetwork {
             if(evt instanceof IdleStateEvent) {
                 IdleStateEvent e = (IdleStateEvent) evt;
                 if(e.state() == IdleState.READER_IDLE) {
-                    Logger.log(Logger.NETWORK, "Client " + sessions.get(ctx.channel().id()).getClientId() + " timed out!");
+                    logger.info("Client " + sessions.get(ctx.channel().id()).getClientId() + " timed out!");
                     ctx.close();
                 }
             }

@@ -1,8 +1,9 @@
 package karnickeldev.solar.worldview.orbitsolver.mathkernel;
 
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.physics.Units;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.worldview.orbitsolver.OrbitSolveInput;
 
 import java.util.Arrays;
@@ -74,7 +75,7 @@ public final class OrbitDataSoA {
 
         int idx = anchorToIndex[anchor];
         if (idx == -1) {
-            Logger.error("Tried removing invalid anchor -1 from " + this.getClass().getSimpleName());
+            Logger.get(LogTag.ORBT_SLVR).error("Tried removing invalid anchor -1 from " + this.getClass().getSimpleName());
             return;
         }
 

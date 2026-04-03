@@ -1,6 +1,7 @@
 package karnickeldev.solar.settings;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 import java.util.Arrays;
 
@@ -50,7 +51,7 @@ public enum Resolution {
 
         String[] parts = target.split(DELIMITER);
         if (parts.length != 2) {
-            Logger.error(Logger.GENERAL, "", new IllegalArgumentException("Invalid resolution format: \"" + target + "\""));
+            Logger.get(LogTag.GENERAL).error("Error matching resolution", new IllegalArgumentException("Invalid resolution format: \"" + target + "\""));
             return FALLBACK_RESOLUTION;
         }
 

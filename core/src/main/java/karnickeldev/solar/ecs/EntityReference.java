@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 public class EntityReference {
 
@@ -14,7 +15,7 @@ public class EntityReference {
 
     public static EntityReference create(EntityManager entityManager, int entityId) {
         if (entityManager == null || !entityManager.isValid(entityId)) {
-            Logger.error("Erroneous EntityReference");
+            Logger.get(LogTag.ENTITY).error("Erroneous EntityReference");
             return null;
         }
         return new EntityReference(entityManager, entityId);

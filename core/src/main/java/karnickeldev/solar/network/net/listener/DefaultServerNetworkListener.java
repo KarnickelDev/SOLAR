@@ -1,20 +1,27 @@
 package karnickeldev.solar.network.net.listener;
 
 import karnickeldev.solar.context.ServerContext;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.packets.*;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ServerWorld;
 
 public class DefaultServerNetworkListener implements ServerNetworkListener {
 
+    private final Logger logger;
+
+    public DefaultServerNetworkListener() {
+        logger = Logger.get(LogTag.SERVER);
+    }
+
     @Override
     public void onClientConnected(int clientId) {
-        Logger.log(Logger.SERVER, "Client connected: " + clientId);
+        logger.info("Client connected " + clientId);
     }
 
     @Override
     public void onClientDisconnected(int clientId) {
-        Logger.log(Logger.SERVER, "Client disconnected: " + clientId);
+        logger.info("Client disconnected: " + clientId);
     }
 
     @Override
@@ -30,11 +37,11 @@ public class DefaultServerNetworkListener implements ServerNetworkListener {
             FullSnapshotRequestPacket p = (FullSnapshotRequestPacket) packet;
             int worldId = p.getWorldId();
             if(!ServerContext.get().getServer().getWorldManager().containsWorld(worldId)) {
-                Logger.error(clientId + " requested Full Snapshot of unknown World");
+                logger.error(clientId + " requested FullSnapshot of unknown World");
                 return;
             }
 
-            Logger.log(Logger.NETWORK, "Resyncing client " + clientId);
+            logger.info("Resyncing client " + clientId);
 
             ServerWorld world = ServerContext.get().getServer().getWorldManager().getWorld(worldId);
             FullSnapshotPacket fullSnapshot = PacketFactory.createFullSnapshotPacket(world);

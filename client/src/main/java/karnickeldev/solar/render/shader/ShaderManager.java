@@ -4,7 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Disposable;
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,9 +18,15 @@ import java.util.Map;
  **/
 public class ShaderManager implements Disposable {
 
+    private final Logger logger;
+
     private record ShaderNode(FileHandle vertexSource, FileHandle fragmentSource, ShaderProgram shaderProgram) {}
 
     private final Map<String, ShaderNode> shaders = new HashMap<>();
+
+    public ShaderManager() {
+        this.logger = Logger.get(LogTag.SHADER);
+    }
 
     public void registerFromInternalFile(String name, String vertPath, String fragPath) {
         register(name, Gdx.files.internal(vertPath), Gdx.files.internal(fragPath));
@@ -44,7 +51,7 @@ public class ShaderManager implements Disposable {
         ShaderProgram shader = new ShaderProgram(processedVertShader, processedFragShader);
         if(!shader.isCompiled()) {
             shader.dispose();
-            Logger.error(Logger.SHADER, "Compile error: " + shader.getLog());
+            logger.error("Compile error: " + shader.getLog());
             return;
         }
 
@@ -78,7 +85,7 @@ public class ShaderManager implements Disposable {
             register(name, vertSrc, fragSrc);
         }
 
-        Logger.log(Logger.SHADER, "Reloaded Shaders");
+        logger.info("Reloaded Shaders");
     }
 
     public void dispose() {

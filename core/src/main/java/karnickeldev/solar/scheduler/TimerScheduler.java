@@ -1,6 +1,6 @@
 package karnickeldev.solar.scheduler;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.Logger;
 
 import java.util.List;
 
@@ -40,8 +40,7 @@ public interface TimerScheduler {
             try {
                 if(!cancelled) action.run();
             } catch (Exception e) {
-                Logger.error("[" + this.getClass().getSimpleName() + "]",
-                    "Error in TimerScheduler task " + action, e.getCause());
+                Logger.get("TimerScheduler").error(e.getCause(),"Error in TimerScheduler task " + action);
             }
         }
 

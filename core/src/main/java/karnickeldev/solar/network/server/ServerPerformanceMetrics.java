@@ -1,6 +1,7 @@
 package karnickeldev.solar.network.server;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 public class ServerPerformanceMetrics {
 
@@ -38,7 +39,7 @@ public class ServerPerformanceMetrics {
         }
         long delta = now - prevTick;
         if (delta >= Integer.MAX_VALUE - 16) {
-            Logger.debug("Tick delta too large for Integer!");
+            Logger.get(LogTag.GENERAL).debug("Tick delta too large for Integer!");
             delta = Integer.MAX_VALUE;
         }
         prevTick = now;

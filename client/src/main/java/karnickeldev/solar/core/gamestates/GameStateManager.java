@@ -1,11 +1,11 @@
 package karnickeldev.solar.core.gamestates;
 
 import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.ui.core.UIManager;
 import karnickeldev.solar.ui.screens.BootGameState;
 import karnickeldev.solar.ui.screens.LoadingScreen;
 import karnickeldev.solar.ui.screens.MainMenuScreen;
-import karnickeldev.solar.util.Logger;
 
 import java.util.List;
 
@@ -14,6 +14,8 @@ import java.util.List;
  * @since 04.07.2025
  **/
 public class GameStateManager {
+
+    private final Logger logger;
 
     private static final GameStateManager instance = new GameStateManager();
     private GameState current = BootGameState.getInstance();
@@ -25,7 +27,9 @@ public class GameStateManager {
         return instance;
     }
 
-    private GameStateManager() {}
+    private GameStateManager() {
+        logger = Logger.get("GSM");
+    }
 
     public GameState getState() {
         return current;
@@ -48,7 +52,7 @@ public class GameStateManager {
         }
         pending = to;
 
-        Logger.log("[GameStateManager] ", "Starting transition: " + current.getID() + " to " + pending.getID());
+        logger.info("Starting transition: " + current.getID() + " to " + pending.getID());
 
         if(!transitioning) {
             transitioning = true;
@@ -58,7 +62,7 @@ public class GameStateManager {
 
             loading.setOnFailure((Throwable t) -> {
                 synchronized (this) {
-                    Logger.error("[GameStateManager] ", "loading failed: " + t.getMessage());
+                    logger.error("loading failed: " + t.getMessage());
                     pending = null;
                     transitioning = false;
                     requestStateLoading(new MainMenuScreen(SolarMain.getInstance(), () -> UIManager.get().showMessage(t.getMessage())), true);
@@ -75,7 +79,7 @@ public class GameStateManager {
             try {
                 current.exit();
             } catch (Exception e) {
-                Logger.error("[GameStateManager] ", "exit failed: " + e.getMessage());
+                logger.error("exit failed: " + e.getMessage());
             }
 
             current = pending;
@@ -84,11 +88,11 @@ public class GameStateManager {
             try {
                 current.enter();
             } catch (Exception e) {
-                Logger.error("[GameStateManager] ", "enter failed: " + e.getMessage());
+                logger.error("enter failed: " + e.getMessage());
             }
         } finally {
             transitioning = false;
-            Logger.log("[GameStateManager] ", "transition done");
+            logger.info("transition done");
         }
     }
 

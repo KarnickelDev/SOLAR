@@ -6,7 +6,8 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.Platform;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.NativeLongByReference;
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 /**
  * @author KarnickelDev
@@ -30,7 +31,7 @@ public interface ThreadAffinity extends Library {
             long mask = 1L << coreId;
             long prev = ThreadAffinity.INSTANCE.SetThreadAffinityMask(h, mask);
             if(prev == 0) {
-                Logger.error("Setting Thread Affinity failed: " + Native.getLastError());
+                Logger.get(LogTag.GENERAL).error("Setting Thread Affinity failed: " + Native.getLastError());
             }
         } else {
             long mask = 1L << coreId;
@@ -38,7 +39,7 @@ public interface ThreadAffinity extends Library {
             int pid = 0;
             int res = ThreadAffinity.INSTANCE.sched_setaffinity(pid, Long.BYTES, ref);
             if (res != 0) {
-                Logger.error("Setting Thread Affinity failed: " + Native.getLastError());
+                Logger.get(LogTag.GENERAL).error("Setting Thread Affinity failed: " + Native.getLastError());
             }
         }
     }

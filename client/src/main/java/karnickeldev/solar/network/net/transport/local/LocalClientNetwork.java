@@ -1,13 +1,14 @@
 package karnickeldev.solar.network.net.transport.local;
 
 import karnickeldev.solar.context.GameContext;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.packets.GameStatePacket;
 import karnickeldev.solar.network.packets.Packet;
-import karnickeldev.solar.util.Logger;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -16,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LocalClientNetwork implements ClientNetwork {
+
+    private final Logger logger;
 
     private final BlockingQueue<Packet> loopbackToServerQueue;
     private final BlockingQueue<Packet> loopbackFromServerQueue;
@@ -31,6 +34,8 @@ public class LocalClientNetwork implements ClientNetwork {
         BlockingQueue<Packet> loopbackFromServerQueue,
         ClientNetworkListener listener,
         Dispatcher dispatcher) {
+        logger = Logger.get(LogTag.NETWORK);
+
         this.loopbackToServerQueue = loopbackToServerQueue;
         this.loopbackFromServerQueue = loopbackFromServerQueue;
         this.listener = listener;
@@ -41,7 +46,7 @@ public class LocalClientNetwork implements ClientNetwork {
     @Override
     public void send(Packet packet) {
         if(!loopbackToServerQueue.offer(packet)) {
-            Logger.error("Packet dropped: " + packet);
+            logger.warn("Packet dropped: " + packet);
         }
     }
 

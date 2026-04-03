@@ -1,8 +1,9 @@
 package karnickeldev.solar.ui.components.mainmenu;
 
 import karnickeldev.solar.Metadata;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.util.IniFile;
-import karnickeldev.solar.util.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +60,7 @@ public class ServerListIni {
         try {
             return file.createNewFile();
         } catch (IOException e) {
-            Logger.error(Logger.ASSETS, "Failed to create File: " + file.getName(), e);
+            Logger.get(LogTag.ASSETS).error("Failed to create File: " + file.getName(), e);
         }
         return false;
     }
@@ -73,7 +74,7 @@ public class ServerListIni {
             iniFile.load(path);
             return true;
         } catch (IOException e) {
-            Logger.error(Logger.ASSETS, "Failed to load File: " + fileName, e);
+            Logger.get(LogTag.ASSETS).error("Failed to load File: " + fileName, e);
         }
         return false;
     }
@@ -86,7 +87,7 @@ public class ServerListIni {
             iniFile.save(path);
             return true;
         } catch (IOException e) {
-            Logger.error(Logger.ASSETS, "Failed to save File: " + fileName, e);
+            Logger.get(LogTag.ASSETS).error("Failed to save File: " + fileName, e);
         }
         return false;
     }

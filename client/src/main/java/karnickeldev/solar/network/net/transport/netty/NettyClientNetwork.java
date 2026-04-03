@@ -10,6 +10,8 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import karnickeldev.solar.context.GameContext;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
@@ -18,7 +20,6 @@ import karnickeldev.solar.network.net.transport.ClientNetworkTracker;
 import karnickeldev.solar.network.net.transport.NetworkTracker;
 import karnickeldev.solar.network.packets.*;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.world.ClientClock;
 
 /**
@@ -26,6 +27,8 @@ import karnickeldev.solar.world.ClientClock;
  * @since 26.06.2025
  **/
 public class NettyClientNetwork implements ClientNetwork {
+
+    private final Logger logger;
 
     private final String host;
     private final int port;
@@ -45,6 +48,8 @@ public class NettyClientNetwork implements ClientNetwork {
 
     public NettyClientNetwork(String host, int port, ClientNetworkListener listener, Dispatcher dispatcher,
                               PacketSyncLayer syncLayer, ClientClock clientClock) {
+        this.logger = Logger.get(LogTag.NETWORK);
+
         this.host = host;
         this.port = port;
         this.listener = listener;
@@ -77,7 +82,7 @@ public class NettyClientNetwork implements ClientNetwork {
         try {
             ChannelFuture future = b.connect(host, port).sync();
             if (!future.isSuccess()) {
-                Logger.error(Logger.NETWORK, "Failed to connect: " + future.cause());
+                logger.error("Failed to connect: " + future.cause());
                 return false;
             }
 
@@ -86,15 +91,15 @@ public class NettyClientNetwork implements ClientNetwork {
             connected = true;
 
             channel.writeAndFlush(new HandshakePacket("test", "password"));
-            Logger.log(Logger.NETWORK, "Connected to server, handshake sent");
+            logger.info("Connected to server, handshake sent");
 
             return true;
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Logger.error(Logger.NETWORK, "Connect interrupted");
+            logger.error("Connect interrupted");
         } catch (Exception e) {
-            Logger.error(Logger.NETWORK, "Connect failed: " + e.getMessage());
+            logger.error("Connect failed: " + e.getMessage());
         }
 
         // cleanup if failed
@@ -122,9 +127,9 @@ public class NettyClientNetwork implements ClientNetwork {
                 channel.writeAndFlush(new DisconnectPacket("bye")).sync();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                Logger.error(Logger.NETWORK, "Interrupted while sending disconnect");
+                logger.warn("Interrupted while sending DisconnectPacket");
             } catch (Exception e) {
-                Logger.error(Logger.NETWORK, "Failed to send DisconnectPacket: " + e.getMessage());
+                logger.warn("Failed to send DisconnectPacket: " + e.getMessage());
             }
         }
 
@@ -147,7 +152,7 @@ public class NettyClientNetwork implements ClientNetwork {
     @Override
     public void send(Packet pkt) {
         if (!isConnected()) {
-            Logger.error(Logger.NETWORK, "Packet dropped: not connected");
+            logger.error("Packet dropped: not connected");
             return;
         }
 
@@ -156,7 +161,7 @@ public class NettyClientNetwork implements ClientNetwork {
             if (isConnected()) {
                 channel.writeAndFlush(pkt);
             } else {
-                Logger.error(Logger.NETWORK, "Channel inactive during send");
+                logger.error("Channel inactive during send");
             }
         });
     }
@@ -179,10 +184,10 @@ public class NettyClientNetwork implements ClientNetwork {
             if(msg.getType() == PacketTypes.HANDSHAKE_RESPONSE.getType()) {
                 HandshakeResponsePacket response = (HandshakeResponsePacket) msg;
                 if(!response.isSuccess()) {
-                    Logger.error(Logger.NETWORK, "Handshake Failed!");
+                    logger.error("Handshake Failed!");
                     shutdown(false);
                 } else {
-                    Logger.log(Logger.NETWORK, "Handshake success!");
+                    logger.info("Handshake success!");
                     handshake = true;
                     dispatcher.dispatch(listener::onConnected);
                 }
@@ -194,13 +199,13 @@ public class NettyClientNetwork implements ClientNetwork {
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) {
-            Logger.log(Logger.NETWORK, "Connection closed");
+            logger.info("Connection closed");
             shutdown(false);
         }
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            Logger.error(Logger.NETWORK, "Exception: " + cause.getMessage());
+            logger.error("Exception: " + cause.getMessage());
             ctx.close();
         }
 
@@ -209,7 +214,7 @@ public class NettyClientNetwork implements ClientNetwork {
             if(evt instanceof IdleStateEvent) {
                 IdleStateEvent e = (IdleStateEvent) evt;
                 if(e.state() == IdleState.READER_IDLE) {
-                    Logger.log(Logger.NETWORK, "Connection timed out! (idle)");
+                    logger.info("Connection timed out! (idle)");
 
                     ctx.close(); // triggers shutdown via channelInactive
                 }

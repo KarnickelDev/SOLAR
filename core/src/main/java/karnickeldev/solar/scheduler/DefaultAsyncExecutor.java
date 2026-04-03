@@ -1,6 +1,7 @@
 package karnickeldev.solar.scheduler;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -24,8 +25,7 @@ public final class DefaultAsyncExecutor implements AsyncExecutor {
             try {
                 task.run();
             } catch (Exception e) {
-                Logger.error("[" + this.getClass().getSimpleName() + "]",
-                    "Error dispatching: " + task, e.getCause());
+                Logger.get(LogTag.SCHEDULER).error("Error dispatching: " + task, e.getCause());
             }
         });
     }

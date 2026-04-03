@@ -1,6 +1,7 @@
 package karnickeldev.solar.ecs;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 /**
  * @author KarnickelDev
@@ -36,7 +37,7 @@ public enum Tag {
 
     public Tag implies(Tag other) {
         if(other == null) {
-            Logger.error(Logger.ENTITY, "Tag is null");
+            Logger.get(LogTag.ENTITY).warn("Tag is null");
         } else {
             this.impliedMask |= other.bit | other.impliedMask;
         }

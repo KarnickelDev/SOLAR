@@ -1,9 +1,10 @@
 package karnickeldev.solar.worldview.orbitsolver;
 
 import karnickeldev.solar.context.GameContext;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.render.EntityRenderer;
 import karnickeldev.solar.render.camera.FloatingOriginCamera;
-import karnickeldev.solar.util.Logger;
 import karnickeldev.solar.util.SplitCoordMath;
 import karnickeldev.solar.util.WorldDelta;
 import karnickeldev.solar.util.WorldPos;
@@ -38,6 +39,8 @@ public final class ClientOrbitPrecisionManager implements OrbitPrecisionManager 
         }
     }
 
+    private final Logger logger;
+
     private final OrbitTier[] tiers;
 
     private final int[] currentTier;
@@ -48,6 +51,8 @@ public final class ClientOrbitPrecisionManager implements OrbitPrecisionManager 
     private boolean justRebuilt = false;
 
     public ClientOrbitPrecisionManager(int capacityPerTier) {
+        this.logger = Logger.get(LogTag.ORBT_SLVR);
+
         this.currentTier = new int[capacityPerTier];
         Arrays.fill(this.currentTier, -1);
 
@@ -110,7 +115,7 @@ public final class ClientOrbitPrecisionManager implements OrbitPrecisionManager 
             int anchor = dfs[idx];
 
             if(currentTier[anchor] == -1) {
-                Logger.error("Entity tier invalid");
+                logger.warn("Entity tier invalid");
                 continue;
             }
 

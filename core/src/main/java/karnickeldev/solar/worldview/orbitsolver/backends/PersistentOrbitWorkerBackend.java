@@ -1,6 +1,7 @@
 package karnickeldev.solar.worldview.orbitsolver.backends;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.util.spinbarrier.PhaserBarrier;
 import karnickeldev.solar.util.spinbarrier.SyncBarrier;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
@@ -12,7 +13,6 @@ import karnickeldev.solar.worldview.orbitsolver.mathkernel.OrbitDataSoA;
 import karnickeldev.solar.worldview.orbitsolver.OrbitExecutionBackend;
 import karnickeldev.solar.worldview.orbitsolver.OrbitLocalFrame;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -20,6 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @since 03.03.2026
  **/
 public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
+
+    private final Logger logger;
 
     private final int workerCount;
     private final Thread[] workers;
@@ -35,7 +37,8 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
     private volatile long simTimeMicros;
 
     public PersistentOrbitWorkerBackend(ClientThreadLayout threadLayout, int chunkSize) {
-        Logger.log("[OrbitWorker] ", "OrbitWorker using chunks of size: " + chunkSize);
+        this.logger = Logger.get(LogTag.ORBT_SLVR);
+        logger.info("OrbitWorker using chunks of size {}", chunkSize);
 
         this.chunkSize = chunkSize;
         ThreadContext context = threadLayout.getOrbitWorkerContext();
@@ -51,7 +54,7 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
                 .name(name)
                 .priority(Thread.MAX_PRIORITY-1)
                 .unstarted(() -> {
-                    Logger.log(Logger.STARTUP, "Starting " + name);
+                    logger.info("Starting " + name);
                     if(context.useCoreAffinity()) ThreadAffinity.pinToCore(context.nextCpuId());
                     workerLoop(workerId);
                 });
@@ -61,6 +64,9 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
     }
 
     public PersistentOrbitWorkerBackend(int workerCount, int chunkSize) {
+        this.logger = Logger.get(LogTag.ORBT_SLVR);
+        logger.info("OrbitWorker using chunks of size {}", chunkSize);
+
         this.chunkSize = chunkSize;
         this.workerCount = workerCount;
 
@@ -74,7 +80,7 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
                 .name(name)
                 .priority(Thread.MAX_PRIORITY-1)
                 .unstarted(() -> {
-                    Logger.log(Logger.STARTUP, "Starting " + name);
+                    logger.info("Starting " + name);
                     workerLoop(workerId);
                 });
 
@@ -103,13 +109,13 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
     public void shutdown() {
         if (!running.compareAndSet(true, false)) return;
 
-        Logger.log("[OrbitSolver] ", "stopping...");
+        logger.info("stopping...");
 
         // tell workers to stop and break any waiting barrier
         try {
             barrier.forceTermination();
         } catch (Throwable t) {
-            Logger.error("[OrbitSolver] ", "Failed to force-terminate barrier", t);
+            logger.error("Failed to force-terminate barrier", t);
         }
 
         // Interrupt alive worker threads to break any blocking operations
@@ -136,11 +142,11 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
         // As final check, log threads still alive
         for (Thread t : workers) {
             if (t != null && t.isAlive()) {
-                Logger.error("[OrbitSolver] ", "Orbit worker failed to stop: " + t.getName());
+                logger.error("Orbit worker failed to stop: " + t.getName());
             }
         }
 
-        Logger.log("[OrbitSolver] ", "shutdown complete");
+        logger.info("shutdown complete");
     }
 
     private void workerLoop(int workerId) {
@@ -181,7 +187,7 @@ public class PersistentOrbitWorkerBackend implements OrbitExecutionBackend {
             barrier.await();
         }
 
-        Logger.log("[OrbitWorker] ", "Stopped OrbitWorker-" + workerId);
+        logger.info("Stopped OrbitWorker-" + workerId);
     }
 
 }

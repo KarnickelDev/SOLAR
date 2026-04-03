@@ -1,6 +1,7 @@
 package karnickeldev.solar.network.net.core;
 
-import karnickeldev.solar.util.Logger;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 import java.util.Arrays;
 
@@ -29,7 +30,7 @@ public class PingTracker {
 
     public static void add(long rttMicros) {
         if(rttMicros > Integer.MAX_VALUE) {
-            Logger.error("Insanely high Ping, something is very wrong!");
+            Logger.get(LogTag.GENERAL).error("PingTracker: Insanely high Ping, something is very wrong!");
             return;
         }
 
