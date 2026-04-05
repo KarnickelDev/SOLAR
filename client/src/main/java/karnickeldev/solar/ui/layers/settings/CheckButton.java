@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.optionsmenu;
+package karnickeldev.solar.ui.layers.settings;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;

@@ -18,6 +18,7 @@ public enum PacketTypes {
     FULL_SNAPSHOT(FullSnapshotPacket.class, FullSnapshotPacket::create),
     TEST_CAM(TestCamPacket.class, TestCamPacket::create, new TestCamHandler()),
     SIM_TIME_UPDATE_REQUEST(SimTimeUpdateRequestPacket.class, SimTimeUpdateRequestPacket::create, new SimTimeUpdateRequestHandler()),
+    CHAT_MESSAGE(ChatMessagePacket.class, ChatMessagePacket::create),
     ;
 
     private final short type;
@@ -57,7 +58,7 @@ public enum PacketTypes {
 
     public void register() {
         if(factory != null) PacketRegistry.register(type, factory);
-        if(handler != null) HandlerRegistry.registerHandler(type, handler);
+        if(handler != null) registerHandler(handler);
     }
 
     private static boolean init = false;

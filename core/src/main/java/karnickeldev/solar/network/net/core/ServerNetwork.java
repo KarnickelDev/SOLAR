@@ -26,6 +26,13 @@ public interface ServerNetwork extends Network {
      */
     void sendToClient(int clientId, Packet packet);
 
+    /**
+     * Queues sending the Packet to all connected clients EXCEPT the given clientId
+     * @param clientId The client to exclude from the broadcast
+     * @param packet The Packet
+     */
+    void broadcastExcept(int clientId, Packet packet);
+
     /** Flushes queued Packets, thus sending them */
     void flush();
 

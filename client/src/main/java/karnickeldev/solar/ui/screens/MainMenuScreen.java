@@ -9,12 +9,10 @@ import karnickeldev.solar.core.gamestates.GameStateID;
 import karnickeldev.solar.core.gamestates.LoadingPlan;
 import karnickeldev.solar.core.gamestates.GameStateScreen;
 import karnickeldev.solar.core.gamestates.LoadingPlanBuilder;
+import karnickeldev.solar.input.GameplayInputManager;
 import karnickeldev.solar.render.StarField;
-import karnickeldev.solar.ui.components.DebugToolTip;
-import karnickeldev.solar.ui.components.mainmenu.MainMenu;
-import karnickeldev.solar.ui.components.mainmenu.MultiplayerMenu;
-import karnickeldev.solar.ui.components.optionsmenu.OptionsMenu;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.layers.mainmenu.MainMenuLayer;
 
 /**
  * @author KarnickelDev
@@ -25,8 +23,7 @@ public class MainMenuScreen implements GameStateScreen {
     private final SolarMain game;
     private final Viewport backgroundViewport;
 
-    private final MainMenu mainMenu = new MainMenu();
-    private final OptionsMenu optionsMenu = new OptionsMenu();
+    private final MainMenuLayer mainMenuLayer = new MainMenuLayer();
 
     private Runnable onInitRunnable;
 
@@ -49,19 +46,10 @@ public class MainMenuScreen implements GameStateScreen {
     public void enter() {
         SolarMain.getInstance().setScreen(this);
 
-        UI.getUIManager().addForceComponent("debug", new DebugToolTip(true));
-        UI.getUIManager().showComponent("debug");
+        UI.getUIManager().clear();
+        UI.getUIManager().push(mainMenuLayer);
 
-        UI.getUIManager().addComponent("main_menu", mainMenu);
-        UI.getUIManager().showComponent("main_menu");
-
-        UI.getUIManager().addComponent("options_menu", optionsMenu);
-        UI.getUIManager().hideComponent("options_menu");
-
-        UI.getUIManager().addComponent("multiplayer_menu", new MultiplayerMenu());
-        UI.getUIManager().hideComponent("multiplayer_menu");
-
-        Gdx.input.setInputProcessor(UI.getUIManager().getStage());
+        Gdx.input.setInputProcessor(UI.getUIManager().getInputManager());
 
         SolarMain.getInstance().getSettingsManager().setFpsOverride(30);
     }
@@ -69,10 +57,8 @@ public class MainMenuScreen implements GameStateScreen {
     @Override
     public void exit() {
         SolarMain.getInstance().getSettingsManager().clearFpsOverride();
-        UI.getUIManager().removeComponent("main_menu");
-        UI.getUIManager().removeComponent("multiplayer_menu");
 
-        UI.getUIManager().hideAll();
+        UI.getUIManager().clear();
     }
 
     @Override

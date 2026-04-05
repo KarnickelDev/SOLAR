@@ -39,7 +39,7 @@ public final class ConsoleAppender implements LogAppender {
         // nop
     }
 
-    private static void appendPadded(StringBuilder sb, String text, int width) {
+    public static void appendPadded(StringBuilder sb, String text, int width) {
         int padding = width - text.length();
         int paddingLeft = padding / 2;
         int paddingRight = padding - paddingLeft;

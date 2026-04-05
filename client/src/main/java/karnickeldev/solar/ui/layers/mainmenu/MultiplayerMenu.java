@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.mainmenu;
+package karnickeldev.solar.ui.layers.mainmenu;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Group;
@@ -8,7 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.core.gamestates.GameStateManager;
-import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.ui.core.UIComponent;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 
@@ -20,16 +20,18 @@ public class MultiplayerMenu implements UIComponent {
 
     private final Table table;
 
-    private String playerDisplayName;
+    public static String playerDisplayName;
 
     private final ServerListIni serverListIni = new ServerListIni();
 
     public MultiplayerMenu() {
         table = new Table();
-        String chars = "0123456789";
-        playerDisplayName = "Player";
-        for(int i = 0; i < 4; i++) {
-            playerDisplayName += chars.charAt((int)(Math.random()*chars.length()));
+        if(playerDisplayName == null) {
+            String chars = "0123456789";
+            playerDisplayName = "Player";
+            for(int i = 0; i < 4; i++) {
+                playerDisplayName += chars.charAt((int)(Math.random()*chars.length()));
+            }
         }
     }
 
@@ -46,6 +48,8 @@ public class MultiplayerMenu implements UIComponent {
 
     @Override
     public void hide() {
+
+
         table.setVisible(false);
         serverListIni.save();
     }
@@ -158,13 +162,16 @@ public class MultiplayerMenu implements UIComponent {
         TextButton back = new TextButton("Back", UI.skin());
         back.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                UI.getUIManager().hideComponent("multiplayer_menu");
+                hide();
             }
         });
 
         Label playerNameLabel = new Label("Your Username:", UI.skin());
         TextField nameInput = new TextField(playerDisplayName, UI.skin());
         nameInput.setAlignment(Align.center);
+        nameInput.setTextFieldListener((textField, c) -> {
+            playerDisplayName = nameInput.getText();
+        });
 
         Table playerName = new Table();
         playerName.right().pad(0);

@@ -3,9 +3,9 @@ package karnickeldev.solar.network.net.handlers;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.context.GameContextContainer;
 import karnickeldev.solar.network.packets.TimestampPacket;
-import karnickeldev.solar.ui.components.UIComponent;
-import karnickeldev.solar.ui.components.game.TimeControl;
-import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.core.UIComponent;
+import karnickeldev.solar.ui.layers.hud.HudLayer;
+import karnickeldev.solar.ui.layers.hud.game.TimeControl;
 
 /**
  * @author KarnickelDev
@@ -24,7 +24,7 @@ public class TimestampHandler implements PacketHandler<TimestampPacket> {
         );
 
         gc.getScheduler().schedule(() -> {
-            UIComponent cmp = UI.getUIManager().getComponent("time_control");
+            UIComponent cmp = HudLayer.INSTANCE.getComponent("time_control");
             if(cmp != null) ((TimeControl) cmp).setTargetSpeedIndex(packet.getTargetSimSpeedIndex());
         });
     }

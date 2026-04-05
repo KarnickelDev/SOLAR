@@ -3,6 +3,8 @@ package karnickeldev.solar.worldview.orbitgraph;
 import karnickeldev.solar.ecs.ECSContext;
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 
 /**
  * @author KarnickelDev
@@ -25,6 +27,7 @@ public final class OrbitGraphSystem {
 
     public void notifyChange() {
         rebuildNecessary = true;
+        Logger.get("OrbitGraph").debug("notifyChange()");
     }
 
     public boolean wasRebuildThisFrame() {
@@ -45,6 +48,7 @@ public final class OrbitGraphSystem {
 
         OrbitGraphBuilder.build(anchorCount, graph.anchorToEntity, graph.entityToAnchor, tmpParentEntity, graph);
         wasRebuild = true;
+        Logger.get("OrbitGraph").debug("rebuild()");
     }
 
     public void collectAnchors(ECSContext ecs) {

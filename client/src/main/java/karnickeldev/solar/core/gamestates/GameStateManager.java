@@ -3,6 +3,7 @@ package karnickeldev.solar.core.gamestates;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.ui.core.UIManager;
+import karnickeldev.solar.ui.layers.dialog.MessageLayer;
 import karnickeldev.solar.ui.screens.BootGameState;
 import karnickeldev.solar.ui.screens.LoadingScreen;
 import karnickeldev.solar.ui.screens.MainMenuScreen;
@@ -65,7 +66,8 @@ public class GameStateManager {
                     logger.error("loading failed: " + t.getMessage());
                     pending = null;
                     transitioning = false;
-                    requestStateLoading(new MainMenuScreen(SolarMain.getInstance(), () -> UIManager.get().showMessage(t.getMessage())), true);
+                    //requestStateLoading(new MainMenuScreen(SolarMain.getInstance(), () -> UIManager.get().showMessage(t.getMessage())), true);
+                    requestStateLoading(new MainMenuScreen(SolarMain.getInstance(), () -> UIManager.get().push(new MessageLayer(t.getMessage()))), true);
                 }
             });
 

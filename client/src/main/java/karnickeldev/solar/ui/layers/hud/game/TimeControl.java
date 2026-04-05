@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.game;
+package karnickeldev.solar.ui.layers.hud.game;
 
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.network.packets.SimTimeUpdateRequestPacket;
 import karnickeldev.solar.simulation.execution.SimSpeedController;
-import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.ui.core.UIComponent;
 import karnickeldev.solar.ui.core.UI;
 
 /**

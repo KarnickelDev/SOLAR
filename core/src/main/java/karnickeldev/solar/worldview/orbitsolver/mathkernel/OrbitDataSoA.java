@@ -81,6 +81,7 @@ public final class OrbitDataSoA {
 
         int last = count - 1;
 
+        // swap with last entity, then remove
         if(idx != last) {
             int movedEntity = anchorIds[last];
 
@@ -90,6 +91,7 @@ public final class OrbitDataSoA {
             anchorToIndex[movedEntity] = idx;
         }
 
+        // remove after swap
         anchorToIndex[anchor] = -1;
         count--;
     }

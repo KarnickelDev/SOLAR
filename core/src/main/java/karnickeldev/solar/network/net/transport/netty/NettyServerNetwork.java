@@ -128,6 +128,15 @@ public class NettyServerNetwork implements ServerNetwork {
     }
 
     @Override
+    public void broadcastExcept(int clientId, Packet packet) {
+        for(ClientSession session: clientIdMap.values()) {
+            if(session.getClientId() != clientId) {
+                sendToClient(session.getClientId(), packet);
+            }
+        }
+    }
+
+    @Override
     public void flush() {
         PacketContext pkt;
 

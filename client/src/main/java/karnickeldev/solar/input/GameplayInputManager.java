@@ -1,8 +1,7 @@
-package karnickeldev.solar.render.camera;
+package karnickeldev.solar.input;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputAdapter;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
@@ -10,12 +9,16 @@ import karnickeldev.solar.physics.Vector2D;
 import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.background.BackgroundGridRenderer;
 import karnickeldev.solar.render.background.RingRenderer;
+import karnickeldev.solar.render.camera.CameraPlayerInput;
+import karnickeldev.solar.render.camera.FloatingOriginCamera;
 import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.ui.core.UIManager;
-import karnickeldev.solar.world.ClientWorld;
-import karnickeldev.solar.world.WorldManager;
+import karnickeldev.solar.ui.layers.escapemenu.EscapeMenuLayer;
 
-public class CameraInput extends InputAdapter {
+/**
+ * @author KarnickelDev
+ * @since 05.04.2026
+ **/
+public class GameplayInputManager implements InputHandler {
 
     private static final float ROTATION_SPEED = (float) Math.toRadians(90);
     private static final float ZOOM_KEY_SPEED = 14f;
@@ -24,28 +27,17 @@ public class CameraInput extends InputAdapter {
     private int lastMouseX = 0, lastMouseY = 0;
     private boolean dragging = false;
 
-    private final WorldManager<ClientWorld> worldManager;
     private FloatingOriginCamera camera;
     private ClientECS ecs;
 
-    public CameraInput(WorldManager<ClientWorld> worldManager) {
-        this.worldManager = worldManager;
-        setWorld(worldManager.getActiveWorld());
+    public GameplayInputManager() {
+
     }
 
-    private void setWorld(ClientWorld world) {
-        if(world == null || worldManager.getActiveWorld() == null) return;
-
-        this.camera = worldManager.getActiveWorld().getCamera();
-        this.ecs = worldManager.getActiveWorld().getECS();
-    }
-
-    public void processInputs() {
-//        // there has to be a better way xD
-//        if(UI.getUIManager().getComponent("escape_menu").getGroup().isVisible()) return;
-//        if(UI.getUIManager().getComponent("options_menu").getGroup().isVisible()) return;
-
-        setWorld(worldManager.getActiveWorld());
+    @Override
+    public void handleInput() {
+        this.camera = GameContext.get().getWorldManager().getActiveWorld().getCamera();
+        this.ecs = GameContext.get().getWorldManager().getActiveWorld().getECS();
 
         CameraPlayerInput signal = camera.getPlayerInput();
 
@@ -102,14 +94,15 @@ public class CameraInput extends InputAdapter {
             return true;
         }
 
-        if(keycode == Input.Keys.F3) {
-            if(UIManager.get().getComponent("debug").getGroup().isVisible()) {
-                UIManager.get().hideComponent("debug");
-            } else {
-                UIManager.get().showComponent("debug");
-            }
-            return true;
-        }
+        // TODO: add back
+//        if(keycode == Input.Keys.F3) {
+//            if(UIManager.get().getComponent("debug").getGroup().isVisible()) {
+//                UIManager.get().hideComponent("debug");
+//            } else {
+//                UIManager.get().showComponent("debug");
+//            }
+//            return true;
+//        }
 
         if(keycode == Input.Keys.SPACE) {
             GameContext.get().getClock().getSimSpeedController().togglePause();
@@ -117,23 +110,7 @@ public class CameraInput extends InputAdapter {
         }
 
         if(keycode == Input.Keys.ESCAPE) {
-            if(UI.getUIManager().getComponent("escape_menu") != null) {
-                boolean escVis = UI.getUIManager().getComponent("escape_menu").getGroup().isVisible();
-                boolean optVis = UI.getUIManager().getComponent("options_menu").getGroup().isVisible();
-
-                if(!escVis && !optVis) {
-                    // open escape menu
-                    UI.getUIManager().showComponent("escape_menu");
-                } else if(escVis && !optVis) {
-                    UI.getUIManager().hideComponent("escape_menu");
-                } else {
-                    // either both open or only options open
-                    // close options, then escape
-                    UI.getUIManager().hideComponent("options_menu");
-                    UI.getUIManager().hideComponent("escape_menu");
-                }
-
-            }
+            UI.getUIManager().push(new EscapeMenuLayer());
             return true;
         }
 
@@ -141,38 +118,13 @@ public class CameraInput extends InputAdapter {
     }
 
     @Override
-    public boolean scrolled(float amountX, float amountY) {
-        CameraPlayerInput signal = camera.getPlayerInput();
-
-        signal.zoomImpulse += amountY * ZOOM_SCROLL_SPEED;
-        signal.zoomCursor.set(Gdx.input.getX(), Gdx.input.getY());
-
-        return true;
-    }
-
-    @Override
-    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if (button == Input.Buttons.MIDDLE) {
-            dragging = false;
-            return true;
-        }
+    public boolean keyUp(int keycode) {
         return false;
     }
 
     @Override
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (!dragging) return false;
-
-        CameraPlayerInput signal = camera.getPlayerInput();
-        signal.clear();
-        signal.dirX = -(screenX - lastMouseX);
-        signal.dirY = screenY - lastMouseY;
-        signal.panning = true;
-
-        lastMouseX = screenX;
-        lastMouseY = screenY;
-
-        return true;
+    public boolean keyTyped(char character) {
+        return false;
     }
 
     @Override
@@ -206,5 +158,50 @@ public class CameraInput extends InputAdapter {
         }
 
         return processed;
+    }
+
+    @Override
+    public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        if (button == Input.Buttons.MIDDLE) {
+            dragging = false;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean touchDragged(int screenX, int screenY, int pointer) {
+        if (!dragging) return false;
+
+        CameraPlayerInput signal = camera.getPlayerInput();
+        signal.clear();
+        signal.dirX = -(screenX - lastMouseX);
+        signal.dirY = screenY - lastMouseY;
+        signal.panning = true;
+
+        lastMouseX = screenX;
+        lastMouseY = screenY;
+
+        return true;
+    }
+
+    @Override
+    public boolean mouseMoved(int screenX, int screenY) {
+        return false;
+    }
+
+    @Override
+    public boolean scrolled(float amountX, float amountY) {
+        CameraPlayerInput signal = camera.getPlayerInput();
+
+        signal.zoomImpulse += amountY * ZOOM_SCROLL_SPEED;
+        signal.zoomCursor.set(Gdx.input.getX(), Gdx.input.getY());
+
+        return true;
     }
 }

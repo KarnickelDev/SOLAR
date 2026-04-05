@@ -68,4 +68,12 @@ public class MathUtil {
         return outX + (v / (inY - inX)) * (outY - outX);
     }
 
+    public static boolean AABB(int x, int y, int x1, int y1, int x2, int y2) {
+        return x >= x1 && x <= x2 && y >= y1 && y <= y2;
+    }
+
+    public static boolean AABB(float x, float y, float x1, float y1, float x2, float y2) {
+        return x >= x1 && x <= x2 && y >= y1 && y <= y2;
+    }
+
 }

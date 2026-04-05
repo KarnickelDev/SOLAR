@@ -3,6 +3,7 @@ package karnickeldev.solar.network.net.transport.local;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.core.ServerNetwork;
+import karnickeldev.solar.network.net.transport.netty.ClientSession;
 import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
@@ -49,6 +50,11 @@ public class LocalServerNetwork implements ServerNetwork {
     @Override
     public void sendToClient(int id, Packet packet) {
         outgoingPacketQueue.offer(packet);
+    }
+
+    @Override
+    public void broadcastExcept(int clientId, Packet packet) {
+        // nop, there only is one client
     }
 
     @Override

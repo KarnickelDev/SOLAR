@@ -56,6 +56,7 @@ public final class GameplayLoadScreen implements GameState {
                 PacketTypes.WORLD_UPDATE.registerHandler(new WorldUpdateHandler());
                 PacketTypes.SERVER_PERFORMANCE_METRICS.registerHandler(new ServerPerformanceMetricsHandler());
                 PacketTypes.FULL_SNAPSHOT.registerHandler(new FullSnapshotHandler());
+                PacketTypes.CHAT_MESSAGE.registerHandler(new ClientChatMessageHandler());
             })
             .syncTask(ComponentType::registerSnapshotDeserializers)
             .syncTask((BackgroundStarRenderer::loadAssets))

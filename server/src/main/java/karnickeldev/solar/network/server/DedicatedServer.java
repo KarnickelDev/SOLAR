@@ -52,6 +52,8 @@ public class DedicatedServer extends Server implements GameServer {
         int sun = EntityFactory.createStar(worldManager.getWorld(1).getECS(), "sun", 0, 0,
             Units.toSU(1, Units.Mass.SOLAR_MASS), Units.toSU(600000f, Units.Length.KILOMETER));
 
+        world1.getECS().getComponentRegistry().get(OrbitDataComponent.class).add(sun, 0.001,0,0,0,0);
+
         int mercury = EntityFactory.createStaticPlanetoidHCS(worldManager.getWorld(1).getECS(), "mercury",
             Units.toSU(0.055f, Units.Mass.EARTH_MASS),
             Units.toSU(2439.7f, Units.Length.KILOMETER), 1,

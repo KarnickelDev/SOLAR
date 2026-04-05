@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.optionsmenu;
+package karnickeldev.solar.ui.layers.settings;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Group;
@@ -10,7 +10,7 @@ import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.settings.Resolution;
 import karnickeldev.solar.settings.Settings;
-import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.ui.core.UIComponent;
 import karnickeldev.solar.ui.core.UI;
 
 /**

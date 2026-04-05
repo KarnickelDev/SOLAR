@@ -15,8 +15,8 @@ import java.util.Map;
 public class FontManager {
 
     public enum Fonts {
-        JETBRAINS_MONO("JetBrainsMono", "JetBrainsMono-Regular.ttf","JetBrainsMono-Bold.ttf"),
-        FONT_AWESOME("FontAwesome", "FontAwesome7-Free-Solid-900.otf","FontAwesome7-Free-Solid-900.otf"),
+        JETBRAINS_MONO("JetBrainsMono", "JetBrainsMonoNerdFontPropo-Regular.ttf","JetBrainsMonoNerdFontPropo-Bold.ttf"),
+        MARTIAN("Martian", "MartianMonoNerdFontPropo-Regular.ttf","MartianMonoNerdFontPropo-Bold.ttf"),
         ;
 
         private final String name;
@@ -69,6 +69,7 @@ public class FontManager {
         param.minFilter = Texture.TextureFilter.Linear;
         param.magFilter = Texture.TextureFilter.Linear;
         param.incremental = false;
+        param.hinting = FreeTypeFontGenerator.Hinting.Medium;
         StringBuilder customCharacters = new StringBuilder(param.characters);
         for(char unicode = 0xF000; unicode < 0xF2FF; unicode++) {
             customCharacters.append(unicode);

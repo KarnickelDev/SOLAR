@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.mainmenu;
+package karnickeldev.solar.ui.layers.mainmenu;
 
 import karnickeldev.solar.Metadata;
 import karnickeldev.solar.logging.LogTag;

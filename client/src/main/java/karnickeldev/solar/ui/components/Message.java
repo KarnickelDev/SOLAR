@@ -7,7 +7,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.core.UIComponent;
 
 /**
  * @author KarnickelDev
@@ -16,11 +19,15 @@ import karnickeldev.solar.ui.core.UI;
 public class Message implements UIComponent {
 
     private final Table table;
-    private String text = "Empty";
+    private final String text;
 
     private TextArea message;
 
-    public Message() {
+    private final Runnable onClose;
+
+    public Message(String test, Runnable onClose) {
+        this.onClose = onClose;
+        this.text = test;
         table = new Table();
     }
 
@@ -29,14 +36,9 @@ public class Message implements UIComponent {
         return table;
     }
 
-    public void setText(String message) {
-        text = message;
-        this.message.setText(text);
-    }
-
     @Override
     public void update(float delta) {
-
+        message.setText(text);
     }
 
     @Override
@@ -57,7 +59,11 @@ public class Message implements UIComponent {
         TextButton close = new TextButton("Close", UI.skin());
         close.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                UI.getUIManager().hideComponent("message");
+                if(onClose != null) {
+                    onClose.run();
+                } else {
+                    Logger.get(LogTag.UI).warn("onClose is null: " + this.getClass().getSimpleName());
+                }
             }
         });
 

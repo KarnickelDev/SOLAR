@@ -1,16 +1,8 @@
 package karnickeldev.solar.ui.core;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import karnickeldev.solar.ui.components.Message;
-import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.input.InputManager;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author KarnickelDev
@@ -24,121 +16,101 @@ public class UIManager {
         return instance;
     }
 
-    private final Stage stage;
-    private final Map<String, UIComponent> uiComponents = new HashMap<>();
+    private final Deque<UILayer> uiLayers = new ArrayDeque<>();
 
-    private UIManager() {
-        this.stage = new Stage(new FitViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT, new OrthographicCamera()));
+    private final InputManager inputManager = new InputManager();
 
-        addComponent("message", new Message());
-        hideComponent("message");
+    public InputManager getInputManager() {
+        return inputManager;
     }
 
-    /** Adds a Component by name if it's not present */
-    public void addComponent(String name, UIComponent component) {
-        if(uiComponents.containsKey(name)) {
-            getStage().addActor(uiComponents.get(name).getGroup());
-            return;
+    private UIManager() {}
+
+    public void push(UILayer uiLayer) {
+        if(uiLayer == null) return;
+        UILayer previous = top();
+
+        if (previous != null) {
+            previous.onBlur();
         }
-        uiComponents.put(name, component);
-        getStage().addActor(uiComponents.get(name).getGroup());
-        uiComponents.get(name).resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        uiLayers.addFirst(uiLayer);
+
+        uiLayer.onEnter();
+        uiLayer.onFocus();
     }
 
-    /** Adds a Component by name, overwriting existing Components of that name*/
-    public void addForceComponent(String name, UIComponent component) {
-        uiComponents.put(name, component);
-        getStage().addActor(uiComponents.get(name).getGroup());
-        uiComponents.get(name).resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    }
+    public void pop(UIExitReason reason) {
+        if(uiLayers.isEmpty()) return;
 
-    /** Gets an existing component or null if not found */
-    public UIComponent getComponent(String name) {
-        return uiComponents.get(name);
-    }
+        UILayer top = uiLayers.removeFirst();
+        top.onExit(reason != null ? reason : UIExitReason.SYSTEM);
 
-    /** Shows a component by name */
-    public void showComponent(String... names) {
-        for(String name: names) {
-            UIComponent component = uiComponents.get(name);
-            if (component != null) component.show();
+        UILayer newTop = top();
+        if(newTop != null) {
+            newTop.onFocus();
         }
     }
 
-    /** Hides a component by name */
-    public void hideComponent(String... names) {
-        for(String name: names) {
-            UIComponent component = uiComponents.get(name);
-            if (component != null) component.hide();
+    public void clear() {
+        while(!uiLayers.isEmpty()) {
+            UILayer uiLayer = uiLayers.removeFirst();
+            uiLayer.onExit(UIExitReason.TRANSITION);
         }
     }
 
-    /** Disables Component interactions (still visible) */
-    public void disableComponent(String... names) {
-        for(String name: names) {
-            UIComponent component = uiComponents.get(name);
-            if(component != null) component.getGroup().setTouchable(Touchable.disabled);
+    public void requestPop(UILayer layer, UIExitReason reason) {
+        if (layer == null || uiLayers.isEmpty()) return;
+
+        boolean wasTop = (layer == top());
+
+        if (!uiLayers.remove(layer)) return;
+
+        // Always call exit
+        layer.onExit(reason != null ? reason : UIExitReason.SYSTEM);
+
+        // If it was top, restore focus to new top
+        if (wasTop) {
+            UILayer newTop = top();
+            if (newTop != null) {
+                newTop.onFocus();
+            }
         }
     }
 
-    /** Enables Component interactions */
-    public void enableComponent(String... names) {
-        for(String name: names) {
-            UIComponent component = uiComponents.get(name);
-            if(component != null) component.getGroup().setTouchable(Touchable.enabled);
-        }
+    public UILayer top() {
+        return uiLayers.peekFirst();
     }
 
-    /** Removes a component from stage and internal map */
-    public void removeComponent(String... names) {
-        for(String name: names) {
-            UIComponent component = uiComponents.remove(name);
-            if (component != null) component.getGroup().remove();
-        }
+    public List<UILayer> getLayersTopToBottom() {
+        return new ArrayList<>(uiLayers);
     }
 
-    public Collection<UIComponent> getComponents() {
-        return uiComponents.values();
-    }
-
-    public void hideAll() {
-        for(UIComponent component: uiComponents.values()) {
-            component.hide();
-        }
-    }
-
-    public void showMessage(String message) {
-        UIComponent msg = uiComponents.get("message");
-        assert msg instanceof Message;
-        Message msgComp = (Message) msg;
-        msgComp.setText(message);
-        msgComp.show();
+    public List<UILayer> getLayersBottomToTop() {
+        List<UILayer> list = new ArrayList<>(uiLayers);
+        Collections.reverse(list);
+        return list;
     }
 
     /** Handles resizing all UI component (called from resize in screens) */
     public void resize(int width, int height) {
-        for(UIComponent component: uiComponents.values()) {
-            component.resize(width, height);
+        for (UILayer layer : getLayersBottomToTop()) {
+            layer.resize(width, height);
         }
-        stage.getViewport().update(width, height, true);
     }
 
     /** Updates all UI logic (called from render loop) */
     public void act(float delta) {
-        stage.getViewport().apply();
-        for(UIComponent component: uiComponents.values()) {
-            component.update(delta);
+        for(UILayer layer : getLayersTopToBottom()) {
+            if(layer.isActive()) layer.act(delta);
         }
-        stage.act(delta);
     }
 
     /** Renders all visible UI groups */
     public void draw() {
-        stage.draw();
-    }
-
-    public Stage getStage() {
-        return stage;
+        for (UILayer layer : getLayersBottomToTop()) {
+            if(layer.isVisible()) layer.draw();
+        }
     }
 }
 

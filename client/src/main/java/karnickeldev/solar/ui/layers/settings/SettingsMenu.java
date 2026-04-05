@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.optionsmenu;
+package karnickeldev.solar.ui.layers.settings;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Group;
@@ -11,33 +11,33 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.core.SolarMain;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.settings.Settings;
-import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.ui.core.UIComponent;
 import karnickeldev.solar.ui.core.UI;
 
 /**
  * @author KarnickelDev
  * @since 08.07.2025
  **/
-public class OptionsMenu implements UIComponent {
+public class SettingsMenu implements UIComponent {
 
     private final Table table;
 
     private final VideoOptionsMenu videoOptionsMenu;
 
-    private Runnable onClose;
-
     private static final String[] subMenuNames = {"General", "Video", "Audio"};
     private int checked = 0;
 
-    public OptionsMenu() {
+    private final Runnable onClose;
+
+    public SettingsMenu(Runnable onClose) {
+        this.onClose = onClose;
+
         table = new Table();
         videoOptionsMenu = new VideoOptionsMenu();
         //table.debugAll();
-    }
-
-    public void setOnCloseRunnable(Runnable onClose) {
-        this.onClose = onClose;
     }
 
     @Override
@@ -49,9 +49,6 @@ public class OptionsMenu implements UIComponent {
     @Override
     public void hide() {
         table.setVisible(false);
-
-        if(onClose != null) onClose.run();
-        onClose = null;
     }
 
     @Override
@@ -112,7 +109,11 @@ public class OptionsMenu implements UIComponent {
         back.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
                 back.setChecked(false);
-                UI.getUIManager().getComponent("options_menu").hide();
+                if(onClose != null) {
+                    onClose.run();
+                } else {
+                    Logger.get(LogTag.UI).error("onClose is null: " + this.getClass().getSimpleName());
+                }
             }
         });
 

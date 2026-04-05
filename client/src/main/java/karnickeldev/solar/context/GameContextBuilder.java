@@ -15,7 +15,6 @@ import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.server.LocalServer;
 import karnickeldev.solar.network.server.Server;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
-import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
 import karnickeldev.solar.util.threadlayout.ThreadAffinity;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
@@ -49,8 +48,6 @@ public class GameContextBuilder {
 
         OrbitSolver orbitSolver = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, threadLayout);
 
-        CameraInput cameraInput = new CameraInput(worldManager);
-
         ShaderManager shaderManager = new ShaderManager();
 
         if(threadLayout.getMainContext().useCoreAffinity()) ThreadAffinity.pinToCore(threadLayout.getMainContext().nextCpuId());
@@ -63,7 +60,6 @@ public class GameContextBuilder {
             clientListener,
             clientClock,
             orbitSolver,
-            cameraInput,
             syncLayer,
             shaderManager,
             threadLayout
@@ -102,8 +98,6 @@ public class GameContextBuilder {
 
         OrbitSolver orbitSolver = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, 1);
 
-        CameraInput cameraInput = new CameraInput(worldManager);
-
         ShaderManager shaderManager = new ShaderManager();
 
         if(threadLayout.getMainContext().useCoreAffinity()) ThreadAffinity.pinToCore(threadLayout.getMainContext().nextCpuId());
@@ -116,7 +110,6 @@ public class GameContextBuilder {
             clientListener,
             time,
             orbitSolver,
-            cameraInput,
             syncLayer,
             shaderManager,
             threadLayout

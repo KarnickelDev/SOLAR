@@ -2,13 +2,9 @@ package karnickeldev.solar.context;
 
 import karnickeldev.solar.network.net.core.ClientNetwork;
 import karnickeldev.solar.scheduler.ClientScheduler;
-import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.listener.ClientNetworkListener;
 import karnickeldev.solar.network.sync.PacketSyncLayer;
-import karnickeldev.solar.render.PlanetoidRenderSystem;
-import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.shader.ShaderManager;
-import karnickeldev.solar.scheduler.Scheduler;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.world.ClientClock;
 import karnickeldev.solar.world.ClientWorld;
@@ -28,7 +24,6 @@ public class GameContextContainer {
     private final ClientNetworkListener clientListener;
 
     private final ClientClock clientClock;
-    private final CameraInput cameraInput;
 
     private final OrbitSolver orbitSolver;
 
@@ -42,7 +37,7 @@ public class GameContextContainer {
 
     public GameContextContainer(boolean multiplayer, WorldManager<ClientWorld> worldManager, ClientScheduler scheduler,
                                 ClientNetwork clientNetwork, ClientNetworkListener clientListener,
-                                ClientClock clientClock, OrbitSolver orbitSolver, CameraInput cameraInput, PacketSyncLayer syncLayer, ShaderManager shaderManager,
+                                ClientClock clientClock, OrbitSolver orbitSolver, PacketSyncLayer syncLayer, ShaderManager shaderManager,
                                 ClientThreadLayout clientThreadLayout) {
         this.multiplayer = multiplayer;
         this.worldManager = worldManager;
@@ -51,7 +46,6 @@ public class GameContextContainer {
         this.clientListener = clientListener;
         this.clientClock = clientClock;
         this.orbitSolver = orbitSolver;
-        this.cameraInput = cameraInput;
         this.syncLayer = syncLayer;
         this.shaderManager = shaderManager;
         this.clientThreadLayout = clientThreadLayout;
@@ -83,10 +77,6 @@ public class GameContextContainer {
 
     public ClientClock getClock() {
         return clientClock;
-    }
-
-    public CameraInput getCameraInput() {
-        return cameraInput;
     }
 
     public OrbitSolver getOrbitSolver() {

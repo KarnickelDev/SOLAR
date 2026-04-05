@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components;
+package karnickeldev.solar.ui.core;
 
 import com.badlogic.gdx.scenes.scene2d.Group;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;

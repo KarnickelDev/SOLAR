@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.game;
+package karnickeldev.solar.ui.layers.hud.game;
 
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -10,7 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.context.GameContext;
-import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.ui.core.UIComponent;
 import karnickeldev.solar.ui.core.FontManager;
 import karnickeldev.solar.ui.core.UI;
 
@@ -90,7 +90,7 @@ public class DateDisplay implements UIComponent {
         group.center().pad(10).padBottom(2).padTop(2);
 
         TextButton.TextButtonStyle toggleStyle = new TextButton.TextButtonStyle(UI.skin().get("default", TextButton.TextButtonStyle.class));
-        toggleStyle.font = UI.getFontManager().getFont(FontManager.Fonts.FONT_AWESOME, 42, false);
+        toggleStyle.font = UI.getFontManager().getFont(FontManager.Fonts.JETBRAINS_MONO, 42, false);
         toggleStyle.checked = null;
         toggleStyle.up = null;
         toggleStyle.down = null;

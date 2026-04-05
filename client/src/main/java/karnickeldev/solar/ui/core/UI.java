@@ -28,10 +28,6 @@ public final class UI {
         return getSkinManager().getFontManager();
     }
 
-    public static Stage stage() {
-        return getUIManager().getStage();
-    }
-
     public static UIManager getUIManager() {
         return UIManager.get();
     }

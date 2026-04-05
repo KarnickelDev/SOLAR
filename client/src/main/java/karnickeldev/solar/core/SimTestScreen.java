@@ -8,44 +8,32 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import karnickeldev.solar.context.GameContext;
-import karnickeldev.solar.context.GameContextBuilder;
 import karnickeldev.solar.context.GameContextContainer;
-import karnickeldev.solar.context.ServerContext;
-import karnickeldev.solar.ecs.EntityFactory;
-import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.MassComponent;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
+import karnickeldev.solar.input.GameplayInputManager;
+import karnickeldev.solar.logging.ChatLogAppender;
+import karnickeldev.solar.logging.LogManager;
 import karnickeldev.solar.network.packets.PacketFactory;
 import karnickeldev.solar.network.packets.TestCamPacket;
-import karnickeldev.solar.physics.Units;
 import karnickeldev.solar.render.EntityRenderer;
 import karnickeldev.solar.render.StarField;
 import karnickeldev.solar.render.background.BackgroundGridRenderer;
 import karnickeldev.solar.render.background.RingRenderer;
-import karnickeldev.solar.render.camera.CameraInput;
 import karnickeldev.solar.render.core.RenderPipeline;
 import karnickeldev.solar.render.core.RendererContext;
-import karnickeldev.solar.ui.components.DebugToolTip;
-import karnickeldev.solar.ui.components.escapemenu.EscapeMenu;
-import karnickeldev.solar.ui.components.game.DateDisplay;
-import karnickeldev.solar.ui.components.game.TimeControl;
 import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.util.MathUtil;
+import karnickeldev.solar.ui.layers.hud.HudLayer;
 import karnickeldev.solar.world.ClientWorld;
-import karnickeldev.solar.world.ServerWorld;
-import karnickeldev.solar.world.World;
 import karnickeldev.solar.world.WorldManager;
 import karnickeldev.solar.worldview.orbitgraph.OrbitGraphData;
 import karnickeldev.solar.worldview.orbitgraph.OrbitGraphSystem;
-import karnickeldev.solar.worldview.orbitsolver.ClientOrbitSolveSystem;
 import karnickeldev.solar.worldview.orbitsolver.OrbitSolveInput;
 import karnickeldev.solar.worldview.orbitsolver.OrbitSolver;
 import karnickeldev.solar.worldview.transform.WorldTransformData;
 import karnickeldev.solar.worldview.transform.WorldTransformSystem;
 
 public class SimTestScreen implements Screen {
-
-    private final CameraInput cameraInput;
 
     private final Viewport backgroundViewport;
     private final Viewport screenViewport;
@@ -56,8 +44,6 @@ public class SimTestScreen implements Screen {
     public SimTestScreen() {
         backgroundViewport = new ExtendViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT);
         screenViewport = new ScreenViewport();
-
-        cameraInput = GameContext.get().getCameraInput();
 
         renderCtx = new RendererContext(SolarMain.getInstance().getBatch(), new ShapeRenderer());
         renderPipeline = new RenderPipeline();
@@ -74,21 +60,14 @@ public class SimTestScreen implements Screen {
     public void show() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
-        UI.getUIManager().addForceComponent("debug", new DebugToolTip(false));
-        UI.getUIManager().showComponent("debug");
+        SolarMain.getInstance().getInputManager().setGameplayInputManager(new GameplayInputManager());
 
-        UI.getUIManager().addComponent("escape_menu", new EscapeMenu());
-        UI.getUIManager().hideComponent("escape_menu");
+        HudLayer.INSTANCE = new HudLayer();
+        UI.getUIManager().push(HudLayer.INSTANCE);
 
-        UI.getUIManager().addComponent("time_control", new TimeControl());
+        LogManager.addAppender(new ChatLogAppender(HudLayer.INSTANCE.chatActor));
 
-        UI.getUIManager().addComponent("date_display", new DateDisplay());
-
-        // ORDER HERE IMPORTANT! (Inputs processed in order of registration)
-        SolarMain.getInstance().getInputManager().addInput(UI.stage());
-        //SolarMain.getInstance().getInputManager().addInput(new GestureDetector(cameraInput));
-        SolarMain.getInstance().getInputManager().addInput(cameraInput);
-        Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager().getInputMultiplexer());
+        Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager());
 
         starRenderer = new SimpleStarRenderer(SolarMain.getInstance().getBatch());
     }
@@ -114,13 +93,13 @@ public class SimTestScreen implements Screen {
             gameContext.getClientNetwork().send(camPacket);
         }
 
+        SolarMain.getInstance().getInputManager().pollInputs();
+
         // camera
-        gameContext.getCameraInput().processInputs();
         clientWorldManager.getActiveWorld().getCamera().update(delta);
 
         gameContext.getClock().updateFrameClockTime();
 
-        // do not use current here, we manually subtract PacketSyncDelay
         gameContext.getSyncLayer().update(gameContext.getClock().getFrameClockTime());
 
         // probably better to do after processing input
@@ -193,12 +172,9 @@ public class SimTestScreen implements Screen {
 
     @Override
     public void hide() {
-        UI.getUIManager().hideComponent("debug");
-        UI.getUIManager().removeComponent("escape_menu");
-        UI.getUIManager().removeComponent("time_control");
-        UI.getUIManager().removeComponent("date_display");
-        SolarMain.getInstance().getInputManager().removeInput(UI.stage());
-        SolarMain.getInstance().getInputManager().removeInput(cameraInput);
+        UI.getUIManager().clear();
+
+        SolarMain.getInstance().getInputManager().setGameplayInputManager(null);
     }
 
     @Override

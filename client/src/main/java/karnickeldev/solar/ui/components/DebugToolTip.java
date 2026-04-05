@@ -13,6 +13,7 @@ import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.network.net.core.PingTracker;
 import karnickeldev.solar.network.net.transport.ClientNetworkTracker;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.core.UIComponent;
 
 /**
  * @author KarnickelDev

@@ -176,6 +176,8 @@ public class LoadingScreen implements Screen {
         if(SkinManager.isInit()) {
             BitmapFont font = UI.getFontManager().getFont(28, false);
             versionGlyphLayout.setText(font, Metadata.APP_NAME + " v" + Metadata.VERSION);
+            // TODO: find why this is necessary, appeared after adding (and typing) in player chat
+            font.setColor(1,1,1,1);
             font.draw(SolarMain.getInstance().getBatch(), versionGlyphLayout,5,versionGlyphLayout.height + 5);
         }
         SolarMain.getInstance().getBatch().end();

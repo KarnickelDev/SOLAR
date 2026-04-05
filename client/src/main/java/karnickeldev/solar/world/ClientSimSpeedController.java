@@ -25,7 +25,7 @@ public class ClientSimSpeedController {
     }
 
     public void requestPause(boolean pause) {
-        request((byte)-1, pause);
+        if(pause != clock.isPaused()) request((byte)-1, pause);
     }
 
     public void togglePause() {

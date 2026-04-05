@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.escapemenu;
+package karnickeldev.solar.ui.layers.escapemenu;
 
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -8,9 +8,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateManager;
-import karnickeldev.solar.ui.components.UIComponent;
-import karnickeldev.solar.ui.components.optionsmenu.OptionsMenu;
+import karnickeldev.solar.logging.LogTag;
+import karnickeldev.solar.logging.Logger;
+import karnickeldev.solar.ui.core.UIComponent;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.layers.settings.SettingsMenuLayer;
 import karnickeldev.solar.ui.screens.MainMenuScreen;
 
 /**
@@ -19,9 +21,13 @@ import karnickeldev.solar.ui.screens.MainMenuScreen;
  **/
 public class EscapeMenu implements UIComponent {
 
+    private final Runnable onClose;
+
     private final Table table;
 
-    public EscapeMenu() {
+    public EscapeMenu(Runnable onClose) {
+        this.onClose = onClose;
+
         table = new Table();
     }
 
@@ -58,22 +64,17 @@ public class EscapeMenu implements UIComponent {
 
         resume.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                UI.getUIManager().getComponent("escape_menu").hide();
+                if(onClose != null) {
+                    onClose.run();
+                } else {
+                    Logger.get(LogTag.UI).warn("onClose is null in " + this.getClass().getSimpleName());
+                }
             }
         });
 
         settings.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                UI.getUIManager().getComponent("escape_menu").hide();
-                UI.getUIManager().getComponent("options_menu").show();
-                UIComponent options = UI.getUIManager().getComponent("options_menu");
-
-                if(options instanceof OptionsMenu) {
-                    OptionsMenu op = (OptionsMenu) options;
-                    op.setOnCloseRunnable(() -> {
-                        UI.getUIManager().showComponent("escape_menu");
-                    });
-                }
+                UI.getUIManager().push(new SettingsMenuLayer());
             }
         });
 

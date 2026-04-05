@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components.mainmenu;
+package karnickeldev.solar.ui.layers.mainmenu;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -16,8 +16,9 @@ import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateManager;
-import karnickeldev.solar.ui.components.UIComponent;
+import karnickeldev.solar.ui.core.UIComponent;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.layers.settings.SettingsMenuLayer;
 import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 
 /**
@@ -26,9 +27,13 @@ import karnickeldev.solar.ui.screens.GameplayLoadScreen;
  **/
 public class MainMenu implements UIComponent {
 
+    private final MainMenuLayer mainMenuLayer;
+
     private final Table table;
 
-    public MainMenu() {
+    public MainMenu(MainMenuLayer mainMenuLayer) {
+        this.mainMenuLayer = mainMenuLayer;
+
         table = new Table();
     }
 
@@ -78,22 +83,18 @@ public class MainMenu implements UIComponent {
 
         multiplayer.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                UI.getUIManager().hideComponent("options_menu");
-                UI.getUIManager().hideComponent("singleplayer_menu");
-                UI.getUIManager().hideComponent("credits_menu");
-                UI.getUIManager().hideComponent("message");
-                UI.getUIManager().showComponent("multiplayer_menu");
+                mainMenuLayer.hideComponent("options_menu");
+                mainMenuLayer.hideComponent("singleplayer_menu");
+                mainMenuLayer.hideComponent("credits_menu");
+                mainMenuLayer.hideComponent("message");
+                mainMenuLayer.showComponent("multiplayer_menu");
             }
         });
 
         options.addListener(new ClickListener() {
             public void clicked(InputEvent event, float x, float y) {
-                UI.getUIManager().hideComponent("options_menu");
-                UI.getUIManager().hideComponent("singleplayer_menu");
-                UI.getUIManager().hideComponent("credits_menu");
-                UI.getUIManager().hideComponent("message");
-                UI.getUIManager().hideComponent("multiplayer_menu");
-                UI.getUIManager().showComponent("options_menu");
+                // TODO: maybe don't create new Object
+                UI.getUIManager().push(new SettingsMenuLayer());
             }
         });
 

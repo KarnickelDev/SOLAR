@@ -12,7 +12,7 @@ public final class OrbitGraphBuilder {
         out.anchorCount = anchorCount;
 
         System.arraycopy(anchorToEntity, 0, out.anchorToEntity, 0, anchorCount);
-        System.arraycopy(entityToAnchor, 0, out.entityToAnchor, 0, anchorCount);
+        System.arraycopy(entityToAnchor, 0, out.entityToAnchor, 0, entityToAnchor.length);
 
         // build parent anchors
         for(int a = 0; a < anchorCount; a++) {
