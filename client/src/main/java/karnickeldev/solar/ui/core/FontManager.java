@@ -32,13 +32,9 @@ public class FontManager {
 
     private final Map<String, BitmapFont> fontCache = new HashMap<>(8);
 
-    private float density;
+    protected FontManager() {}
 
-    protected FontManager() {
-        density = Gdx.graphics.getDensity();
-    }
-
-    public BitmapFont getFont(Fonts font, int size, boolean bold) {
+    private BitmapFont getFontRaw(Fonts font, int size, boolean bold) {
         String key = font.name + "-" + size + (bold ? "-bold" : "-reg");
 
         if(!fontCache.containsKey(key)) {
@@ -47,12 +43,20 @@ public class FontManager {
         return fontCache.get(key);
     }
 
-    public BitmapFont getFont(int size, boolean bold) {
-        return getFont(Fonts.JETBRAINS_MONO, size, bold);
+    public BitmapFont getFont(Fonts font, int uiSize, float uiScale, boolean bold) {
+        return getFontRaw(font, Math.round(uiSize * uiScale), bold);
     }
 
-    public BitmapFont getFont(int size) {
-        return getFont(Fonts.JETBRAINS_MONO, size, false);
+    public BitmapFont getFont(Fonts font, int uiSize, boolean bold) {
+        return getFontRaw(font, Math.round(uiSize * UILayoutEngine.getUIScaleY()), bold);
+    }
+
+    public BitmapFont getFont(int uiSize, boolean bold) {
+        return getFont(Fonts.JETBRAINS_MONO, uiSize, UILayoutEngine.getUIScaleY(), bold);
+    }
+
+    public BitmapFont getFont(int uiSize) {
+        return getFont(Fonts.JETBRAINS_MONO, uiSize, UILayoutEngine.getUIScaleY(),false);
     }
 
     public void clearCache() {
@@ -60,12 +64,11 @@ public class FontManager {
             font.dispose();
         }
         fontCache.clear();
-        density = Gdx.graphics.getDensity();
     }
 
-    protected BitmapFont generateFont(Fonts font, int size, boolean bold) {
+    private BitmapFont generateFont(Fonts font, int size, boolean bold) {
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        param.size = Math.max(3, Math.round(size * density));
+        param.size = Math.max(3, size);
         param.minFilter = Texture.TextureFilter.Linear;
         param.magFilter = Texture.TextureFilter.Linear;
         param.incremental = false;

@@ -1,42 +1,49 @@
 package karnickeldev.solar.ui.layers.hud.chat;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.Widget;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
-import karnickeldev.solar.ui.core.FontManager;
+import karnickeldev.solar.core.SimTestScreen;
+import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.components.UIElement;
+import karnickeldev.solar.ui.core.UILayoutEngine;
+import karnickeldev.solar.ui.fontutil.MSDFFont;
+import karnickeldev.solar.ui.fontutil.MessageWrapper;
 import karnickeldev.solar.util.MathUtil;
 
 /**
  * @author KarnickelDev
  * @since 06.04.2026
  **/
-public class MessageRenderer extends Widget {
+public class MessageRenderer extends UIElement {
 
     private static final float AUTO_SCROLL_THRESHOLD = 50f;
     private static final float AUTO_SCROLL_SPEED = 300f;
-    private static final float MAX_SCROLL_SPEED = 10_000;
+    private static final float MAX_SCROLL_SPEED = 10_000f;
 
-    private static final Color NOTIFY_COLOR = new Color(0xFFC857FF);
-
-    private static final int fontSize = 18;
+    private static final int CHAT_FONT_SIZE = 12;
 
     private MessageProvider messageProvider;
 
-    private float scrollOffset = 0;
-    private float scrollVelocity = 0;
+    private float scrollOffset = 0f;
+    private float animationOffset = 0f;
+    private float scrollVelocity = 0f;
+
     private boolean autoScroll = true;
     private int unreadMessages = 0;
+
+    private float paddingLeft = 0;
+    private float paddingRight = 0;
+    private float paddingTop = 0;
+    private float paddingBottom = 0;
+    private float paddingMessages = 0;
 
     private float padLeft = 0;
     private float padRight = 0;
@@ -44,233 +51,255 @@ public class MessageRenderer extends Widget {
     private float padBottom = 0;
     private float padMessages = 0;
 
+    private float v_borderThickness = 0;
+    private float borderThickness = 0;
+
     private final Vector2 tmpVec = new Vector2();
-    private final Rectangle scissors = new Rectangle();
     private final Rectangle bounds = new Rectangle();
 
-    private float totalHeight = 0;
+    private float totalHeight = 0f;
 
     public MessageRenderer(MessageProvider provider) {
-        setTouchable(Touchable.enabled);
-
-        addListener(new InputListener() {
-
-            @Override
-            public boolean scrolled(InputEvent event, float x, float y, float amountX, float amountY) {
-                // down is positive amount
-                scrollVelocity += amountY * 300;
-                autoScroll = false;
-                return true;
-            }
-        });
-
+        setTouchable(true);
         setMessageProvider(provider);
-
-        setX(0);
-        setY(0);
-        setWidth(400);
-        setHeight(400);
     }
 
-    public void setMessageProvider(MessageProvider messageProvider) {
-        this.messageProvider = messageProvider;
+    @Override
+    public boolean handleInput(InputEvent e) {
+        if (e.getType() == InputEvent.Type.scrolled) {
+            scrollVelocity += e.getScrollAmountY() * 300f;
+            scrollVelocity = MathUtil.clamp(scrollVelocity, -MAX_SCROLL_SPEED, MAX_SCROLL_SPEED);
+
+            autoScroll = false;
+            animationOffset = 0f;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public void setMessageProvider(MessageProvider provider) {
+        this.messageProvider = provider;
     }
 
     public void addMessage(ChatMessage message) {
-        message.layout(UI.getFontManager().getFont(FontManager.Fonts.MARTIAN, fontSize, false), getWidth() - padLeft - padRight);
+        float availableWidth = getWidth() - padLeft - padRight;
+        float fontScale = CHAT_FONT_SIZE * UILayoutEngine.getUIScaleY();
 
-        ChatMessage oldMsg = messageProvider.addMessage(message);
-        if(oldMsg != null) {
-            totalHeight -= oldMsg.getTotalHeight() + padMessages;
-            reLayout();
+        rebuildMessage(message, SimTestScreen.font, availableWidth, fontScale);
+
+        ChatMessage removed = messageProvider.addMessage(message);
+        if (removed != null) {
+            totalHeight -= computeMessageHeight(removed, fontScale) + padMessages;
         }
 
-        if(autoScroll || isAtBottom()) autoScroll = true;
-        if(!autoScroll) unreadMessages++;
+        boolean wasAtBottom = isAtBottom();
 
-        totalHeight += message.getTotalHeight() + padMessages;
+        if (!autoScroll && !wasAtBottom) {
+            unreadMessages++;
+        } else {
+            autoScroll = true;
+        }
 
-        // IMPORTANT: add height to scrollOffset so visually nothing moves
-        scrollOffset -= message.getTotalHeight() + padMessages;
+        float addedHeight = computeMessageHeight(message, fontScale) + padMessages;
+        totalHeight += addedHeight;
+
+        if (wasAtBottom) {
+            animationOffset -= addedHeight;
+        } else {
+            scrollOffset -= addedHeight;
+        }
     }
 
     public void setPad(float left, float right, float top, float bottom, float messages) {
-        padLeft = left;
-        padRight = right;
-        padTop = top;
-        padBottom = bottom;
-        padMessages = messages;
+        paddingLeft = left;
+        paddingRight = right;
+        paddingTop = top;
+        paddingBottom = bottom;
+        paddingMessages = messages;
+
+        padLeft = (borderThickness + paddingLeft) * UILayoutEngine.getUIScaleY();
+        padRight = (borderThickness + paddingRight) * UILayoutEngine.getUIScaleY();
+        padTop = (borderThickness + paddingTop) * UILayoutEngine.getUIScaleY();
+        padBottom = (borderThickness + paddingBottom) * UILayoutEngine.getUIScaleY();
+        padMessages = paddingMessages * UILayoutEngine.getUIScaleY();
     }
 
-    public int unreadMessages() {
-        return unreadMessages;
+    public void setBorderThickness(float borderThickness) {
+        this.v_borderThickness = borderThickness;
+        this.borderThickness = borderThickness * UILayoutEngine.getUIScaleY();
+        setPad(paddingLeft, paddingRight, paddingTop, paddingBottom, paddingMessages);
     }
 
+    @Override
+    public void layout(float width, float height, float scale) {
+        setBorderThickness(v_borderThickness);
+        super.layout(width, height, scale);
 
+        float availableWidth = getWidth() - padLeft - padRight;
+        float fontScale = CHAT_FONT_SIZE * UILayoutEngine.getUIScaleY();
 
-    private void reLayout() {
-        // invalidate messages layout
         for (int i = 0; i < messageProvider.size(); i++) {
-            messageProvider.getMessage(i).invalidateLayout();
+            rebuildMessage(messageProvider.getMessage(i), SimTestScreen.font, availableWidth, fontScale);
         }
-    }
-
-    private void clampScroll() {
-        float max = Math.max(0, totalHeight - getHeight() + padTop + padBottom);
-        scrollOffset = MathUtil.clamp(scrollOffset, -max, 0);
-    }
-
-    private boolean isAtBottom() {
-        return Math.abs(scrollOffset) < AUTO_SCROLL_THRESHOLD;
     }
 
     @Override
     public void act(float delta) {
-        scrollVelocity = MathUtil.clamp(scrollVelocity, -MAX_SCROLL_SPEED, MAX_SCROLL_SPEED); // clamp scroll speed
-        scrollOffset += scrollVelocity * delta; // apply scroll speed
-        if(autoScroll) scrollOffset += AUTO_SCROLL_SPEED * delta; // apply smooth auto scrolling
-        clampScroll(); // clamp scrollOffset
+        recomputeTotalHeight();
 
-        if(isAtBottom()) unreadMessages = 0;
+        scrollVelocity = MathUtil.clamp(scrollVelocity, -MAX_SCROLL_SPEED, MAX_SCROLL_SPEED);
 
-        // decelerate
+        if (autoScroll) {
+            scrollVelocity = AUTO_SCROLL_SPEED;
+        }
+
+        scrollOffset += scrollVelocity * delta;
+        clampScroll();
+
+        if (isAtBottom()) {
+            unreadMessages = 0;
+
+            if (scrollVelocity >= 0f) {
+                autoScroll = true;
+            }
+        }
+
+        animationOffset *= (float) Math.pow(0.90f, delta * 200f);
+        if (Math.abs(animationOffset) < 1f) {
+            animationOffset = 0f;
+        }
+
         scrollVelocity *= (float) Math.pow(0.90f, delta * 70f);
-        if(Math.abs(scrollVelocity) < 1f) scrollVelocity = 0;
-
-        for (int i = 0; i < messageProvider.size(); i++) {
-            ChatMessage msg = messageProvider.getMessage(i);
-            layout(UI.getFontManager().getFont(FontManager.Fonts.MARTIAN, fontSize, false), msg, getWidth() - padLeft - padRight);
+        if (Math.abs(scrollVelocity) < 1f) {
+            scrollVelocity = 0f;
         }
     }
 
     @Override
-    public void draw(Batch batch, float parentAlpha) {
-        BitmapFont font = UI.getFontManager().getFont(FontManager.Fonts.MARTIAN, fontSize, false);
-        currentColor = -1;
+    public void render(RendererContext ctx) {
+        draw(ctx.batch(), 1f);
+    }
 
+    public void draw(Batch batch, float parentAlpha) {
         Drawable background = UI.skin().getDrawable("default-pane-noborder");
 
-        batch.setColor(new Color(0x0E0B0AC0)); // 0x0F1115B0
+        batch.setColor(new Color(0x0E0B0AC0));
         background.draw(batch, getX(), getY(), getWidth(), getHeight());
-        batch.setColor(new Color(0xD94A3A2a)); // #D94A3A (red-ish)
-        background.draw(batch, getX(), getY(), getWidth(), 1); // bottom left-right
-        background.draw(batch, getX(), getY(), 1, getHeight()); // left bottom-top
-        background.draw(batch, getX(), getTop()-1, getWidth(), 1); // top left-right
-        background.draw(batch, getRight()-1, getY(), 1, getHeight()); // right bottom-top
-        batch.setColor(1,1,1,1);
 
+        batch.setColor(new Color(0xD94A3A2A));
+        background.draw(batch, getX(), getY(), getWidth(), borderThickness);
+        background.draw(batch, getX(), getY() + borderThickness, borderThickness, getHeight() - 2 * borderThickness);
+        background.draw(batch, getX(), getTop() - borderThickness, getWidth(), borderThickness);
+        background.draw(batch, getRight() - borderThickness, getY() + borderThickness, borderThickness, getHeight() - 2 * borderThickness);
+
+        batch.setColor(Color.WHITE);
         batch.flush();
 
-        tmpVec.set(padLeft, padBottom);
-        localToStageCoordinates(tmpVec);
+        tmpVec.set(getX() + padLeft, getY() + padBottom);
 
-        bounds.set(tmpVec.x, tmpVec.y, getWidth() - padLeft - padRight, getHeight() - padTop - padBottom);
-        ScissorStack.calculateScissors(getStage().getCamera(), batch.getTransformMatrix(), bounds, scissors);
+        bounds.set(
+            tmpVec.x,
+            tmpVec.y,
+            getWidth() - padLeft - padRight,
+            getHeight() - padTop - padBottom
+        );
 
-        if (ScissorStack.pushScissors(scissors)) {
-            Color pre = font.getColor();
-            font.setColor(1f,1f,1f,1f);
-
-            drawMessages(batch, font, getX(), getY(), getWidth(), getHeight());
-
-            drawUnreadMessages(batch);
-
-            // restore render context
+        if (ScissorStack.pushScissors(bounds)) {
+            drawMessages();
             batch.flush();
             ScissorStack.popScissors();
-            font.setColor(pre);
         }
     }
 
-    private final GlyphLayout glyph = new GlyphLayout();
+    private void drawMessages() {
+        MSDFFont font = SimTestScreen.font;
 
-    private void drawUnreadMessages(Batch batch) {
-        if(unreadMessages == 0) return;
+        float fontScale = CHAT_FONT_SIZE * UILayoutEngine.getUIScaleY();
+        float lineHeight = font.getLineHeight() * fontScale;
 
-        BitmapFont font = UI.getFontManager().getFont(22, true);
-        String text = unreadMessages < 100 ? "+" + unreadMessages : "+99";
+        float drawX = getX() + padLeft;
+        float drawY = getY() + padBottom + scrollOffset + animationOffset;
+        float visibleTop = getY() + getHeight() - padTop;
 
-        font.setColor(NOTIFY_COLOR);
-        glyph.setText(font, text);
-        font.draw(batch, glyph, getRight() - 12 - glyph.width, getY() + 5 + glyph.height);
-    }
+        Matrix4 projMatrix = new Matrix4().setToOrtho2D(
+            0,
+            0,
+            Gdx.graphics.getWidth(),
+            Gdx.graphics.getHeight()
+        );
 
-    private void drawMessages(Batch batch, BitmapFont font, float xRaw, float yRaw, float widthRaw, float heightRaw) {
-        float x = xRaw + padLeft;
-        float y = yRaw + padTop;
-        float width = widthRaw - padLeft - padRight;
-        float height = heightRaw - padTop - padBottom;
-
-        float drawY = y + scrollOffset;
+        SimTestScreen.msdfBatch.begin(projMatrix);
 
         for (int i = messageProvider.size() - 1; i >= 0; i--) {
             ChatMessage msg = messageProvider.getMessage(i);
 
-            for (int l = msg.getLines().size() - 1; l >= 0; l--) {
-                ChatMessage.ChatLine line = msg.getLines().get(l);
-                float h = font.getLineHeight();
-                if (drawY + h < y) {
-                    drawY += h;
-                    continue;
-                }
-                if (drawY > y + height) break;
+            float messageHeight = computeMessageHeight(msg, fontScale);
 
-                drawLine(batch, font, line, x, drawY + h);
-
-                drawY += h;
+            if (drawY + messageHeight < getY() + padBottom) {
+                drawY += messageHeight + padMessages;
+                continue;
             }
-            drawY += padMessages;
+
+            if (drawY > visibleTop) {
+                break;
+            }
+
+            SimTestScreen.msdfBatch.drawMessage(
+                font,
+                msg,
+                drawX,
+                drawY,
+                fontScale
+            );
+
+            drawY += messageHeight + padMessages;
+        }
+
+        SimTestScreen.msdfBatch.end();
+    }
+
+    private void rebuildMessage(ChatMessage message, MSDFFont font, float availableWidth, float fontScale) {
+        int maxColumns = Math.max(1, (int) (availableWidth / (font.getSpaceAdvance() * fontScale)));
+
+        boolean needsRebuild = message.wrappedForColumns != maxColumns || message.wrappedForScale != fontScale;
+        if (!needsRebuild) {
+            return;
+        }
+
+        MessageWrapper.wrap(message, maxColumns, fontScale);
+    }
+
+    private float computeMessageHeight(ChatMessage message, float fontScale) {
+        if (message == null) {
+            return 0f;
+        }
+
+        return message.lineCount * SimTestScreen.font.getLineHeight() * fontScale;
+    }
+
+    private void recomputeTotalHeight() {
+        totalHeight = 0f;
+
+        float fontScale = CHAT_FONT_SIZE * UILayoutEngine.getUIScaleY();
+
+        for (int i = 0; i < messageProvider.size(); i++) {
+            ChatMessage msg = messageProvider.getMessage(i);
+            totalHeight += computeMessageHeight(msg, fontScale);
+
+            if (i != messageProvider.size() - 1) {
+                totalHeight += padMessages;
+            }
         }
     }
 
-    private final Color color = new Color(1,1,1,1);
-    private int currentColor = -1;
-
-    private void drawLine(Batch batch, BitmapFont font, ChatMessage.ChatLine line, float x, float y) {
-        float drawX = x;
-
-        for(ChatMessage.ChatSegment seg : line.segments) {
-            if (seg.rgba8888 != currentColor) {
-                Color.rgba8888ToColor(color, seg.rgba8888);
-                font.setColor(color);
-                currentColor = seg.rgba8888;
-            }
-
-            glyph.setText(font, seg.text);
-            font.draw(batch, glyph, drawX, y);
-
-            drawX += glyph.width;
-        }
+    private void clampScroll() {
+        float max = Math.max(0f, totalHeight - getHeight() + padTop + padBottom);
+        scrollOffset = MathUtil.clamp(scrollOffset, -max, 0f);
     }
 
-    private void layout(BitmapFont font, ChatMessage msg, float maxWidth) {
-        if(!msg.isDirty()) return;
-
-        totalHeight -= msg.getTotalHeight() + padMessages;
-        msg.layout(font, maxWidth);
-        totalHeight += msg.getTotalHeight() + padMessages;
+    private boolean isAtBottom() {
+        return Math.abs(scrollOffset) < AUTO_SCROLL_THRESHOLD * UILayoutEngine.getUIScaleY();
     }
-
-    @Override
-    protected void sizeChanged() {
-        super.sizeChanged();
-        reLayout();
-    }
-
-    @Override
-    protected void positionChanged() {
-        super.positionChanged();
-        reLayout();
-    }
-
-    @Override
-    public float getPrefWidth() {
-        return 100;
-    }
-
-    @Override
-    public float getPrefHeight() {
-        return 100;
-    }
-
 }

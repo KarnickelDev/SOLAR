@@ -21,7 +21,7 @@ public class ClientChatMessageHandler implements PacketHandler<ChatMessagePacket
             return;
         }
 
-        HudLayer.INSTANCE.chatActor.addChatMessage(new ChatMessageBuilder(packet.getSender(), packet.getText()).build());
+        HudLayer.INSTANCE.renderer.addMessage(new ChatMessageBuilder(packet.getSender(), packet.getText()).build());
         Logger.get(LogTag.NETWORK).debug("Client received ChatMessagePacket");
     }
 

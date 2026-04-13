@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.logging.appender.LogFormatter;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.layers.hud.HudLayer;
 import karnickeldev.solar.ui.layers.hud.chat.ChatMessageBuilder;
 import karnickeldev.solar.ui.layers.hud.chat.ChatWindow;
 
@@ -38,7 +39,7 @@ public class ChatLogAppender implements LogAppender{
         }
         b.text(msg);
 
-        GameContext.get().getScheduler().schedule(() -> chatWindow.addChatMessage(b.build()));
+        GameContext.get().getScheduler().schedule(() -> HudLayer.INSTANCE.renderer.addMessage(b.build()));
     }
 
     @Override

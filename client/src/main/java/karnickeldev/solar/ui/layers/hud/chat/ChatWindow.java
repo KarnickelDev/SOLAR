@@ -17,15 +17,15 @@ import karnickeldev.solar.ui.layers.mainmenu.MultiplayerMenu;
  **/
 public class ChatWindow extends Table implements UIComponent {
 
-    private final MessageRenderer renderer;
+    //private final MessageRenderer renderer;
 
     private final TextField textInput;
 
     private boolean active = false;
 
     public ChatWindow() {
-        renderer = new MessageRenderer(new ChatMessageStore());
-        renderer.setPad(5,5,5,5,5);
+        //renderer = new MessageRenderer(new ChatMessageStore());
+        //renderer.setPad(5,5,5,5,5);
 
         textInput = new TextField("Type here", UI.skin());
         textInput.setTouchable(Touchable.enabled);
@@ -43,8 +43,13 @@ public class ChatWindow extends Table implements UIComponent {
         setPosition(20,32);
         setSize(420,350);
 
-        add(renderer).expand().fill().row();
+        //add(renderer).expand().fill().row();
+        add().expand().fill().row();
         add(textInput).fillX().height(30);
+    }
+
+    public TextField getTextField() {
+        return textInput;
     }
 
     @Override
@@ -59,7 +64,7 @@ public class ChatWindow extends Table implements UIComponent {
     public void activate() {
         active = true;
 
-        getStage().setScrollFocus(renderer);
+        //getStage().setScrollFocus(renderer);
         getStage().setKeyboardFocus(textInput);
         textInput.setText("");
     }
@@ -80,11 +85,11 @@ public class ChatWindow extends Table implements UIComponent {
         }
 
         textInput.setText("");
-        addChatMessage(new ChatMessageBuilder().sender(MultiplayerMenu.playerDisplayName).text(UI.WHITE, text).build());
+        addChatMessage(new ChatMessageBuilder().text(ChatMessageBuilder.DEFAULT_SENDER_COLOR, MultiplayerMenu.playerDisplayName + ": ").text(UI.WHITE, text).build());
     }
 
     public void addChatMessage(ChatMessage msg) {
-        renderer.addMessage(msg);
+        //renderer.addMessage(msg);
     }
 
     public void addLogMessage(ChatMessage msg) {

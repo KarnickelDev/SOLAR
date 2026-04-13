@@ -68,7 +68,7 @@ public abstract class UILayer implements InputHandler {
 
 
     /** Handles resizing all UI component (called from resize in screens) */
-    public final void resize(int width, int height) {
+    public void resize(int width, int height) {
         logger.debug("resizing {}", getName());
         for(UIComponent component: uiComponents.values()) {
             component.resize(width, height);
@@ -77,7 +77,7 @@ public abstract class UILayer implements InputHandler {
     }
 
     /** Updates all UI logic (called from render loop) */
-    public final void act(float delta) {
+    public void act(float delta) {
         stage.getViewport().apply();
         for(UIComponent component: uiComponents.values()) {
             component.update(delta);
@@ -86,7 +86,7 @@ public abstract class UILayer implements InputHandler {
     }
 
     /** Renders all visible UI groups */
-    public final void draw() {
+    public void draw() {
         stage.draw();
     }
 

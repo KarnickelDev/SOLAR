@@ -2,11 +2,16 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.context.GameContextContainer;
 import karnickeldev.solar.ecs.components.MassComponent;
@@ -22,7 +27,10 @@ import karnickeldev.solar.render.background.BackgroundGridRenderer;
 import karnickeldev.solar.render.background.RingRenderer;
 import karnickeldev.solar.render.core.RenderPipeline;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.components.Label;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.core.UILayoutEngine;
+import karnickeldev.solar.ui.fontutil.*;
 import karnickeldev.solar.ui.layers.hud.HudLayer;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
@@ -32,6 +40,7 @@ import karnickeldev.solar.worldview.orbitsolver.OrbitSolveInput;
 import karnickeldev.solar.worldview.orbitsolver.OrbitSolver;
 import karnickeldev.solar.worldview.transform.WorldTransformData;
 import karnickeldev.solar.worldview.transform.WorldTransformSystem;
+import org.lwjgl.opengl.GL20;
 
 public class SimTestScreen implements Screen {
 
@@ -40,6 +49,11 @@ public class SimTestScreen implements Screen {
 
     private final RenderPipeline renderPipeline;
     private final RendererContext renderCtx;
+
+    ShaderProgram shaderProgram;
+   public static  MSDFBatch msdfBatch;
+    TextCache textCache;
+    public static MSDFFont font;
 
     public SimTestScreen() {
         backgroundViewport = new ExtendViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT);
@@ -52,6 +66,9 @@ public class SimTestScreen implements Screen {
         renderPipeline.add(new RingRenderer());
 
         renderPipeline.add(new EntityRenderer(GameContext.get().getWorldManager()));
+
+        GameContext.get().getShaderManager().registerFromInternalFile("msdf", "shaders/msdf/msdf.vert", "shaders/msdf/msdf.frag");
+        shaderProgram = GameContext.get().getShaderManager().get("msdf");
     }
 
     public static SimpleStarRenderer starRenderer;
@@ -70,6 +87,42 @@ public class SimTestScreen implements Screen {
         Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager());
 
         starRenderer = new SimpleStarRenderer(SolarMain.getInstance().getBatch());
+
+        AssetWrapper.getInstance().getAssetManager().load("fonts/atlas.png", Texture.class);
+        AssetWrapper.getInstance().getAssetManager().finishLoading();
+        Texture atlas = AssetWrapper.getInstance().getAssetManager().get("fonts/atlas.png", Texture.class);
+
+        atlas.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+        font = JSONLoader.loadFont(Gdx.files.internal("fonts/atlas.json"), atlas);
+
+        textCache = new TextCache("Test: 123456\nHallo Welt! \udb80\udc18", 18f);
+        msdfBatch = new MSDFBatch(1024, shaderProgram);
+
+        Label.font = font;
+        Label.batch = msdfBatch;
+    }
+
+    private void test() {
+        //Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+        Matrix4 proj = new Matrix4().setToOrtho2D(
+            0,
+            0,
+            Gdx.graphics.getWidth(),
+            Gdx.graphics.getHeight()
+        );
+
+        textCache.setFontSize(UILayoutEngine.getUIScaleY() * 18);
+        textCache.rebuildIfNeeded(font);
+
+        msdfBatch.begin(proj);
+        msdfBatch.draw(font, textCache.layout(),  0, 0);
+        msdfBatch.draw(font, textCache.layout(),  600, 200);
+        msdfBatch.end();
     }
 
     double tmp = 0;
@@ -150,6 +203,7 @@ public class SimTestScreen implements Screen {
 
         // finish next orbitsolve frame
         GameContext.get().getOrbitSolver().finishFrame();
+        test();
     }
 
     @Override

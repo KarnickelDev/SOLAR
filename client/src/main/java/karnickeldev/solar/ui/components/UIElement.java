@@ -1,0 +1,167 @@
+package karnickeldev.solar.ui.components;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.core.UILayout;
+import karnickeldev.solar.ui.core.UILayoutEngine;
+
+/**
+ * @author KarnickelDev
+ * @since 09.04.2026
+ **/
+public abstract class UIElement {
+
+    private static final Color[] DEBUG_COLORS = {
+        Color.RED,
+        Color.GREEN,
+        Color.BLUE,
+        Color.YELLOW,
+        Color.ORANGE,
+        Color.MAGENTA
+    };
+
+    private static int ID = 0;
+
+    private final int id;
+    private final UILayout layout = new UILayout();
+
+    private UIElement parent;
+
+    private float x;
+    private float y;
+
+    private float width = 100;
+    private float height = 100;
+    private boolean visible = true;
+    private boolean debug = false;
+
+    private boolean touchable = true;
+
+    private boolean layoutDirty = true;
+
+    public UIElement() {
+        this.id = ID++;
+    }
+
+    public abstract void act(float dt);
+
+    public abstract void render(RendererContext ctx);
+
+    public void renderDebug(RendererContext ctx) {
+        if(!debug) return;
+
+        ctx.shapes().setColor(DEBUG_COLORS[id % DEBUG_COLORS.length]);
+        ctx.shapes().rect(getX(), getY(), getWidth(), getHeight());
+    }
+
+    public abstract boolean handleInput(InputEvent e);
+
+    public UILayout getLayout() {
+        return layout;
+    }
+
+    public void invalidateLayout() {
+        layoutDirty = true;
+    }
+
+    public boolean isLayoutDirty() {
+        return layoutDirty;
+    }
+
+    public void layout(float width, float height, float scale) {
+        if(!layoutDirty) return;
+
+        UILayoutEngine.apply(this, width, height, scale);
+        layoutDirty = false;
+    }
+
+    public boolean hit(float mx, float my) {
+        float mouseY = Gdx.graphics.getHeight() - my;
+        return mx >= x && mx <= x + width && mouseY >= y && mouseY <= y + height;
+    }
+
+    public void setParent(UIElement parent) {
+        this.parent = parent;
+    }
+
+    public UIElement getParent() {
+        return parent;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setTouchable(boolean touchable) {
+        this.touchable = touchable;
+    }
+
+    public boolean isTouchable() {
+        return touchable;
+    }
+
+    public void setX(float x) {
+        if(x != this.x) {
+            this.x = x;
+            invalidateLayout();
+        }
+    }
+
+    public void setY(float y) {
+        if(y != this.y) {
+            this.y = y;
+            invalidateLayout();
+        }
+    }
+
+    public void setWidth(float width) {
+        if(width != this.width) {
+            this.width = width;
+            invalidateLayout();
+        }
+    }
+
+    public void setHeight(float height) {
+        if(height != this.height) {
+            this.height = height;
+            invalidateLayout();
+        }
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public float getHeight() {
+        return height;
+    }
+
+    public float getTop() {
+        return y + height;
+    }
+
+    public float getRight() {
+        return x + width;
+    }
+
+
+
+}
