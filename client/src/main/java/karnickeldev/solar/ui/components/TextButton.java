@@ -61,7 +61,7 @@ public class TextButton extends Label {
     }
 
     private void onHover() {
-        setFontColor(Color.GREEN);
+        setFontColor(Color.rgba8888(Color.GREEN));
     }
 
 }

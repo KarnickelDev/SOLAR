@@ -150,7 +150,7 @@ public class GameplayInputManager implements InputHandler {
             processed = true;
         }
 
-        if (button == Input.Buttons.MIDDLE) {
+        if (button == Input.Buttons.RIGHT) {
             dragging = true;
             lastMouseX = screenX;
             lastMouseY = screenY;
@@ -162,7 +162,7 @@ public class GameplayInputManager implements InputHandler {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if (button == Input.Buttons.MIDDLE) {
+        if (button == Input.Buttons.RIGHT) {
             dragging = false;
             return true;
         }

@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.fontutil;
+package karnickeldev.solar.ui.fontutil.kernel;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
@@ -38,52 +38,44 @@ public class JSONLoader {
 
             float pxRange = at.getFloat("distanceRange", 6);
 
-            float spaceAdvance = 0f;
-
             for (JsonValue g : root.get("glyphs")) {
                 int codepoint = g.getInt("unicode");
 
-                Glyph glyph = new Glyph(codepoint);
-
-                glyph.advance = g.getFloat("advance");
+                float advance = g.getFloat("advance");
+                float planeLeft = 0, planeRight = 0, planeTop = 0, planeBottom = 0;
+                float u0 = 0, u1 = 0, v0 = 0, v1 = 0;
+                short atlasPage = 0;
 
                 JsonValue pb = g.get("planeBounds");
                 if(pb != null) {
-                    glyph.planeLeft = pb.getFloat("left",0);
-                    glyph.planeBottom = pb.getFloat("bottom",0);
-                    glyph.planeRight = pb.getFloat("right",0);
-                    glyph.planeTop = pb.getFloat("top",0);
+                    planeLeft = pb.getFloat("left",0);
+                    planeBottom = pb.getFloat("bottom",0);
+                    planeRight = pb.getFloat("right",0);
+                    planeTop = pb.getFloat("top",0);
                 }
                 JsonValue ab = g.get("atlasBounds");
                 if(ab != null) {
-                    glyph.u0 = ab.getFloat("left", 0) / width;
-                    glyph.u1 = ab.getFloat("right",0) / width;
+                    u0 = ab.getFloat("left", 0) / width;
+                    u1 = ab.getFloat("right",0) / width;
 
                     if (yOrigin.equalsIgnoreCase("bottom")) {
-                        glyph.v0 = 1f - (ab.getFloat("bottom") / height);
-                        glyph.v1 = 1f - (ab.getFloat("top") / height);
+                        v0 = 1f - (ab.getFloat("bottom") / height);
+                        v1 = 1f - (ab.getFloat("top") / height);
                     } else {
-                        glyph.v0 = ab.getFloat("bottom") / height;
-                        glyph.v1 = ab.getFloat("top") / height;
+                        v0 = ab.getFloat("bottom") / height;
+                        v1 = ab.getFloat("top") / height;
                     }
                 }
 
-                font.addGlyph(glyph);
+                font.addGlyph(new Glyph(codepoint, advance, planeLeft, planeBottom, planeRight, planeTop, u0, v0, u1, v1, atlasPage));
             }
 
             // ADD FALLBACK GLYPH
             Glyph q = font.getGlyph('?');
-            Glyph missing = new Glyph('?');
-            missing.advance = q.advance;
-            missing.atlasPage = q.atlasPage;
-            missing.u0 = q.u0;
-            missing.v0 = q.v0;
-            missing.u1 = q.u1;
-            missing.v1 = q.v1;
-            missing.planeLeft = q.planeLeft;
-            missing.planeBottom = q.planeBottom;
-            missing.planeRight = q.planeRight;
-            missing.planeTop = q.planeTop;
+            Glyph missing = new Glyph('?', q.advance,
+                q.planeLeft, q.planeBottom, q.planeRight, q.planeTop,
+                q.u0, q.v0, q.u1, q.v1, q.atlasPage
+            );
 
             font.setDefaultGlyph(missing);
 

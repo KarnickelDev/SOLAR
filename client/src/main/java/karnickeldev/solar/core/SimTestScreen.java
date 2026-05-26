@@ -3,10 +3,8 @@ package karnickeldev.solar.core;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -31,6 +29,7 @@ import karnickeldev.solar.ui.components.Label;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.core.UILayoutEngine;
 import karnickeldev.solar.ui.fontutil.*;
+import karnickeldev.solar.ui.fontutil.kernel.*;
 import karnickeldev.solar.ui.layers.hud.HudLayer;
 import karnickeldev.solar.world.ClientWorld;
 import karnickeldev.solar.world.WorldManager;
@@ -51,8 +50,8 @@ public class SimTestScreen implements Screen {
     private final RendererContext renderCtx;
 
     ShaderProgram shaderProgram;
-   public static  MSDFBatch msdfBatch;
-    TextCache textCache;
+    public static MSDFBatch msdfBatch;
+    TextBlock textCache;
     public static MSDFFont font;
 
     public SimTestScreen() {
@@ -96,7 +95,7 @@ public class SimTestScreen implements Screen {
 
         font = JSONLoader.loadFont(Gdx.files.internal("fonts/atlas.json"), atlas);
 
-        textCache = new TextCache("Test: 123456\nHallo Welt! \udb80\udc18", 18f);
+        textCache = new TextBlock(new RichTextBuilder().scale(18).text("Test: 123456\nHallo Welt! \udb80\udc18").build());
         msdfBatch = new MSDFBatch(1024, shaderProgram);
 
         Label.font = font;
@@ -109,19 +108,13 @@ public class SimTestScreen implements Screen {
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-        Matrix4 proj = new Matrix4().setToOrtho2D(
-            0,
-            0,
-            Gdx.graphics.getWidth(),
-            Gdx.graphics.getHeight()
-        );
+        msdfBatch.getProjectionMatrix().setToOrtho2D(0,0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
-        textCache.setFontSize(UILayoutEngine.getUIScaleY() * 18);
-        textCache.rebuildIfNeeded(font);
+        textCache.setUiScale(UILayoutEngine.getUIScaleY());
 
-        msdfBatch.begin(proj);
-        msdfBatch.draw(font, textCache.layout(),  0, 0);
-        msdfBatch.draw(font, textCache.layout(),  600, 200);
+        msdfBatch.begin();
+        msdfBatch.draw(font, textCache.layout(font),  0, 0);
+        msdfBatch.draw(font, textCache.layout(font),  600, 200);
         msdfBatch.end();
     }
 

@@ -4,9 +4,11 @@ import com.badlogic.gdx.graphics.Color;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.logging.appender.LogFormatter;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.fontutil.RichTextBuilder;
+import karnickeldev.solar.ui.fontutil.TextBlock;
 import karnickeldev.solar.ui.layers.hud.HudLayer;
-import karnickeldev.solar.ui.layers.hud.chat.ChatMessageBuilder;
 import karnickeldev.solar.ui.layers.hud.chat.ChatWindow;
+import karnickeldev.solar.ui.layers.hud.chat.MessageRenderer;
 
 /**
  * @author KarnickelDev
@@ -22,24 +24,28 @@ public class ChatLogAppender implements LogAppender{
 
     @Override
     public void append(LogEvent event) {
-        ChatMessageBuilder b = new ChatMessageBuilder();
+        if(!GameContext.isSet()) return;
+
+        RichTextBuilder b = new RichTextBuilder(MessageRenderer.DEFAULT_CHAT_FONT_SIZE);
 
         // Log Level
-        b.text(getColor(event.level), "[" + event.level.toString().trim() + "] ");
+        b.color(getColor(event.level));
+        b.text("[" + event.level.toString().trim() + "] ");
 
         // Log Tag
-        b.text(getColor(event.level),"[" + event.tag + "] ");
+        b.color(getColor(event.level));
+        b.text("[" + event.tag + "] ");
 
         // message
         String msg = LogFormatter.format(event.template, event.args);
         if(event.level == LogLevel.INFO) {
-            b.color(UI.WHITE);
+            b.color(Color.rgba8888(UI.WHITE));
         } else {
             b.color(getColor(event.level));
         }
         b.text(msg);
 
-        GameContext.get().getScheduler().schedule(() -> HudLayer.INSTANCE.renderer.addMessage(b.build()));
+        GameContext.get().getScheduler().schedule(() -> HudLayer.INSTANCE.renderer.addMessage(new TextBlock(b.build())));
     }
 
     @Override

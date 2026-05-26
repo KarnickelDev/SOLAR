@@ -1,12 +1,15 @@
 package karnickeldev.solar.network.net.handlers;
 
+import com.badlogic.gdx.graphics.Color;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.packets.ChatMessagePacket;
+import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.fontutil.RichTextBuilder;
+import karnickeldev.solar.ui.fontutil.TextBlock;
 import karnickeldev.solar.ui.layers.hud.HudLayer;
-import karnickeldev.solar.ui.layers.hud.chat.ChatMessage;
-import karnickeldev.solar.ui.layers.hud.chat.ChatMessageBuilder;
+import karnickeldev.solar.ui.layers.hud.chat.MessageRenderer;
 
 /**
  * @author KarnickelDev
@@ -21,7 +24,10 @@ public class ClientChatMessageHandler implements PacketHandler<ChatMessagePacket
             return;
         }
 
-        HudLayer.INSTANCE.renderer.addMessage(new ChatMessageBuilder(packet.getSender(), packet.getText()).build());
+        HudLayer.INSTANCE.renderer.addMessage(new TextBlock(new RichTextBuilder(MessageRenderer.DEFAULT_CHAT_FONT_SIZE)
+            .color(Color.CYAN).text(packet.getSender() + ": ")
+            .color(UI.WHITE).text(packet.getText())
+            .build()));
         Logger.get(LogTag.NETWORK).debug("Client received ChatMessagePacket");
     }
 

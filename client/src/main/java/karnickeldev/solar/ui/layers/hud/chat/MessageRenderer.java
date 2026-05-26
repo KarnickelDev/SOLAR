@@ -1,9 +1,7 @@
 package karnickeldev.solar.ui.layers.hud.chat;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -14,8 +12,8 @@ import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.components.UIElement;
 import karnickeldev.solar.ui.core.UILayoutEngine;
-import karnickeldev.solar.ui.fontutil.MSDFFont;
-import karnickeldev.solar.ui.fontutil.MessageWrapper;
+import karnickeldev.solar.ui.fontutil.TextBlock;
+import karnickeldev.solar.ui.fontutil.kernel.MSDFFont;
 import karnickeldev.solar.util.MathUtil;
 
 /**
@@ -24,11 +22,11 @@ import karnickeldev.solar.util.MathUtil;
  **/
 public class MessageRenderer extends UIElement {
 
+    public static float DEFAULT_CHAT_FONT_SIZE = 11f;
+
     private static final float AUTO_SCROLL_THRESHOLD = 50f;
     private static final float AUTO_SCROLL_SPEED = 300f;
     private static final float MAX_SCROLL_SPEED = 10_000f;
-
-    private static final int CHAT_FONT_SIZE = 12;
 
     private MessageProvider messageProvider;
 
@@ -83,15 +81,15 @@ public class MessageRenderer extends UIElement {
         this.messageProvider = provider;
     }
 
-    public void addMessage(ChatMessage message) {
+    public void addMessage(TextBlock message) {
         float availableWidth = getWidth() - padLeft - padRight;
-        float fontScale = CHAT_FONT_SIZE * UILayoutEngine.getUIScaleY();
+        float uiScale = UILayoutEngine.getUIScaleY();
 
-        rebuildMessage(message, SimTestScreen.font, availableWidth, fontScale);
+        rebuildMessage(message, SimTestScreen.font, availableWidth, uiScale);
 
-        ChatMessage removed = messageProvider.addMessage(message);
+        TextBlock removed = messageProvider.addMessage(message);
         if (removed != null) {
-            totalHeight -= computeMessageHeight(removed, fontScale) + padMessages;
+            totalHeight -= removed.getLayout().getBoundsHeight() + padMessages;
         }
 
         boolean wasAtBottom = isAtBottom();
@@ -102,7 +100,7 @@ public class MessageRenderer extends UIElement {
             autoScroll = true;
         }
 
-        float addedHeight = computeMessageHeight(message, fontScale) + padMessages;
+        float addedHeight = message.getLayout().getBoundsHeight() + padMessages;
         totalHeight += addedHeight;
 
         if (wasAtBottom) {
@@ -138,10 +136,10 @@ public class MessageRenderer extends UIElement {
         super.layout(width, height, scale);
 
         float availableWidth = getWidth() - padLeft - padRight;
-        float fontScale = CHAT_FONT_SIZE * UILayoutEngine.getUIScaleY();
+        float uiScale = UILayoutEngine.getUIScaleY();
 
         for (int i = 0; i < messageProvider.size(); i++) {
-            rebuildMessage(messageProvider.getMessage(i), SimTestScreen.font, availableWidth, fontScale);
+            rebuildMessage(messageProvider.getMessage(i), SimTestScreen.font, availableWidth, uiScale);
         }
     }
 
@@ -216,26 +214,16 @@ public class MessageRenderer extends UIElement {
     private void drawMessages() {
         MSDFFont font = SimTestScreen.font;
 
-        float fontScale = CHAT_FONT_SIZE * UILayoutEngine.getUIScaleY();
-        float lineHeight = font.getLineHeight() * fontScale;
-
         float drawX = getX() + padLeft;
         float drawY = getY() + padBottom + scrollOffset + animationOffset;
         float visibleTop = getY() + getHeight() - padTop;
 
-        Matrix4 projMatrix = new Matrix4().setToOrtho2D(
-            0,
-            0,
-            Gdx.graphics.getWidth(),
-            Gdx.graphics.getHeight()
-        );
-
-        SimTestScreen.msdfBatch.begin(projMatrix);
+        SimTestScreen.msdfBatch.begin();
 
         for (int i = messageProvider.size() - 1; i >= 0; i--) {
-            ChatMessage msg = messageProvider.getMessage(i);
+            TextBlock msg = messageProvider.getMessage(i);
 
-            float messageHeight = computeMessageHeight(msg, fontScale);
+            float messageHeight = msg.getLayout().getBoundsHeight();
 
             if (drawY + messageHeight < getY() + padBottom) {
                 drawY += messageHeight + padMessages;
@@ -246,13 +234,7 @@ public class MessageRenderer extends UIElement {
                 break;
             }
 
-            SimTestScreen.msdfBatch.drawMessage(
-                font,
-                msg,
-                drawX,
-                drawY,
-                fontScale
-            );
+            SimTestScreen.msdfBatch.draw(font, msg.layout(font), drawX, drawY);
 
             drawY += messageHeight + padMessages;
         }
@@ -260,33 +242,18 @@ public class MessageRenderer extends UIElement {
         SimTestScreen.msdfBatch.end();
     }
 
-    private void rebuildMessage(ChatMessage message, MSDFFont font, float availableWidth, float fontScale) {
-        int maxColumns = Math.max(1, (int) (availableWidth / (font.getSpaceAdvance() * fontScale)));
-
-        boolean needsRebuild = message.wrappedForColumns != maxColumns || message.wrappedForScale != fontScale;
-        if (!needsRebuild) {
-            return;
-        }
-
-        MessageWrapper.wrap(message, maxColumns, fontScale);
-    }
-
-    private float computeMessageHeight(ChatMessage message, float fontScale) {
-        if (message == null) {
-            return 0f;
-        }
-
-        return message.lineCount * SimTestScreen.font.getLineHeight() * fontScale;
+    private void rebuildMessage(TextBlock message, MSDFFont font, float availableWidth, float uiScale) {
+        message.setMaxWidth(availableWidth);
+        message.setUiScale(uiScale);
+        message.layout(font);
     }
 
     private void recomputeTotalHeight() {
         totalHeight = 0f;
 
-        float fontScale = CHAT_FONT_SIZE * UILayoutEngine.getUIScaleY();
-
         for (int i = 0; i < messageProvider.size(); i++) {
-            ChatMessage msg = messageProvider.getMessage(i);
-            totalHeight += computeMessageHeight(msg, fontScale);
+            TextBlock msg = messageProvider.getMessage(i);
+            totalHeight += msg.getLayout().getBoundsHeight();
 
             if (i != messageProvider.size() - 1) {
                 totalHeight += padMessages;

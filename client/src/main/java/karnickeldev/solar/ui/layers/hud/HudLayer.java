@@ -9,12 +9,15 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.network.packets.ChatMessagePacket;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.components.*;
 import karnickeldev.solar.ui.core.*;
+import karnickeldev.solar.ui.fontutil.RichTextBuilder;
+import karnickeldev.solar.ui.fontutil.TextBlock;
 import karnickeldev.solar.ui.layers.hud.chat.*;
 import karnickeldev.solar.ui.layers.hud.game.DateDisplay;
 import karnickeldev.solar.ui.layers.mainmenu.MultiplayerMenu;
@@ -42,8 +45,9 @@ public class HudLayer extends UILayer {
 
         chatActor = new ChatWindow();
 
-        label.setFontColor(UI.WHITE);
+        label.setFontColor(0xFFFFFFFF);
         label.setBackgroundColor(new Color(0x202020FF));
+        label.pad(10, 10, 10, 10);
 
         renderer = new MessageRenderer(new ChatMessageStore());
         renderer.setPad(5,5,5,5,5);
@@ -240,7 +244,10 @@ public class HudLayer extends UILayer {
 
         if(keycode == Input.Keys.ENTER) {
             if(blocksInput()) {
-                renderer.addMessage(new ChatMessageBuilder(MultiplayerMenu.playerDisplayName, chatActor.getTextField().getText()).build());
+                renderer.addMessage(new TextBlock(new RichTextBuilder(MessageRenderer.DEFAULT_CHAT_FONT_SIZE)
+                    .color(Color.CYAN).text(MultiplayerMenu.playerDisplayName + ": ")
+                    .color(UI.WHITE).text(chatActor.getTextField().getText())
+                    .build()));
                 GameContext.get().getClientNetwork().send(new ChatMessagePacket(MultiplayerMenu.playerDisplayName, chatActor.getTextField().getText()));
                 chatActor.handleInput();
             } else {

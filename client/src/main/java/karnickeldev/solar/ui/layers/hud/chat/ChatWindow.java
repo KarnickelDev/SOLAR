@@ -9,6 +9,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.core.UIComponent;
+import karnickeldev.solar.ui.fontutil.RichTextBuilder;
+import karnickeldev.solar.ui.fontutil.TextBlock;
 import karnickeldev.solar.ui.layers.mainmenu.MultiplayerMenu;
 
 /**
@@ -85,14 +87,17 @@ public class ChatWindow extends Table implements UIComponent {
         }
 
         textInput.setText("");
-        addChatMessage(new ChatMessageBuilder().text(ChatMessageBuilder.DEFAULT_SENDER_COLOR, MultiplayerMenu.playerDisplayName + ": ").text(UI.WHITE, text).build());
+        addChatMessage(new TextBlock(new RichTextBuilder()
+            .color(Color.CYAN).text(MultiplayerMenu.playerDisplayName + ": ")
+            .color(UI.WHITE).text(text)
+            .build()));
     }
 
-    public void addChatMessage(ChatMessage msg) {
+    public void addChatMessage(TextBlock msg) {
         //renderer.addMessage(msg);
     }
 
-    public void addLogMessage(ChatMessage msg) {
+    public void addLogMessage(TextBlock msg) {
 
     }
 

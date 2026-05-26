@@ -1,8 +1,6 @@
 package karnickeldev.solar.ui.core;
 
 import com.badlogic.gdx.Gdx;
-import karnickeldev.solar.ui.components.TextButton;
-import karnickeldev.solar.ui.components.UIElement;
 
 /**
  * @author KarnickelDev
@@ -15,6 +13,8 @@ public class UILayoutEngine {
     /** UI Viewport*/
     public static class UIViewport {
         private float x, y, width, height;
+
+        private UIViewport() {}
 
         public float x() {
             return x;
@@ -59,112 +59,82 @@ public class UILayoutEngine {
         return getUiViewportRect().height() / UI.VIRTUAL_HEIGHT;
     }
 
-    public static void apply(UIElement e, float screenWidth, float screenHeight, float ui_scale) {
+    public static void apply(UIElement e, float screenWidth, float screenHeight, float uiScale) {
         UILayout l = e.getLayout();
 
         // IMPORTANT: FORCE UPDATE!!!
         getUiViewportRect();
 
-        float baseX = viewport.x();
-        float baseY = viewport.y();
-        float baseW = viewport.width();
-        float baseH = viewport.height();
+        float baseX, baseY, baseW, baseH;
+
         if (e.getParent() != null) {
             UIElement p = e.getParent();
             baseX = p.getX();
             baseY = p.getY();
             baseW = p.getWidth();
             baseH = p.getHeight();
+        } else {
+            baseX = viewport.x();
+            baseY = viewport.y();
+            baseW = viewport.width();
+            baseH = viewport.height();
         }
 
         float scale = viewport.height() / UI.VIRTUAL_HEIGHT;
-        float scaleX = viewport.width() / UI.VIRTUAL_WIDTH;
 
-        boolean isRoot = (e.getParent() == null);
-        float width = resolveWidth(l, baseW, scale, isRoot);
-        float height = resolveHeight(l, baseH, scale, isRoot);
+        // compute size
+        float width = resolveWidth(l, baseW, scale);
+        float height = resolveHeight(l, baseH, scale);
 
-        if(e instanceof TextButton t) {
-            if(t.getText().contains("Resume")) {
-                System.out.println(baseW);
-            }
-        }
+        // compute anchor position
+        float x = computeAnchorX(l, baseW, width);
+        float y = computeAnchorY(l, baseH, height);
 
-        float x = 0;
-        float y = 0;
+//        if(e.getParent() != null) {
+//            x = 0;
+//            y = 0;
+//        }
 
-        switch (l.anchor) {
-            case BOTTOM_LEFT -> {
-                x = 0;
-                y = 0;
-            }
-            case BOTTOM_RIGHT -> {
-                x = baseW - width;
-                y = 0;
-            }
-            case TOP_LEFT -> {
-                x = 0;
-                y = baseH - height;
-            }
-            case TOP_RIGHT -> {
-                x = baseW - width;
-                y = baseH - height;
-            }
-            case CENTER -> {
-                x = (baseW - width) * 0.5f;
-                y = (baseH - height) * 0.5f;
-            }
-            case LEFT ->  {
-                x = 0;
-                y = (baseH - height) * 0.5f;
-            }
-            case RIGHT -> {
-                x = baseW - width;
-                y = (baseH - height) * 0.5f;
-            }
-            case TOP -> {
-                x = (baseW - width) * 0.5f;
-                y = baseH - height;
-            }
-            case BOTTOM ->  {
-                x = (baseW - width) * 0.5f;
-                y = 0;
-            }
-        }
-
-        if(e.getParent() != null) {
-            x = 0;
-            y = 0;
-        }
-
-        // apply parent pos
+        // apply parent offset
         x += baseX;
         y += baseY;
 
         // apply scaled offset
-        float offsetScale = isRoot ? scale : scale;
-        x += l.offsetX * offsetScale;
-        y += l.offsetY * offsetScale;
+        x += l.offsetX * scale;
+        y += l.offsetY * scale;
 
         // persist changes
-        e.setWidth(width);
-        e.setHeight(height);
-        e.setX(x);
-        e.setY(y);
+        e.setBounds(x, y, width, height);
     }
 
-    private static float resolveWidth(UILayout l, float baseW, float scale, boolean isRoot) {
+    private static float resolveWidth(UILayout l, float baseW, float scale) {
         if (l.widthPercent > 0) {
             return l.widthPercent * baseW;
         }
-        return isRoot ? l.fixedWidth * scale : l.fixedWidth * scale;
+        return l.fixedWidth * scale;
     }
 
-    private static float resolveHeight(UILayout l, float baseH, float scale, boolean isRoot) {
+    private static float resolveHeight(UILayout l, float baseH, float scale) {
         if (l.heightPercent > 0) {
             return l.heightPercent * baseH;
         }
-        return isRoot ? l.fixedHeight * scale : l.fixedHeight * scale;
+        return l.fixedHeight * scale;
+    }
+
+    private static float computeAnchorX(UILayout l, float baseW, float w) {
+        return switch (l.anchor) {
+            case LEFT, TOP_LEFT, BOTTOM_LEFT -> 0;
+            case RIGHT, TOP_RIGHT, BOTTOM_RIGHT -> baseW - w;
+            case CENTER, TOP, BOTTOM -> (baseW - w) * 0.5f;
+        };
+    }
+
+    private static float computeAnchorY(UILayout l, float baseH, float h) {
+        return switch (l.anchor) {
+            case BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT -> 0;
+            case TOP, TOP_LEFT, TOP_RIGHT -> baseH - h;
+            case CENTER, LEFT, RIGHT -> (baseH - h) * 0.5f;
+        };
     }
 
 }

@@ -76,4 +76,8 @@ public class MathUtil {
         return x >= x1 && x <= x2 && y >= y1 && y <= y2;
     }
 
+    public static float packColor(int rgba8888) {
+        return Float.intBitsToFloat(Integer.reverseBytes(rgba8888) & 0xfeffffff);
+    }
+
 }

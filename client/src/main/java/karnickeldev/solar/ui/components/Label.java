@@ -8,37 +8,42 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.core.UILayoutEngine;
-import karnickeldev.solar.ui.fontutil.MSDFBatch;
-import karnickeldev.solar.ui.fontutil.MSDFFont;
-import karnickeldev.solar.ui.fontutil.TextCache;
+import karnickeldev.solar.ui.fontutil.TextRun;
+import karnickeldev.solar.ui.fontutil.TextStyle;
+import karnickeldev.solar.ui.fontutil.kernel.MSDFBatch;
+import karnickeldev.solar.ui.fontutil.kernel.MSDFFont;
+import karnickeldev.solar.ui.fontutil.kernel.TextLayout;
 import org.lwjgl.opengl.GL20;
 
 /**
  * @author KarnickelDev
  * @since 13.04.2026
  **/
+@SuppressWarnings("deprecation")
 public class Label extends UIElement {
 
     public static MSDFFont font;
     public static MSDFBatch batch;
 
-    private final TextCache layout = new TextCache("");
+    private final TextRun[] textRun;
+    private final TextLayout layout;
 
-    private int fontSize = 14;
+    private float fontSize = TextStyle.DEFAULT_FONT_SIZE;
 
-    protected final Color fontColor = new Color(1,1,1,1);
     protected final Color backgroundColor = new Color(0,0,0,0.5f);
     protected final Texture backgroundTex;
 
-    protected float padding = 10f;
+    protected float padLeft, padRight, padTop, padBottom;
 
-    protected int align = Align.center;
+    protected int contentAlign = Align.center;
+    protected int textAlign = Align.center;
 
-    private boolean wrap = false;
+    private boolean dirty = true;
 
     public Label(String text, Texture backgroundTex) {
         this.backgroundTex = backgroundTex;
-        layout.setText(text);
+        this.textRun = new TextRun[]{new TextRun(text, 0xFFFFFFFF, fontSize, 0)};
+        layout = new TextLayout(textRun[0].text().length(), 1);
     }
 
     public Label(String text) {
@@ -46,32 +51,47 @@ public class Label extends UIElement {
     }
 
     public void pad(float pad) {
-        this.padding = pad;
+        pad(pad, pad, pad, pad);
+    }
+
+    public void pad(float padLeft, float padRight, float padTop, float padBottom) {
+        this.padLeft = padLeft;
+        this.padRight = padRight;
+        this.padTop = padTop;
+        this.padBottom = padBottom;
     }
 
     public void setText(String text) {
-        layout.setText(text);
+        if(text.equals(textRun[0].text())) return;
+        textRun[0].setText(text);
+        dirty = true;
     }
 
     public String getText() {
-        return "";
+        return textRun[0].text();
     }
 
-    public void setWrap(boolean wrap) {
-        this.wrap = wrap;
+    public void setContentAlignment(int align) {
+        this.contentAlign = align;
     }
 
-    public void setAlignment(int align) {
-        this.align = align;
+    public void setTextAlign(int align) {
+        if(this.textAlign == align) return;
+        this.textAlign = align;
+        dirty = true;
     }
 
     public void setFontSize(int fontSize) {
+        if(this.fontSize == fontSize) return;
         this.fontSize = fontSize;
-        invalidateLayout();
+        this.textRun[0].setScale(fontSize);
+        dirty = true;
     }
 
-    public void setFontColor(Color fontColor) {
-        this.fontColor.set(fontColor);
+    public void setFontColor(int fontColor) {
+        if(this.textRun[0].color() == fontColor) return;
+        this.textRun[0].setColor(fontColor);
+        dirty = true;
     }
 
     public void setBackgroundColor(Color backgroundColor) {
@@ -81,19 +101,19 @@ public class Label extends UIElement {
     @Override
     public void layout(float width, float height, float ui_scale) {
         super.layout(width, height, ui_scale);
-        layout.setFontSize(fontSize * UILayoutEngine.getUIScaleY());
+        if(dirty) {
+            layout.layout(font, textRun, textAlign,
+                getWidth() - (padLeft + padRight) * UILayoutEngine.getUIScaleY(), UILayoutEngine.getUIScaleY());
+        }
     }
 
     @Override
     public void act(float dt) {
-        //layout.setText(font, text, fontColor,getWidth() - 2 * padding * UILayoutEngine.getUIScaleY(), align, wrap);
-        layout.rebuildIfNeeded(font);
+
     }
 
     @Override
     public void render(RendererContext ctx) {
-        Matrix4 proj = new Matrix4().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
         if(backgroundColor.a > 0) {
             ctx.batch().end();
             ctx.batch().begin();
@@ -103,35 +123,39 @@ public class Label extends UIElement {
 
         ctx.batch().end();
 
-        float pad = padding * UILayoutEngine.getUIScaleY();
+        float scale = UILayoutEngine.getUIScaleY();
+        float pLeft = padLeft * scale;
+        float pRight = padRight * scale;
+        float pTop = padTop * scale;
+        float pBottom = padBottom * scale;
 
         //font.draw(ctx.batch(), layout, getX() + pad, getY() + getHeight() - layout.height - pad);
 
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-        batch.begin(proj);
+        batch.begin();
 
         float dx;
         float dy;
 
-        if(Align.isLeft(align)) {
-            dx = pad;
-        } else if(Align.isRight(align)) {
-            dx = getWidth() - pad - layout.layout().width;
+        if(Align.isLeft(contentAlign)) {
+            dx = pLeft;
+        } else if(Align.isRight(contentAlign)) {
+            dx = getWidth() - pRight - layout.getBoundsWidth();
         } else {
-            dx = (getWidth() - layout.layout().width) * 0.5f;
+            dx = (getWidth() - layout.getBoundsWidth()) * 0.5f;
         }
 
-        if(Align.isTop(align)) {
-            dy = getHeight() - pad - layout.layout().height;
-        } else if(Align.isBottom(align)) {
-            dy = pad;
+        if(Align.isTop(contentAlign)) {
+            dy = getHeight() - pTop - layout.getBoundsHeight();
+        } else if(Align.isBottom(contentAlign)) {
+            dy = pBottom;
         } else {
-            dy = (getHeight() - layout.layout().height) * 0.5f;
+            dy = (getHeight() - layout.getBoundsHeight()) * 0.5f;
         }
 
-        batch.draw(font, layout.layout(), getX() + dx, getY() + dy);
+        batch.draw(font, layout, getX() + dx, getY() + dy);
 
         batch.end();
 

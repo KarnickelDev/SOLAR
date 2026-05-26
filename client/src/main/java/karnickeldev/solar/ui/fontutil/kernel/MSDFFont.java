@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.fontutil;
+package karnickeldev.solar.ui.fontutil.kernel;
 
 import com.badlogic.gdx.graphics.Texture;
 
@@ -18,8 +18,8 @@ public final class MSDFFont {
     String name = "EMPTY";
 
     // dense glyph storage
-    private Glyph[]  glyphs;
-    private int glyphCount = 1; /** Start at 1 to leave space for MISSING_GLYPH*/
+    private Glyph[] glyphs;
+    private int glyphCount = 1; /** Start at 1 to leave space for MISSING_GLYPH */
 
     private final Map<Integer, Integer> codepointToGlyphIndex =  new HashMap<>(128);
 
@@ -58,10 +58,10 @@ public final class MSDFFont {
     }
 
     public void setDefaultGlyph(Glyph glyph) {
-        glyph.index = 0;
+        //glyph.index = 0;
         glyphs[0] = glyph;
         if (glyph.codepoint >= 0 && glyph.codepoint < asciiLookup.length) {
-            asciiLookup[glyph.codepoint] = (short)glyphCount;
+            asciiLookup[glyph.codepoint] = 0;
         } else {
             codepointToGlyphIndex.put(glyph.codepoint, 0);
         }
@@ -70,7 +70,7 @@ public final class MSDFFont {
     public void addGlyph(Glyph glyph) {
         ensureGlyphCapacity(glyphCount + 1);
 
-        glyph.index = glyphCount;
+        //glyph.index = glyphCount;
         glyphs[glyphCount] = glyph;
 
         if (glyph.codepoint >= 0 && glyph.codepoint < asciiLookup.length) {
@@ -84,6 +84,10 @@ public final class MSDFFont {
 
     public Glyph getGlyph(int codepoint) {
         return glyphs[getGlyphIndex(codepoint)];
+    }
+
+    public Glyph getGlyphUnsafe(int index) {
+        return glyphs[index];
     }
 
     public int getGlyphIndex(int codepoint) {

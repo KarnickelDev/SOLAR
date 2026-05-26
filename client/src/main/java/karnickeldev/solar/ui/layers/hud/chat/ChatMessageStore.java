@@ -1,5 +1,7 @@
 package karnickeldev.solar.ui.layers.hud.chat;
 
+import karnickeldev.solar.ui.fontutil.TextBlock;
+
 /**
  * @author KarnickelDev
  * @since 06.04.2026
@@ -8,7 +10,7 @@ public final class ChatMessageStore implements MessageProvider {
 
     public static final int MAX_MESSAGES = 64;
 
-    private final ChatMessage[] buffer = new ChatMessage[MAX_MESSAGES];
+    private final TextBlock[] buffer = new TextBlock[MAX_MESSAGES];
 
     private int start;
     private int size = 0;
@@ -19,12 +21,12 @@ public final class ChatMessageStore implements MessageProvider {
     }
 
     @Override
-    public ChatMessage getMessage(int i) {
+    public TextBlock getMessage(int i) {
         return buffer[(start + i) % MAX_MESSAGES];
     }
 
     @Override
-    public ChatMessage addMessage(ChatMessage message) {
+    public TextBlock addMessage(TextBlock message) {
         int idx = (start + size) % MAX_MESSAGES;
 
         if(size < MAX_MESSAGES) {
@@ -32,7 +34,7 @@ public final class ChatMessageStore implements MessageProvider {
             size++;
             return null;
         } else {
-            ChatMessage old = buffer[start];
+            TextBlock old = buffer[start];
             buffer[start] = message;
             start = (start + 1) % MAX_MESSAGES;
             return old;

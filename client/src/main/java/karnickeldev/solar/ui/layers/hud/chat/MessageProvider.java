@@ -1,15 +1,17 @@
 package karnickeldev.solar.ui.layers.hud.chat;
 
+import karnickeldev.solar.ui.fontutil.TextBlock;
+
 /**
  * @author KarnickelDev
  * @since 07.04.2026
  **/
 public interface MessageProvider {
 
-    ChatMessage getMessage(int i);
+    TextBlock getMessage(int i);
 
     int size();
 
-    ChatMessage addMessage(ChatMessage chatMessage);
+    TextBlock addMessage(TextBlock chatMessage);
 
 }

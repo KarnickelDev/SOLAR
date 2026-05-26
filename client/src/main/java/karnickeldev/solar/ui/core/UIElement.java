@@ -1,11 +1,10 @@
-package karnickeldev.solar.ui.components;
+package karnickeldev.solar.ui.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.render.core.RendererContext;
-import karnickeldev.solar.ui.core.UILayout;
-import karnickeldev.solar.ui.core.UILayoutEngine;
+import karnickeldev.solar.util.MathUtil;
 
 /**
  * @author KarnickelDev
@@ -31,9 +30,9 @@ public abstract class UIElement {
 
     private float x;
     private float y;
-
     private float width = 100;
     private float height = 100;
+
     private boolean visible = true;
     private boolean debug = false;
 
@@ -79,11 +78,12 @@ public abstract class UIElement {
 
     public boolean hit(float mx, float my) {
         float mouseY = Gdx.graphics.getHeight() - my;
-        return mx >= x && mx <= x + width && mouseY >= y && mouseY <= y + height;
+        return MathUtil.AABB(mx, mouseY, getX(), getY(), getRight(), getTop());
     }
 
     public void setParent(UIElement parent) {
         this.parent = parent;
+        invalidateLayout();
     }
 
     public UIElement getParent() {
@@ -110,34 +110,6 @@ public abstract class UIElement {
         return touchable;
     }
 
-    public void setX(float x) {
-        if(x != this.x) {
-            this.x = x;
-            invalidateLayout();
-        }
-    }
-
-    public void setY(float y) {
-        if(y != this.y) {
-            this.y = y;
-            invalidateLayout();
-        }
-    }
-
-    public void setWidth(float width) {
-        if(width != this.width) {
-            this.width = width;
-            invalidateLayout();
-        }
-    }
-
-    public void setHeight(float height) {
-        if(height != this.height) {
-            this.height = height;
-            invalidateLayout();
-        }
-    }
-
     public float getX() {
         return x;
     }
@@ -162,6 +134,14 @@ public abstract class UIElement {
         return x + width;
     }
 
-
+    // internal only
+    void setBounds(float x, float y, float width, float height) {
+        if(this.x == x && this.y == y && this.width == width && this.height == height) return;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        invalidateLayout();
+    }
 
 }
