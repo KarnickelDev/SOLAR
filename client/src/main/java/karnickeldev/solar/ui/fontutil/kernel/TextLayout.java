@@ -1,11 +1,9 @@
 package karnickeldev.solar.ui.fontutil.kernel;
 
-import karnickeldev.solar.ui.core.UILayoutEngine;
 import karnickeldev.solar.ui.fontutil.RichText;
 import karnickeldev.solar.ui.fontutil.TextRun;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author KarnickelDev
@@ -62,15 +60,6 @@ public final class TextLayout {
 
         minX = minY = Float.POSITIVE_INFINITY;
         maxX = maxY = Float.NEGATIVE_INFINITY;
-    }
-
-    public void layout(MSDFFont font, String text, float fontSize, int align, float maxWidth) {
-        layout(font, new TextRun[]{new TextRun(text, 0xFFFFFFFF, fontSize, 0)}, align, maxWidth,
-            UILayoutEngine.getUIScaleY());
-    }
-
-    public void layout(MSDFFont font, TextRun[] runs, int align, float maxWidth) {
-        layout(font, runs, align, maxWidth, UILayoutEngine.getUIScaleY());
     }
 
     public void layout(MSDFFont font, TextRun[] runs, int align, float maxWidth, float uiScale) {
@@ -150,6 +139,14 @@ public final class TextLayout {
 
     public boolean isEmpty() {
         return glyphCount == 0;
+    }
+
+    public int getLineCount() {
+        return lineCount;
+    }
+
+    public float getLineWidth(int i) {
+        return lineWidth[i];
     }
 
     public int getLineGlyphCount(int line) {

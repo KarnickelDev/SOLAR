@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,15 +49,15 @@ public class FontManager {
     }
 
     public BitmapFont getFont(Fonts font, int uiSize, boolean bold) {
-        return getFontRaw(font, Math.round(uiSize * UILayoutEngine.getUIScaleY()), bold);
+        return getFontRaw(font, Math.round(uiSize * 1), bold);
     }
 
     public BitmapFont getFont(int uiSize, boolean bold) {
-        return getFont(Fonts.JETBRAINS_MONO, uiSize, UILayoutEngine.getUIScaleY(), bold);
+        return getFont(Fonts.JETBRAINS_MONO, uiSize, 1, bold);
     }
 
     public BitmapFont getFont(int uiSize) {
-        return getFont(Fonts.JETBRAINS_MONO, uiSize, UILayoutEngine.getUIScaleY(),false);
+        return getFont(Fonts.JETBRAINS_MONO, uiSize, 1,false);
     }
 
     public void clearCache() {

@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui.fontutil.kernel;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
@@ -72,6 +73,10 @@ public final class MSDFBatch implements Disposable {
         return projectionMatrix;
     }
 
+    public boolean isDrawing() {
+        return drawing;
+    }
+
     public void begin() {
         if(drawing) throw new IllegalStateException("Must call end() before begin()");
 
@@ -82,6 +87,9 @@ public final class MSDFBatch implements Disposable {
 
         currentTexture = null;
         currentFont = null;
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
 
     public void draw(MSDFFont font, TextLayout layout, float x, float y) {

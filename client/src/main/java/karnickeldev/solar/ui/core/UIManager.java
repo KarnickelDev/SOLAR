@@ -1,6 +1,8 @@
 package karnickeldev.solar.ui.core;
 
 import karnickeldev.solar.input.InputManager;
+import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 
 import java.util.*;
 
@@ -20,11 +22,17 @@ public class UIManager {
 
     private final InputManager inputManager = new InputManager();
 
+    private UILayoutEngine.UILayoutContext  uiLayoutContext;
+
     public InputManager getInputManager() {
         return inputManager;
     }
 
     private UIManager() {}
+
+    public UILayoutEngine.UILayoutContext getLayoutContext() {
+        return uiLayoutContext;
+    }
 
     public void push(UILayer uiLayer) {
         if(uiLayer == null) return;
@@ -99,10 +107,11 @@ public class UIManager {
         }
     }
 
-    /** Updates all UI logic (called from render loop) */
-    public void act(float delta) {
-        for(UILayer layer : getLayersTopToBottom()) {
-            if(layer.isActive()) layer.act(delta);
+    /** Updates all UI (called from render loop) */
+    public void update(UILayoutEngine.UILayoutContext ctx, float delta) {
+        uiLayoutContext = ctx;
+        for (UILayer layer : getLayersTopToBottom()) {
+            layer.update(ctx, delta);
         }
     }
 
@@ -110,6 +119,12 @@ public class UIManager {
     public void draw() {
         for (UILayer layer : getLayersBottomToTop()) {
             if(layer.isVisible()) layer.draw();
+        }
+    }
+
+    public void render(RendererContext ctx) {
+        for(UILayer layer : getLayersBottomToTop()) {
+            if(layer.isVisible()) layer.render(ctx);
         }
     }
 }

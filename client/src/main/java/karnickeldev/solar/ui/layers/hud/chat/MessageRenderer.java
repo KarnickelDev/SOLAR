@@ -1,18 +1,19 @@
 package karnickeldev.solar.ui.layers.hud.chat;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import karnickeldev.solar.core.SimTestScreen;
 import karnickeldev.solar.render.core.RendererContext;
-import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.render.core.UIRenderer;
+import karnickeldev.solar.ui.components.Panel;
+import karnickeldev.solar.ui.components.UIHelper;
 import karnickeldev.solar.ui.components.UIElement;
-import karnickeldev.solar.ui.core.UILayoutEngine;
+import karnickeldev.solar.ui.components.UILayoutEngine;
+import karnickeldev.solar.ui.core.UIManager;
 import karnickeldev.solar.ui.fontutil.TextBlock;
+import karnickeldev.solar.ui.fontutil.kernel.MSDFBatch;
 import karnickeldev.solar.ui.fontutil.kernel.MSDFFont;
 import karnickeldev.solar.util.MathUtil;
 
@@ -34,25 +35,14 @@ public class MessageRenderer extends UIElement {
     private float animationOffset = 0f;
     private float scrollVelocity = 0f;
 
+    private float cAutoscrollThreshold = AUTO_SCROLL_THRESHOLD;
+
     private boolean autoScroll = true;
     private int unreadMessages = 0;
 
-    private float paddingLeft = 0;
-    private float paddingRight = 0;
-    private float paddingTop = 0;
-    private float paddingBottom = 0;
     private float paddingMessages = 0;
-
-    private float padLeft = 0;
-    private float padRight = 0;
-    private float padTop = 0;
-    private float padBottom = 0;
     private float padMessages = 0;
 
-    private float v_borderThickness = 0;
-    private float borderThickness = 0;
-
-    private final Vector2 tmpVec = new Vector2();
     private final Rectangle bounds = new Rectangle();
 
     private float totalHeight = 0f;
@@ -82,8 +72,8 @@ public class MessageRenderer extends UIElement {
     }
 
     public void addMessage(TextBlock message) {
-        float availableWidth = getWidth() - padLeft - padRight;
-        float uiScale = UILayoutEngine.getUIScaleY();
+        float availableWidth = getContentWidth();
+        float uiScale = UIManager.get().getLayoutContext().uiScaleY();
 
         rebuildMessage(message, SimTestScreen.font, availableWidth, uiScale);
 
@@ -111,32 +101,22 @@ public class MessageRenderer extends UIElement {
     }
 
     public void setPad(float left, float right, float top, float bottom, float messages) {
-        paddingLeft = left;
-        paddingRight = right;
-        paddingTop = top;
-        paddingBottom = bottom;
-        paddingMessages = messages;
-
-        padLeft = (borderThickness + paddingLeft) * UILayoutEngine.getUIScaleY();
-        padRight = (borderThickness + paddingRight) * UILayoutEngine.getUIScaleY();
-        padTop = (borderThickness + paddingTop) * UILayoutEngine.getUIScaleY();
-        padBottom = (borderThickness + paddingBottom) * UILayoutEngine.getUIScaleY();
-        padMessages = paddingMessages * UILayoutEngine.getUIScaleY();
+        setPadding(left, right, top, bottom);
+        setMessagePadding(messages);
     }
 
-    public void setBorderThickness(float borderThickness) {
-        this.v_borderThickness = borderThickness;
-        this.borderThickness = borderThickness * UILayoutEngine.getUIScaleY();
-        setPad(paddingLeft, paddingRight, paddingTop, paddingBottom, paddingMessages);
+    public void setMessagePadding(float padMessages) {
+        paddingMessages = padMessages;
     }
 
     @Override
-    public void layout(float width, float height, float scale) {
-        setBorderThickness(v_borderThickness);
-        super.layout(width, height, scale);
+    public void updateLayout(UILayoutEngine.UILayoutContext ctx) {
+        super.updateLayout(ctx);
+        padMessages = paddingMessages * ctx.uiScaleY();
+        cAutoscrollThreshold = AUTO_SCROLL_THRESHOLD * ctx.uiScaleY();
 
-        float availableWidth = getWidth() - padLeft - padRight;
-        float uiScale = UILayoutEngine.getUIScaleY();
+        float availableWidth = getContentWidth();
+        float uiScale = ctx.uiScaleY();
 
         for (int i = 0; i < messageProvider.size(); i++) {
             rebuildMessage(messageProvider.getMessage(i), SimTestScreen.font, availableWidth, uiScale);
@@ -177,55 +157,32 @@ public class MessageRenderer extends UIElement {
 
     @Override
     public void render(RendererContext ctx) {
-        draw(ctx.batch(), 1f);
+        draw(ctx);
     }
 
-    public void draw(Batch batch, float parentAlpha) {
-        Drawable background = UI.skin().getDrawable("default-pane-noborder");
+    public void draw(RendererContext ctx) {
+        UIHelper.drawBackground(ctx.uiRenderer(), this, new Color(0x0E0B0AC0), Panel.WHITE);
+        UIHelper.drawBorder(ctx.uiRenderer(), this, new Color(0xD94A3A2A), Panel.WHITE);
 
-        batch.setColor(new Color(0x0E0B0AC0));
-        background.draw(batch, getX(), getY(), getWidth(), getHeight());
-
-        batch.setColor(new Color(0xD94A3A2A));
-        background.draw(batch, getX(), getY(), getWidth(), borderThickness);
-        background.draw(batch, getX(), getY() + borderThickness, borderThickness, getHeight() - 2 * borderThickness);
-        background.draw(batch, getX(), getTop() - borderThickness, getWidth(), borderThickness);
-        background.draw(batch, getRight() - borderThickness, getY() + borderThickness, borderThickness, getHeight() - 2 * borderThickness);
-
-        batch.setColor(Color.WHITE);
-        batch.flush();
-
-        tmpVec.set(getX() + padLeft, getY() + padBottom);
-
-        bounds.set(
-            tmpVec.x,
-            tmpVec.y,
-            getWidth() - padLeft - padRight,
-            getHeight() - padTop - padBottom
-        );
-
-        if (ScissorStack.pushScissors(bounds)) {
-            drawMessages();
-            batch.flush();
-            ScissorStack.popScissors();
+        if (ctx.uiRenderer().pushScissors(getContentX(), getContentY(), getContentWidth(), getContentHeight())) {
+            drawMessages(ctx.uiRenderer());
+            ctx.uiRenderer().popScissors();
         }
     }
 
-    private void drawMessages() {
+    private void drawMessages(UIRenderer uiRenderer) {
         MSDFFont font = SimTestScreen.font;
 
-        float drawX = getX() + padLeft;
-        float drawY = getY() + padBottom + scrollOffset + animationOffset;
-        float visibleTop = getY() + getHeight() - padTop;
-
-        SimTestScreen.msdfBatch.begin();
+        float drawX = getContentX();
+        float drawY = getContentY() + scrollOffset + animationOffset;
+        float visibleTop = getContentTop();
 
         for (int i = messageProvider.size() - 1; i >= 0; i--) {
             TextBlock msg = messageProvider.getMessage(i);
 
             float messageHeight = msg.getLayout().getBoundsHeight();
 
-            if (drawY + messageHeight < getY() + padBottom) {
+            if (drawY + messageHeight < getContentY()) {
                 drawY += messageHeight + padMessages;
                 continue;
             }
@@ -234,12 +191,10 @@ public class MessageRenderer extends UIElement {
                 break;
             }
 
-            SimTestScreen.msdfBatch.draw(font, msg.layout(font), drawX, drawY);
+            uiRenderer.drawText(font, msg.layout(font), drawX, drawY);
 
             drawY += messageHeight + padMessages;
         }
-
-        SimTestScreen.msdfBatch.end();
     }
 
     private void rebuildMessage(TextBlock message, MSDFFont font, float availableWidth, float uiScale) {
@@ -262,11 +217,11 @@ public class MessageRenderer extends UIElement {
     }
 
     private void clampScroll() {
-        float max = Math.max(0f, totalHeight - getHeight() + padTop + padBottom);
+        float max = Math.max(0f, totalHeight - getHeight());
         scrollOffset = MathUtil.clamp(scrollOffset, -max, 0f);
     }
 
     private boolean isAtBottom() {
-        return Math.abs(scrollOffset) < AUTO_SCROLL_THRESHOLD * UILayoutEngine.getUIScaleY();
+        return Math.abs(scrollOffset) < cAutoscrollThreshold;
     }
 }

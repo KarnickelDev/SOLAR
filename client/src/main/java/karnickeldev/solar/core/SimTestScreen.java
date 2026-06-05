@@ -3,8 +3,10 @@ package karnickeldev.solar.core;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -25,9 +27,10 @@ import karnickeldev.solar.render.background.BackgroundGridRenderer;
 import karnickeldev.solar.render.background.RingRenderer;
 import karnickeldev.solar.render.core.RenderPipeline;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.render.core.UIRenderer;
 import karnickeldev.solar.ui.components.Label;
 import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.ui.core.UILayoutEngine;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 import karnickeldev.solar.ui.fontutil.*;
 import karnickeldev.solar.ui.fontutil.kernel.*;
 import karnickeldev.solar.ui.layers.hud.HudLayer;
@@ -58,16 +61,18 @@ public class SimTestScreen implements Screen {
         backgroundViewport = new ExtendViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT);
         screenViewport = new ScreenViewport();
 
-        renderCtx = new RendererContext(SolarMain.getInstance().getBatch(), new ShapeRenderer());
+
+        GameContext.get().getShaderManager().registerFromInternalFile("msdf", "shaders/msdf/msdf.vert", "shaders/msdf/msdf.frag");
+        shaderProgram = GameContext.get().getShaderManager().get("msdf");
+        msdfBatch = new MSDFBatch(1024, shaderProgram);
+
+        renderCtx = new RendererContext(SolarMain.getInstance().getBatch(), new UIRenderer(new SpriteBatch(), msdfBatch), new ShapeRenderer());
         renderPipeline = new RenderPipeline();
 
         renderPipeline.add(new BackgroundGridRenderer());
         renderPipeline.add(new RingRenderer());
 
         renderPipeline.add(new EntityRenderer(GameContext.get().getWorldManager()));
-
-        GameContext.get().getShaderManager().registerFromInternalFile("msdf", "shaders/msdf/msdf.vert", "shaders/msdf/msdf.frag");
-        shaderProgram = GameContext.get().getShaderManager().get("msdf");
     }
 
     public static SimpleStarRenderer starRenderer;
@@ -96,13 +101,11 @@ public class SimTestScreen implements Screen {
         font = JSONLoader.loadFont(Gdx.files.internal("fonts/atlas.json"), atlas);
 
         textCache = new TextBlock(new RichTextBuilder().scale(18).text("Test: 123456\nHallo Welt! \udb80\udc18").build());
-        msdfBatch = new MSDFBatch(1024, shaderProgram);
 
         Label.font = font;
-        Label.batch = msdfBatch;
     }
 
-    private void test() {
+    private void test(float uiScale) {
         //Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -110,7 +113,7 @@ public class SimTestScreen implements Screen {
 
         msdfBatch.getProjectionMatrix().setToOrtho2D(0,0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 
-        textCache.setUiScale(UILayoutEngine.getUIScaleY());
+        textCache.setUiScale(uiScale);
 
         msdfBatch.begin();
         msdfBatch.draw(font, textCache.layout(font),  0, 0);
@@ -191,12 +194,23 @@ public class SimTestScreen implements Screen {
 
         renderPipeline.render(renderCtx, delta);
 
-        UI.getUIManager().act(delta);
+        renderCtx.batch().setColor(1,1,1,1);
+        renderCtx.debug().begin(ShapeRenderer.ShapeType.Line);
+
+        UILayoutEngine.UILayoutContext uiContext = UILayoutEngine.computeLayoutContext(Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+        renderCtx.uiRenderer().updateViewport(0,0, uiContext.screenWidth(), uiContext.screenHeight());
+        renderCtx.uiRenderer().begin();
+
+        UI.getUIManager().update(uiContext, delta);
         UI.getUIManager().draw();
+        UI.getUIManager().render(renderCtx);
+
+        renderCtx.uiRenderer().end();
+        renderCtx.debug().end();
 
         // finish next orbitsolve frame
         GameContext.get().getOrbitSolver().finishFrame();
-        test();
+        test(uiContext.uiScaleY());
     }
 
     @Override

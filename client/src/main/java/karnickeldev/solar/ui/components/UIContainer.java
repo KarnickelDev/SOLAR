@@ -12,7 +12,13 @@ import java.util.List;
  **/
 public class UIContainer extends UIElement {
 
-    protected final List<UIElement> children = new ArrayList<>();
+    protected final List<UIElement> children = new ArrayList<>(4);
+
+    public UIContainer() {}
+
+    public List<UIElement> getChildren() {
+        return children;
+    }
 
     public void add(UIElement child) {
         children.add(child);
@@ -29,6 +35,9 @@ public class UIContainer extends UIElement {
 
     @Override
     public void render(RendererContext ctx) {
+        if(!isVisible()) return;
+
+        // last, render children
         for(UIElement child : children) {
             child.render(ctx);
         }
@@ -52,11 +61,11 @@ public class UIContainer extends UIElement {
     }
 
     @Override
-    public void layout(float width, float height, float scale) {
-        super.layout(width, height, scale);
+    public void updateLayout(UILayoutEngine.UILayoutContext ctx) {
+        super.updateLayout(ctx);
 
         for(UIElement child : children) {
-            child.layout(width, height, scale);
+            child.updateLayout(ctx);
         }
     }
 

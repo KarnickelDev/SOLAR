@@ -27,7 +27,7 @@ public class BackgroundGridRenderer implements RenderPass {
     public void render(RendererContext ctx, float delta) {
         if (!renderOn) return;
 
-        ShapeRenderer shapes = ctx.shapes();
+        ShapeRenderer shapes = ctx.debug();
         FloatingOriginCamera cam = GameContext.get().getWorldManager().getActiveWorld().getCamera();
 
         int screenW = Gdx.graphics.getWidth();

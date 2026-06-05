@@ -11,6 +11,7 @@ import karnickeldev.solar.core.gamestates.GameStateScreen;
 import karnickeldev.solar.core.gamestates.LoadingPlanBuilder;
 import karnickeldev.solar.input.GameplayInputManager;
 import karnickeldev.solar.render.StarField;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.layers.mainmenu.MainMenuLayer;
 
@@ -87,7 +88,7 @@ public class MainMenuScreen implements GameStateScreen {
         time += 10*delta;
         //GasGiantTest.genPlanet(shapeRenderer, backgroundViewport, time);
 
-        UI.getUIManager().act(delta);
+        UI.getUIManager().update(UILayoutEngine.computeLayoutContext(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()), delta);
         UI.getUIManager().draw();
 
         if(onInitRunnable != null) {

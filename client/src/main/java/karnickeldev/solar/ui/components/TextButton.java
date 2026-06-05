@@ -1,10 +1,12 @@
 package karnickeldev.solar.ui.components;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
+import karnickeldev.solar.util.MathUtil;
 
 /**
  * @author KarnickelDev
@@ -31,6 +33,11 @@ public class TextButton extends Label {
 
     @Override
     public boolean handleInput(InputEvent event) {
+        float my = Gdx.graphics.getHeight() - event.getStageY();
+        if(!MathUtil.AABB(event.getStageX(), my, getX(), getY(), getRight(), getTop())) {
+            return false;
+        }
+
         if(event.getType() == InputEvent.Type.touchDown) {
             if(event.getButton() == Input.Buttons.LEFT) {
                 onClick();

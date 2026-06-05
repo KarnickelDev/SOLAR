@@ -5,10 +5,11 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import karnickeldev.solar.input.InputHandler;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
+import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.components.UIElement;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author KarnickelDev
@@ -24,6 +25,8 @@ public abstract class UILayer implements InputHandler {
     protected boolean visible = true;
 
     private final Map<String, UIComponent> uiComponents = new HashMap<>();
+
+    private final List<UIElement> uiElements = new ArrayList<>(16);
 
     public UILayer(String name, Stage stage) {
         this.name = name;
@@ -66,6 +69,34 @@ public abstract class UILayer implements InputHandler {
 
     public abstract void onBlur();
 
+    public void addElement(UIElement element) {
+        if(uiElements.contains(element)) return;
+
+        uiElements.add(element);
+    }
+
+    public void removeElement(UIElement element) {
+        uiElements.remove(element);
+    }
+
+    public void update(UILayoutEngine.UILayoutContext ctx, float delta) {
+        for(UIElement uiElement : uiElements) {
+            uiElement.updateLayout(ctx);
+        }
+
+        for(UIElement uiElement : uiElements) {
+            if(isActive()) uiElement.act(delta);
+        }
+
+        act(delta);
+    }
+
+    public void render(RendererContext ctx) {
+        for(UIElement uiElement : uiElements) {
+            uiElement.render(ctx);
+            uiElement.renderDebug(ctx);
+        }
+    }
 
     /** Handles resizing all UI component (called from resize in screens) */
     public void resize(int width, int height) {

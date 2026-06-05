@@ -4,16 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.network.packets.ChatMessagePacket;
-import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.components.*;
 import karnickeldev.solar.ui.core.*;
 import karnickeldev.solar.ui.fontutil.RichTextBuilder;
@@ -47,81 +42,25 @@ public class HudLayer extends UILayer {
 
         label.setFontColor(0xFFFFFFFF);
         label.setBackgroundColor(new Color(0x202020FF));
-        label.pad(10, 10, 10, 10);
+        label.setPadding(10, 10, 10, 10);
 
         renderer = new MessageRenderer(new ChatMessageStore());
         renderer.setPad(5,5,5,5,5);
         renderer.setBorderThickness(3);
-        renderer.getLayout().fixedWidth = 420;
-        renderer.getLayout().fixedHeight = 320;
+        renderer.getLayout().fixedWidth(420).fixedHeight(320);
         renderer.getLayout().offsetX = 20;
         renderer.getLayout().offsetY = 58;
 
         chatContainer.add(renderer);
-        chatContainer.setX(0);
-        chatContainer.setY(0);
-        chatContainer.getLayout().widthPercent = 1;
-        chatContainer.getLayout().heightPercent = 1;
-
-        UIElement topRight = new UIElement() {
-            @Override
-            public void act(float dt) {
-
-            }
-
-            @Override
-            public void render(RendererContext ctx) {
-
-            }
-
-            @Override
-            public boolean handleInput(InputEvent e) {
-                return false;
-            }
-        };
-        topRight.getLayout().anchor = UILayout.Anchor.TOP_RIGHT;
-
-        UIElement topLeft = new UIElement() {
-            @Override
-            public void act(float dt) {
-
-            }
-
-            @Override
-            public void render(RendererContext ctx) {
-
-            }
-
-            @Override
-            public boolean handleInput(InputEvent e) {
-                return false;
-            }
-        };
-        topLeft.getLayout().anchor = UILayout.Anchor.TOP_LEFT;
-
-        UIElement bottomRight = new UIElement() {
-            @Override
-            public void act(float dt) {
-
-            }
-
-            @Override
-            public void render(RendererContext ctx) {
-
-            }
-
-            @Override
-            public boolean handleInput(InputEvent e) {
-                return false;
-            }
-        };
-        bottomRight.getLayout().anchor = UILayout.Anchor.BOTTOM_RIGHT;
-
-        chatContainer.add(topRight);
-        chatContainer.add(bottomRight);
-        chatContainer.add(topLeft);
+        chatContainer.getLayout().fill();
 
         label.getLayout().anchor = UILayout.Anchor.TOP;
+
+        label.setDebug(true);
+        chatContainer.setDebug(true);
+
+        addElement(chatContainer);
+        addElement(label);
     }
 
     @Override
@@ -133,44 +72,12 @@ public class HudLayer extends UILayer {
     public void act(float dt) {
         getStage().getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
         super.act(dt);
-        //renderer.layout(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 1);
-        //renderer.act(dt);
-
-        shapeRenderer.setProjectionMatrix( new Matrix4().setToOrtho2D(0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
-
-        chatContainer.layout(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 1);
-        chatContainer.act(dt);
-
-        label.layout(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 1);
-        label.act(dt);
-    }
-
-    ShapeRenderer shapeRenderer = new ShapeRenderer();
-
-    @Override
-    public void draw() {
-        stage.draw();
-
-        stage.getBatch().begin();
-        //renderer.draw(stage.getBatch(), 1f);
-        chatContainer.render(new RendererContext((SpriteBatch) stage.getBatch(), null));
-        label.render(new RendererContext((SpriteBatch) stage.getBatch(), null));
-        stage.getBatch().end();
-
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        chatContainer.setDebug(true);
-        chatContainer.renderDebug(new RendererContext(null, shapeRenderer));
-        label.setDebug(true);
-        label.renderDebug(new RendererContext(null, shapeRenderer));
-        shapeRenderer.end();
-
     }
 
     @Override
     public void resize(int width, int height) {
         chatContainer.invalidateLayout();
         label.invalidateLayout();
-        //renderer.invalidateLayout();
     }
 
     @Override

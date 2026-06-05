@@ -3,11 +3,9 @@ package karnickeldev.solar.ui.components;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.render.core.RendererContext;
-import karnickeldev.solar.ui.core.UILayoutEngine;
 import karnickeldev.solar.ui.fontutil.TextRun;
 import karnickeldev.solar.ui.fontutil.TextStyle;
 import karnickeldev.solar.ui.fontutil.kernel.MSDFBatch;
@@ -23,7 +21,6 @@ import org.lwjgl.opengl.GL20;
 public class Label extends UIElement {
 
     public static MSDFFont font;
-    public static MSDFBatch batch;
 
     private final TextRun[] textRun;
     private final TextLayout layout;
@@ -31,12 +28,15 @@ public class Label extends UIElement {
     private float fontSize = TextStyle.DEFAULT_FONT_SIZE;
 
     protected final Color backgroundColor = new Color(0,0,0,0.5f);
+    protected final Color borderColor = new Color(0,0,0,0);
     protected final Texture backgroundTex;
-
-    protected float padLeft, padRight, padTop, padBottom;
 
     protected int contentAlign = Align.center;
     protected int textAlign = Align.center;
+
+    private final TextLayout prefLayoutCache = new TextLayout();
+    private float cachedPrefWidth = 100f;
+    private float cachedPrefHeight = 100f;
 
     private boolean dirty = true;
 
@@ -50,15 +50,8 @@ public class Label extends UIElement {
         this(text, Panel.WHITE);
     }
 
-    public void pad(float pad) {
-        pad(pad, pad, pad, pad);
-    }
-
-    public void pad(float padLeft, float padRight, float padTop, float padBottom) {
-        this.padLeft = padLeft;
-        this.padRight = padRight;
-        this.padTop = padTop;
-        this.padBottom = padBottom;
+    public void setBorderColor(int rgba) {
+        borderColor.set(rgba);
     }
 
     public void setText(String text) {
@@ -99,11 +92,25 @@ public class Label extends UIElement {
     }
 
     @Override
-    public void layout(float width, float height, float ui_scale) {
-        super.layout(width, height, ui_scale);
+    public float getPreferredWidth(float scale) {
+        return 1.1f*scale*(cachedPrefWidth + padLeft + padRight + 2*borderThickness);
+    }
+
+    @Override
+    public float getPreferredHeight(float scale) {
+        return 1.1f*scale*(cachedPrefHeight + padTop + padBottom + 2*borderThickness);
+    }
+
+    @Override
+    public void updateLayout(UILayoutEngine.UILayoutContext ctx) {
         if(dirty) {
-            layout.layout(font, textRun, textAlign,
-                getWidth() - (padLeft + padRight) * UILayoutEngine.getUIScaleY(), UILayoutEngine.getUIScaleY());
+            prefLayoutCache.layout(font, textRun, textAlign, ctx.screenWidth(), 1f);
+            cachedPrefWidth = prefLayoutCache.getBoundsWidth();
+            cachedPrefHeight = prefLayoutCache.getBoundsHeight();
+        }
+        super.updateLayout(ctx);
+        if(dirty) {
+            layout.layout(font, textRun, textAlign, getContentWidth(), ctx.uiScaleY());
         }
     }
 
@@ -114,52 +121,29 @@ public class Label extends UIElement {
 
     @Override
     public void render(RendererContext ctx) {
-        if(backgroundColor.a > 0) {
-            ctx.batch().end();
-            ctx.batch().begin();
-            ctx.batch().setColor(backgroundColor);
-            ctx.batch().draw(backgroundTex, getX(), getY(), getWidth(), getHeight());
-        }
-
-        ctx.batch().end();
-
-        float scale = UILayoutEngine.getUIScaleY();
-        float pLeft = padLeft * scale;
-        float pRight = padRight * scale;
-        float pTop = padTop * scale;
-        float pBottom = padBottom * scale;
-
-        //font.draw(ctx.batch(), layout, getX() + pad, getY() + getHeight() - layout.height - pad);
-
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
-        batch.begin();
+        UIHelper.drawBackground(ctx.uiRenderer(), this, backgroundColor, backgroundTex);
+        UIHelper.drawBorder(ctx.uiRenderer(), this, borderColor, Panel.WHITE);
 
         float dx;
         float dy;
 
         if(Align.isLeft(contentAlign)) {
-            dx = pLeft;
+            dx = 0;
         } else if(Align.isRight(contentAlign)) {
-            dx = getWidth() - pRight - layout.getBoundsWidth();
+            dx = getContentWidth() - layout.getBoundsWidth();
         } else {
-            dx = (getWidth() - layout.getBoundsWidth()) * 0.5f;
+            dx = (getContentWidth() - layout.getBoundsWidth()) * 0.5f;
         }
 
         if(Align.isTop(contentAlign)) {
-            dy = getHeight() - pTop - layout.getBoundsHeight();
+            dy = getContentHeight() - layout.getBoundsHeight();
         } else if(Align.isBottom(contentAlign)) {
-            dy = pBottom;
+            dy = 0;
         } else {
-            dy = (getHeight() - layout.getBoundsHeight()) * 0.5f;
+            dy = (getContentHeight() - layout.getBoundsHeight()) * 0.5f;
         }
 
-        batch.draw(font, layout, getX() + dx, getY() + dy);
-
-        batch.end();
-
-        ctx.batch().begin();
+        ctx.uiRenderer().drawText(font, layout, getContentX() + dx, getContentY() + dy);
     }
 
     @Override

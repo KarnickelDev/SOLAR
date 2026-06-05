@@ -2,6 +2,7 @@ package karnickeldev.solar.render.core;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import karnickeldev.solar.ui.fontutil.kernel.MSDFBatch;
 
 /**
  * @author KarnickelDev
@@ -9,5 +10,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
  **/
 public record RendererContext(
     SpriteBatch batch,
-    ShapeRenderer shapes
+    UIRenderer uiRenderer,
+    ShapeRenderer debug
 ) {}

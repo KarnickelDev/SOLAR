@@ -3,7 +3,9 @@ package karnickeldev.solar.ui.components;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.render.core.RendererContext;
 
 /**
@@ -22,15 +24,18 @@ public class Panel extends UIElement {
     }
 
     private final Color color = new Color(1,1,1,0);
+    private final Color borderColor = new Color(1,1,1,0);
+
     private final Texture texture;
 
-    public Panel(Texture texture, Color color) {
+    public Panel(Texture texture, Color color, Color borderColor) {
         this.texture = texture;
         if(color != null) this.color.set(color);
+        if(borderColor != null) this.borderColor.set(borderColor);
     }
 
-    public Panel(Color color) {
-        this(WHITE, color);
+    public Panel(Color background, Color borderColor) {
+        this(WHITE, background, borderColor);
     }
 
     @Override
@@ -42,8 +47,8 @@ public class Panel extends UIElement {
     public void render(RendererContext ctx) {
         if(!isVisible() || color.a == 0) return;
 
-        ctx.batch().setColor(color);
-        ctx.batch().draw(texture, getX(), getY(), getWidth(), getHeight());
+        UIHelper.drawBackground(ctx.uiRenderer(), this, color, texture);
+        UIHelper.drawBorder(ctx.uiRenderer(), this, borderColor, texture);
     }
 
     @Override

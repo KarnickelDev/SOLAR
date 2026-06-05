@@ -31,7 +31,7 @@ public class RingRenderer implements RenderPass {
 
     @Override
     public void render(RendererContext ctx, float delta) {
-        ShapeRenderer shapes = ctx.shapes();
+        ShapeRenderer shapes = ctx.debug();
         FloatingOriginCamera cam = GameContext.get().getWorldManager().getActiveWorld().getCamera();
 
         shapes.setColor(LINE_COLOR);

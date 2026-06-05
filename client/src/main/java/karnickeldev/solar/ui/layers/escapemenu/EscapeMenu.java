@@ -1,23 +1,15 @@
 package karnickeldev.solar.ui.layers.escapemenu;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
-import com.badlogic.gdx.utils.Align;
+import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
-import karnickeldev.solar.ui.components.Panel;
-import karnickeldev.solar.ui.components.TextButton;
-import karnickeldev.solar.ui.components.UIContainer;
-import karnickeldev.solar.ui.components.UIElement;
-import karnickeldev.solar.ui.core.UIComponent;
+import karnickeldev.solar.ui.components.*;
 import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.ui.core.UILayout;
+import karnickeldev.solar.ui.components.UILayout;
 import karnickeldev.solar.ui.layers.settings.SettingsMenuLayer;
 import karnickeldev.solar.ui.screens.MainMenuScreen;
 
@@ -27,10 +19,16 @@ import karnickeldev.solar.ui.screens.MainMenuScreen;
  **/
 public class EscapeMenu extends UIContainer {
 
+    private static final int backgroundColor = 0x0F1215F0;
+    private static final int borderColor =     0x34312FFF;
+    private static final int buttonColor =     0x0F1215FF;
+    private static final int fontColor =       0xF9D2B6FF;
+
     private final Runnable onClose;
 
     private final Panel panel;
     private final TextButton resume;
+    private final TextButton saveOrPlayerlist;
     private final TextButton settings;
     private final TextButton back;
     private final TextButton exit;
@@ -38,67 +36,102 @@ public class EscapeMenu extends UIContainer {
     public EscapeMenu(Runnable onClose) {
         this.onClose = onClose;
 
-        Color buttonColor = new Color(0x7F0000FF);
+        setPadding(0);
+        setBorderThickness(0);
+        getLayout().anchor = UILayout.Anchor.CENTER;
+        getLayout().fixedWidth(300);
+        getLayout().fixedHeight(460);
 
-        panel = new Panel(new Color(0x202020F0));
-        panel.getLayout().anchor = UILayout.Anchor.CENTER;
-        panel.getLayout().heightPercent = 1;
-        panel.getLayout().widthPercent = 1;
+        panel = new Panel(new Color(backgroundColor), new Color(borderColor));
+        panel.getLayout().percentWidth(1f);
+        panel.getLayout().percentHeight(1f);
+        panel.setBorderThickness(2f);
+
+        Color buttonColorObj = new Color(buttonColor);
 
         resume = new TextButton("Resume");
-        resume.pad(10f);
+        resume.setPadding(10f);
+        resume.setBorderThickness(2f);
         resume.setOnClick(this::onResume);
-        resume.setBackgroundColor(buttonColor);
-        resume.getLayout().anchor = UILayout.Anchor.CENTER;
-        resume.getLayout().fixedWidth = 280;
-        resume.getLayout().fixedHeight = 100;
-        resume.getLayout().offsetY = 300;
-        resume.getLayout().offsetX = 10;
+        resume.setBackgroundColor(buttonColorObj);
+        resume.setBorderColor(borderColor);
+        resume.setFontColor(fontColor);
+        resume.getLayout().percentWidth(1f).fixedHeight(48);
+
+        saveOrPlayerlist = new TextButton(GameContext.get().isSingleplayer() ? "Save" : "Playerlist");
+        saveOrPlayerlist.setPadding(10f);
+        saveOrPlayerlist.setBorderThickness(2f);
+        saveOrPlayerlist.setBackgroundColor(buttonColorObj);
+        saveOrPlayerlist.setBorderColor(borderColor);
+        saveOrPlayerlist.setFontColor(fontColor);
+        saveOrPlayerlist.getLayout().percentWidth(1f).fixedHeight(48);
 
         settings = new TextButton("Settings");
-        settings.pad(10f);
+        settings.setPadding(10f);
+        settings.setBorderThickness(2f);
         settings.setOnClick(this::onSettings);
-        settings.setBackgroundColor(buttonColor);
-        settings.getLayout().anchor = UILayout.Anchor.CENTER;
-        settings.getLayout().fixedWidth = 280;
-        settings.getLayout().fixedHeight = 100;
-        settings.getLayout().offsetY = 200;
-        settings.getLayout().offsetX = 10;
+        settings.setBackgroundColor(buttonColorObj);
+        settings.setBorderColor(borderColor);
+        settings.setFontColor(fontColor);
+        settings.getLayout().percentWidth(1f).fixedHeight(48);
 
-        back = new TextButton("Back");
-        back.pad(10f);
+        back = new TextButton(GameContext.get().isSingleplayer() ? "Back" : "Disconnect");
+        back.setPadding(10f);
+        back.setBorderThickness(2f);
         back.setOnClick(this::onBack);
-        back.setBackgroundColor(buttonColor);
-        back.getLayout().anchor = UILayout.Anchor.CENTER;
-        back.getLayout().fixedWidth = 280;
-        back.getLayout().fixedHeight = 100;
-        back.getLayout().offsetY = 100;
-        back.getLayout().offsetX = 10;
+        back.setBackgroundColor(buttonColorObj);
+        back.setBorderColor(borderColor);
+        back.setFontColor(fontColor);
+        back.getLayout().percentWidth(1f).fixedHeight(48);
 
         exit = new TextButton("Exit");
-        exit.pad(10f);
+        exit.setPadding(10f);
+        exit.setBorderThickness(2f);
         exit.setOnClick(this::onExit);
-        exit.setBackgroundColor(buttonColor);
-        exit.getLayout().anchor = UILayout.Anchor.CENTER;
-        exit.getLayout().fixedWidth = 280;
-        exit.getLayout().fixedHeight = 100;
-        exit.getLayout().offsetY = 0;
-        exit.getLayout().offsetX = 10;
+        exit.setBackgroundColor(buttonColorObj);
+        exit.setBorderColor(borderColor);
+        exit.setFontColor(fontColor);
+        exit.getLayout().percentWidth(1f).fixedHeight(48);
 
-        getLayout().anchor = UILayout.Anchor.CENTER;
-        getLayout().fixedWidth = 300;
-        getLayout().fixedHeight = 400;
+        Spacer[] spacers = new Spacer[6];
+        for (int i = 0; i < spacers.length; i++) {
+            spacers[i] = new Spacer(100,100);
+            spacers[i].getLayout().percentWidth(1f);
+            spacers[i].getLayout().fillHeight((i == 0 || i == spacers.length-1) ? 0.5f : 1f);
+        }
+
+        VerticalGroup verticalGroup = new VerticalGroup();
+        verticalGroup.getLayout().fill();
+        verticalGroup.setPadding(15f);
+
+        verticalGroup.add(spacers[0]);
+        verticalGroup.add(resume);
+        verticalGroup.add(spacers[1]);
+        verticalGroup.add(saveOrPlayerlist);
+        verticalGroup.add(spacers[2]);
+        verticalGroup.add(settings);
+        verticalGroup.add(spacers[3]);
+        verticalGroup.add(back);
+        verticalGroup.add(spacers[4]);
+        verticalGroup.add(exit);
+        verticalGroup.add(spacers[5]);
+
+        OptionCycler.OptionDefinition<Integer> def = new  OptionCycler.OptionDefinition<>(
+            new String[]{"25%", "50%", "75%", "100%"},
+            new Integer[]{25, 50, 75, 100}
+        );
+
+        OptionCycler<Integer> cycler = new OptionCycler<>(def);
+        cycler.getLayout().fixedHeight(48).percentWidth(1f);
+        verticalGroup.add(cycler);
 
         add(panel);
-        add(resume);
-        add(settings);
-        add(back);
-        add(exit);
+        add(verticalGroup);
     }
 
     @Override
     public boolean handleInput(InputEvent e) {
-        for(UIElement child: children) {
+        for(UIElement child : children) {
             if(child.hit(e.getStageX(), e.getStageY()) && child.handleInput(e)) return true;
         }
         return false;

@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.core;
+package karnickeldev.solar.ui.components;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -33,6 +33,12 @@ public abstract class UIElement {
     private float width = 100;
     private float height = 100;
 
+    protected float padLeft, padRight, padTop, padBottom;
+    protected float cpLeft, cpRight, cpTop, cpBottom;
+
+    protected float borderThickness;
+    protected float cBorderThickness;
+
     private boolean visible = true;
     private boolean debug = false;
 
@@ -51,8 +57,8 @@ public abstract class UIElement {
     public void renderDebug(RendererContext ctx) {
         if(!debug) return;
 
-        ctx.shapes().setColor(DEBUG_COLORS[id % DEBUG_COLORS.length]);
-        ctx.shapes().rect(getX(), getY(), getWidth(), getHeight());
+        ctx.debug().setColor(DEBUG_COLORS[id % DEBUG_COLORS.length]);
+        ctx.debug().rect(getX(), getY(), getWidth(), getHeight());
     }
 
     public abstract boolean handleInput(InputEvent e);
@@ -69,10 +75,10 @@ public abstract class UIElement {
         return layoutDirty;
     }
 
-    public void layout(float width, float height, float scale) {
+    public void updateLayout(UILayoutEngine.UILayoutContext ctx) {
         if(!layoutDirty) return;
 
-        UILayoutEngine.apply(this, width, height, scale);
+        UILayoutEngine.computeLayout(this, ctx);
         layoutDirty = false;
     }
 
@@ -134,14 +140,83 @@ public abstract class UIElement {
         return x + width;
     }
 
-    // internal only
+    public float getContentX() {
+        return x + borderThickness + cpLeft;
+    }
+
+    public float getContentY() {
+        return y + borderThickness + cpBottom;
+    }
+
+    public float getContentRight() {
+        return getContentX() + getContentWidth();
+    }
+
+    public float getContentTop() {
+        return getContentY() + getContentHeight();
+    }
+
+    public float getContentWidth() {
+        return width - 2*cBorderThickness - cpLeft - cpRight;
+    }
+
+    public float getContentHeight() {
+        return height - 2*cBorderThickness - cpTop - cpBottom;
+    }
+
+    public float getPreferredWidth(float scale) {
+        return 100 * scale;
+    }
+
+    public float getPreferredHeight(float scale) {
+        return 100 * scale;
+    }
+
+    public float getBorderThickness() {
+        return cBorderThickness;
+    }
+
+    public void setBorderThickness(float borderThickness) {
+        if(this.borderThickness == borderThickness) return;
+
+        this.borderThickness = borderThickness;
+        invalidateLayout();
+    }
+
+    public void setPadding(float padLeft, float padRight, float padTop, float padBottom) {
+        if(this.padLeft == padLeft && this.padRight == padRight && this.padTop == padTop && this.padBottom == padBottom) {
+            return;
+        }
+
+        this.padLeft = padLeft;
+        this.padRight = padRight;
+        this.padTop = padTop;
+        this.padBottom = padBottom;
+
+        invalidateLayout();
+    }
+
+    public void setPadding(float pad) {
+        setPadding(pad, pad, pad, pad);
+    }
+
+    //############################ internal only #######################################################################
+
     void setBounds(float x, float y, float width, float height) {
         if(this.x == x && this.y == y && this.width == width && this.height == height) return;
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-        invalidateLayout();
+    }
+
+    void updateMetrics(float uiScale) {
+        cpLeft = padLeft * uiScale;
+        cpRight = padRight * uiScale;
+        cpTop = padTop * uiScale;
+        cpBottom = padBottom * uiScale;
+
+        cBorderThickness = borderThickness * uiScale;
     }
 
 }
