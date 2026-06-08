@@ -6,13 +6,14 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
+import karnickeldev.solar.ui.core.UIEventHandler;
 import karnickeldev.solar.util.MathUtil;
 
 /**
  * @author KarnickelDev
  * @since 13.04.2026
  **/
-public class TextButton extends Label {
+public class TextButton extends Label implements UIEventHandler {
 
     private boolean hover = false;
     private boolean checked = false;
@@ -62,13 +63,20 @@ public class TextButton extends Label {
         try {
             onClick.run();
         } catch (Exception ex) {
-            Logger.get(LogTag.UI).warn("TextButton: error on click: " + ex.getMessage());
+            Logger.get(this.getClass().getSimpleName()).warn("error on click: " + ex.getMessage());
         }
         checked = !checked;
     }
 
-    private void onHover() {
+    @Override
+    public final void onHover() {
         setFontColor(Color.rgba8888(Color.GREEN));
     }
+
+    @Override
+    public final void onEnter() {}
+
+    @Override
+    public final void onExit() {}
 
 }

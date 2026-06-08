@@ -1,17 +1,10 @@
 package karnickeldev.solar.ui.components;
 
-import java.util.List;
-
 /**
  * @author KarnickelDev
  * @since 10.04.2026
  **/
 public class UILayout {
-
-    public enum Axis {
-        HORIZONTAL,
-        VERTICAL
-    }
 
     public enum SizeMode {
         FIXED,
@@ -20,28 +13,11 @@ public class UILayout {
         FILL,
     }
 
-    public record Allocation(UILayout slot, float size) {}
-
-    public enum Anchor {
-        TOP_LEFT, TOP_RIGHT,
-        BOTTOM_LEFT, BOTTOM_RIGHT,
-        CENTER,
-        LEFT, RIGHT, TOP, BOTTOM
-    }
-
-    public Anchor anchor = Anchor.BOTTOM_LEFT;
-
-    // positioning
-    public float offsetX = 0;
-    public float offsetY = 0;
-
     private SizeMode widthMode = SizeMode.CONTENT;
     private SizeMode heightMode = SizeMode.CONTENT;
 
     private float widthValue = 1f;
     private float heightValue = 1f;
-
-    private float aspectRatio = 0f;
 
     public UILayout fixedWidth(float w) {
         widthMode = SizeMode.FIXED;
@@ -93,11 +69,6 @@ public class UILayout {
         return this;
     }
 
-    public UILayout aspectRatio(float value) {
-        aspectRatio = value;
-        return this;
-    }
-
     public SizeMode getWidthMode() {
         return widthMode;
     }
@@ -114,60 +85,51 @@ public class UILayout {
         return heightValue;
     }
 
-    public float getAspectRatio() {
-        return aspectRatio;
-    }
+    public record AllocationItem(SizeMode mode, float value, float prefSize) {}
 
-    public static Allocation[] allocateSlots(List<UIElement> elements, Axis axis, float availableSize, float crossSize, float scale) {
+    public static float[] allocateSlices(AllocationItem[] items, float availableSize, float scale) {
+        float[] result = new float[items.length];
+
         float used = 0f;
         float totalWeight = 0f;
-        Allocation[] allocations = new Allocation[elements.size()];
 
-        for(int i = 0; i < elements.size(); i++) {
-            UILayout slot = elements.get(i).getLayout();
+        for(int i = 0; i < items.length; i++) {
+            AllocationItem item = items[i];
+            switch(item.mode()) {
 
-            SizeMode mode = axis == Axis.HORIZONTAL ? slot.widthMode : slot.heightMode;
-            float value = axis == Axis.HORIZONTAL ? slot.widthValue : slot.heightValue;
-
-            float size = 0f;
-
-            switch (mode) {
                 case FIXED -> {
-                    size = value * scale;
-                    used += size;
+                    result[i] = item.value() * scale;
+                    used += result[i];
                 }
+
                 case PERCENT -> {
-                    size = availableSize * value;
-                    used += size;
+                    result[i] = availableSize * item.value();
+                    used += result[i];
                 }
+
                 case CONTENT -> {
-                    size = axis == Axis.HORIZONTAL ?
-                        elements.get(i).getPreferredWidth(scale) : elements.get(i).getPreferredHeight(scale);
-                    used += size;
+                    result[i] = item.prefSize();
+                    used += result[i];
                 }
 
                 case FILL -> {
-                    totalWeight += value;
+                    totalWeight += item.value();
                 }
             }
-
-            if(mode != SizeMode.FILL) allocations[i] = new Allocation(slot, size);
         }
 
-        float remaining = Math.max(0, availableSize - used);
-        float fillUnit = totalWeight > 0 ? remaining / totalWeight : 0f;
+        float remaining = Math.max(0f, availableSize - used);
+        float unit = totalWeight > 0f ? remaining / totalWeight : 0f;
 
-        for (int i = 0; i < allocations.length; i++) {
-            if(allocations[i] != null) continue;
+        for(int i = 0; i < items.length; i++) {
+            AllocationItem item = items[i];
 
-            UILayout slot = elements.get(i).getLayout();
-
-            float fillWeight = axis == Axis.HORIZONTAL ? slot.widthValue : slot.heightValue;
-            float fillSize = fillUnit * fillWeight;
-            allocations[i] = new Allocation(slot, fillSize);
+            if(item.mode() == UILayout.SizeMode.FILL) {
+                result[i] = unit * item.value();
+            }
         }
 
-        return allocations;
+        return result;
     }
 
 }

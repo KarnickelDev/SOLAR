@@ -4,10 +4,46 @@ package karnickeldev.solar.ui.components;
  * @author KarnickelDev
  * @since 07.06.2026
  **/
-public class HorizontalGroup extends LinearGroup {
+public class HorizontalGroup extends UIContainer {
 
-    protected HorizontalGroup() {
-        super(UILayout.Axis.HORIZONTAL);
+    @Override
+    public void measure(UILayoutEngine.UILayoutContext ctx) {
+        float w = 0;
+        float h = 0;
+
+        for(Slot slot : children) {
+            UIElement child = slot.child();
+            child.measure(ctx);
+            h = Math.max(h, child.getMeasuredHeight());
+            w += child.getMeasuredWidth();
+        }
+
+        prefWidth = w;
+        prefHeight = h;
+    }
+
+    @Override
+    public void onLayout(UILayoutEngine.UILayoutContext ctx) {
+        UILayout.AllocationItem[] items = new UILayout.AllocationItem[children.size()];
+
+        for (int i = 0; i < children.size(); i++) {
+            UIElement child = children.get(i).child();
+            UILayout layout = children.get(i).layout();
+            items[i] = new UILayout.AllocationItem(layout.getWidthMode(), layout.getWidthValue(), child.getMeasuredWidth());
+        }
+
+        float[] widths = UILayout.allocateSlices(items, getContentWidth(), ctx.uiScaleY());
+
+        float cursor = 0f;
+
+        for (int i = 0; i < children.size(); i++) {
+            UIElement child = children.get(i).child();
+
+            float ch = UILayoutEngine.resolveHeight(child, children.get(i).layout(), getContentHeight(), ctx.uiScaleY());
+            child.arrange(ctx, getContentX() + cursor, getContentY(), widths[i], ch);
+
+            cursor += widths[i];
+        }
     }
 
 }

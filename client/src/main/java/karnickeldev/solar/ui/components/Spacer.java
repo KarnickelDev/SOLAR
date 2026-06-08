@@ -9,22 +9,18 @@ import karnickeldev.solar.render.core.RendererContext;
  **/
 public class Spacer extends UIElement {
 
-    private final float prefWidth;
-    private final float prefHeight;
+    private final float vPrefWidth;
+    private final float vPrefHeight;
 
     public Spacer(float width, float height) {
-        this.prefWidth = width;
-        this.prefHeight = height;
+        this.vPrefWidth = width;
+        this.vPrefHeight = height;
     }
 
     @Override
-    public float getPreferredWidth(float scale) {
-        return prefWidth * scale;
-    }
-
-    @Override
-    public float getPreferredHeight(float scale) {
-        return prefHeight * scale;
+    public void measure(UILayoutEngine.UILayoutContext ctx) {
+        prefWidth = vPrefWidth * ctx.uiScaleY();
+        prefHeight = vPrefHeight * ctx.uiScaleY();
     }
 
     @Override

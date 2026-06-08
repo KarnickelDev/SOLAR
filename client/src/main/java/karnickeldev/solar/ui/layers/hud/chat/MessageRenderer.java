@@ -110,8 +110,7 @@ public class MessageRenderer extends UIElement {
     }
 
     @Override
-    public void updateLayout(UILayoutEngine.UILayoutContext ctx) {
-        super.updateLayout(ctx);
+    public void onLayout(UILayoutEngine.UILayoutContext ctx) {
         padMessages = paddingMessages * ctx.uiScaleY();
         cAutoscrollThreshold = AUTO_SCROLL_THRESHOLD * ctx.uiScaleY();
 
@@ -121,6 +120,11 @@ public class MessageRenderer extends UIElement {
         for (int i = 0; i < messageProvider.size(); i++) {
             rebuildMessage(messageProvider.getMessage(i), SimTestScreen.font, availableWidth, uiScale);
         }
+    }
+
+    @Override
+    public void measure(UILayoutEngine.UILayoutContext ctx) {
+
     }
 
     @Override

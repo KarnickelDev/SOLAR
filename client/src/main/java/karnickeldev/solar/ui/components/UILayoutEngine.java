@@ -47,92 +47,29 @@ public class UILayoutEngine {
         return new UILayoutContext(screenWidth, screenHeight, aspectRatio,  viewportX, viewportY, viewportWidth, viewportHeight, uiScaleY);
     }
 
-    static void computeLayout(UIElement e, UILayoutContext ctx) {
-        UILayout l = e.getLayout();
-
-        float baseX, baseY, baseW, baseH;
-
-        if (e.getParent() != null) {
-            UIElement p = e.getParent();
-            baseX = p.getContentX();
-            baseY = p.getContentY();
-            baseW = p.getContentWidth();
-            baseH = p.getContentHeight();
-        } else {
-            baseX = ctx.viewportX();
-            baseY = ctx.viewportY();
-            baseW = ctx.viewportWidth();
-            baseH = ctx.viewportHeight();
-        }
-
-        float scale = ctx.uiScaleY();
-
-        // compute size
-        float width = resolveWidth(e, l, baseW, scale);
-        float height = resolveHeight(e, l, baseH, scale);
-
-        // compute anchor position
-        float x = computeAnchorX(l, baseW, width);
-        float y = computeAnchorY(l, baseH, height);
-
-        // this is important: without it, we can't use parent-relative positions for child elements
-        if(e.getParent() != null) {
-            x = 0;
-            y = 0;
-        }
-
-        // apply parent offset
-        x += baseX;
-        y += baseY;
-
-        // apply scaled offset
-        x += l.offsetX * scale;
-        y += l.offsetY * scale;
-
-        // persist changes
-        e.setBounds(x, y, width, height);
-        e.updateMetrics(scale);
-    }
-
-    private static float resolveWidth(UIElement e, UILayout l, float baseW, float scale) {
+    static float resolveWidth(UIElement e, UILayout l, float baseW, float scale) {
         return switch(l.getWidthMode()) {
 
             case FIXED -> l.getWidthValue() * scale;
 
             case PERCENT -> l.getWidthValue() * baseW;
 
-            case CONTENT -> e.getPreferredWidth(scale);
+            case CONTENT -> e.getMeasuredWidth();
 
             default -> 0f;
         };
     }
 
-    private static float resolveHeight(UIElement e, UILayout l, float baseH, float scale) {
+     static float resolveHeight(UIElement e, UILayout l, float baseH, float scale) {
         return switch(l.getHeightMode()) {
 
             case FIXED -> l.getHeightValue() * scale;
 
             case PERCENT -> l.getHeightValue() * baseH;
 
-            case CONTENT -> e.getPreferredHeight(scale);
+            case CONTENT -> e.getMeasuredHeight();
 
             default -> 0f;
-        };
-    }
-
-    private static float computeAnchorX(UILayout l, float baseW, float w) {
-        return switch (l.anchor) {
-            case LEFT, TOP_LEFT, BOTTOM_LEFT -> 0;
-            case RIGHT, TOP_RIGHT, BOTTOM_RIGHT -> baseW - w;
-            case CENTER, TOP, BOTTOM -> (baseW - w) * 0.5f;
-        };
-    }
-
-    private static float computeAnchorY(UILayout l, float baseH, float h) {
-        return switch (l.anchor) {
-            case BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT -> 0;
-            case TOP, TOP_LEFT, TOP_RIGHT -> baseH - h;
-            case CENTER, LEFT, RIGHT -> (baseH - h) * 0.5f;
         };
     }
 

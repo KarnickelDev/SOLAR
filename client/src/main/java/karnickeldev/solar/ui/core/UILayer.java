@@ -6,6 +6,7 @@ import karnickeldev.solar.input.InputHandler;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.components.Canvas;
 import karnickeldev.solar.ui.components.UIElement;
 import karnickeldev.solar.ui.components.UILayoutEngine;
 
@@ -28,9 +29,20 @@ public abstract class UILayer implements InputHandler {
 
     private final List<UIElement> uiElements = new ArrayList<>(16);
 
+    protected final Canvas canvas = new Canvas();
+
     public UILayer(String name, Stage stage) {
         this.name = name;
         this.stage = stage;
+    }
+
+    public Canvas getCanvas() {
+        return canvas;
+    }
+
+    public void layout(UILayoutEngine.UILayoutContext ctx) {
+        canvas.measure(ctx);
+        canvas.arrange(ctx, ctx.viewportX(), ctx.viewportY(), ctx.viewportWidth(), ctx.viewportHeight());
     }
 
     public Stage getStage() {
@@ -81,8 +93,13 @@ public abstract class UILayer implements InputHandler {
 
     public void update(UILayoutEngine.UILayoutContext ctx, float delta) {
         for(UIElement uiElement : uiElements) {
-            uiElement.updateLayout(ctx);
+            uiElement.measure(ctx);
+            uiElement.arrange(ctx, 0, 0, ctx.screenWidth(), ctx.screenHeight());
         }
+
+        layout(ctx);
+
+        canvas.act(delta);
 
         for(UIElement uiElement : uiElements) {
             if(isActive()) uiElement.act(delta);
@@ -96,6 +113,9 @@ public abstract class UILayer implements InputHandler {
             uiElement.render(ctx);
             uiElement.renderDebug(ctx);
         }
+
+        canvas.render(ctx);
+        canvas.renderDebug(ctx);
     }
 
     /** Handles resizing all UI component (called from resize in screens) */

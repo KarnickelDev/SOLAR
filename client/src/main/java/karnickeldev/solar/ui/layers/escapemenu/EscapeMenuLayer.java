@@ -4,6 +4,10 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import karnickeldev.solar.ui.components.Canvas;
+import karnickeldev.solar.ui.components.UIContainer;
+import karnickeldev.solar.ui.components.UILayout;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.core.UIExitReason;
 import karnickeldev.solar.ui.core.UILayer;
@@ -19,7 +23,8 @@ public class EscapeMenuLayer extends UILayer {
     public EscapeMenuLayer() {
         super("escape_menu", new Stage(new ScreenViewport()));
         escapemenu = new EscapeMenu(() -> UI.getUIManager().requestPop(this, UIExitReason.USER_CLOSE));
-        addElement(escapemenu);
+
+        getCanvas().add(escapemenu, new Canvas.CanvasSlot().anchor(Canvas.Anchor.CENTER).fixedSize(300,400));
     }
 
     @Override

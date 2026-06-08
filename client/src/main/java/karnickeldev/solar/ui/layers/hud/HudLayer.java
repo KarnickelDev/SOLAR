@@ -31,7 +31,7 @@ public class HudLayer extends UILayer {
 
     public ChatWindow chatActor;
 
-    public UIContainer chatContainer = new UIContainer();
+    public UIContainer chatContainer = new VerticalGroup();
 
     TextButton label = new TextButton("Label");
 
@@ -46,21 +46,17 @@ public class HudLayer extends UILayer {
 
         renderer = new MessageRenderer(new ChatMessageStore());
         renderer.setPad(5,5,5,5,5);
-        renderer.setBorderThickness(3);
-        renderer.getLayout().fixedWidth(420).fixedHeight(320);
-        renderer.getLayout().offsetX = 20;
-        renderer.getLayout().offsetY = 58;
+        renderer.setBorderThickness(2);
 
-        chatContainer.add(renderer);
-        chatContainer.getLayout().fill();
-
-        label.getLayout().anchor = UILayout.Anchor.TOP;
+        chatContainer.add(renderer, new UILayout().percentWidth(1).percentHeight(1));
 
         label.setDebug(true);
         chatContainer.setDebug(true);
 
-        addElement(chatContainer);
-        addElement(label);
+        getCanvas().add(label, new Canvas.CanvasSlot().anchor(Canvas.Anchor.TOP));
+        getCanvas().add(chatContainer, new Canvas.CanvasSlot()
+            .anchor(Canvas.Anchor.BOTTOM_LEFT).fixedSize(420, 320).offset(20, 58)
+        );
     }
 
     @Override

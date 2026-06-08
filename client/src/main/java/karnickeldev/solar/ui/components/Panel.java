@@ -55,4 +55,10 @@ public class Panel extends UIElement {
     public boolean handleInput(InputEvent e) {
         return false;
     }
+
+    @Override
+    public void measure(UILayoutEngine.UILayoutContext ctx) {
+        prefWidth = 100;
+        prefHeight = 100;
+    }
 }

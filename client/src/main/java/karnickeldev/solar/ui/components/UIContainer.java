@@ -10,26 +10,72 @@ import java.util.List;
  * @author KarnickelDev
  * @since 10.04.2026
  **/
-public class UIContainer extends UIElement {
+public abstract class UIContainer extends UIElement {
 
-    protected final List<UIElement> children = new ArrayList<>(4);
+    protected record Slot(UIElement child, UILayout layout) {}
+
+    protected final List<Slot> children = new ArrayList<>(4);
 
     public UIContainer() {}
 
-    public List<UIElement> getChildren() {
-        return children;
+    public void add(UIElement child) {
+        add(child, new UILayout());
     }
 
-    public void add(UIElement child) {
-        children.add(child);
+    public void add(UIElement child, UILayout layout) {
+        children.add(new Slot(child, layout));
         child.setParent(this);
         child.invalidateLayout();
     }
 
     @Override
+    public void measure(UILayoutEngine.UILayoutContext ctx) {
+        float w = 0;
+        float h = 0;
+
+        for (Slot s : children) {
+
+            s.child.measure(ctx);
+
+            w = Math.max(w, s.child.getMeasuredWidth());
+            h = Math.max(h, s.child.getMeasuredHeight());
+        }
+
+        prefWidth = w;
+        prefHeight = h;
+    }
+
+    @Override
+    public void arrange(UILayoutEngine.UILayoutContext ctx, float x, float y, float w, float h) {
+        setBounds(x, y, w, h, ctx.uiScaleY());
+
+        for (Slot s : children) {
+            s.child.arrange(ctx, getContentX(), getContentY(), getContentWidth(), getContentHeight());
+        }
+
+        onLayout(ctx);
+    }
+
+    static float computeAnchorX(Canvas.Anchor anchor, float baseW, float w) {
+        return switch (anchor) {
+            case LEFT, TOP_LEFT, BOTTOM_LEFT -> 0;
+            case RIGHT, TOP_RIGHT, BOTTOM_RIGHT -> baseW - w;
+            case CENTER, TOP, BOTTOM -> (baseW - w) * 0.5f;
+        };
+    }
+
+    static float computeAnchorY(Canvas.Anchor anchor, float baseH, float h) {
+        return switch (anchor) {
+            case BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT -> 0;
+            case TOP, TOP_LEFT, TOP_RIGHT -> baseH - h;
+            case CENTER, LEFT, RIGHT -> (baseH - h) * 0.5f;
+        };
+    }
+
+    @Override
     public void act(float dt) {
-        for(UIElement child : children) {
-            child.act(dt);
+        for(Slot child : children) {
+            child.child.act(dt);
         }
     }
 
@@ -38,15 +84,15 @@ public class UIContainer extends UIElement {
         if(!isVisible()) return;
 
         // last, render children
-        for(UIElement child : children) {
-            child.render(ctx);
+        for(Slot child : children) {
+            child.child.render(ctx);
         }
     }
 
     @Override
     public boolean handleInput(InputEvent e) {
-        for(UIElement child : children) {
-            if(child.handleInput(e)) return true;
+        for(Slot child : children) {
+            if(child.child.handleInput(e)) return true;
         }
         return false;
     }
@@ -55,25 +101,16 @@ public class UIContainer extends UIElement {
     public void invalidateLayout() {
         super.invalidateLayout();
 
-        for(UIElement child : children) {
-            child.invalidateLayout();
-        }
-    }
-
-    @Override
-    public void updateLayout(UILayoutEngine.UILayoutContext ctx) {
-        super.updateLayout(ctx);
-
-        for(UIElement child : children) {
-            child.updateLayout(ctx);
+        for(Slot child : children) {
+            child.child.invalidateLayout();
         }
     }
 
     @Override
     public void setDebug(boolean debug) {
         super.setDebug(debug);
-        for(UIElement child : children) {
-            child.setDebug(debug);
+        for(Slot child : children) {
+            child.child.setDebug(debug);
         }
     }
 
@@ -82,8 +119,8 @@ public class UIContainer extends UIElement {
         // IMPORTANT: render in reverse, so child debug outline not obscured
         super.renderDebug(ctx);
 
-        for(UIElement child : children) {
-            child.renderDebug(ctx);
+        for(Slot child : children) {
+            child.child.renderDebug(ctx);
         }
     }
 

@@ -24,14 +24,16 @@ public abstract class UIElement {
     private static int ID = 0;
 
     private final int id;
-    private final UILayout layout = new UILayout();
 
-    private UIElement parent;
+    protected UIElement parent;
 
     private float x;
     private float y;
     private float width = 100;
     private float height = 100;
+
+    protected float prefWidth = 100;
+    protected float prefHeight = 100;
 
     protected float padLeft, padRight, padTop, padBottom;
     protected float cpLeft, cpRight, cpTop, cpBottom;
@@ -44,7 +46,7 @@ public abstract class UIElement {
 
     private boolean touchable = true;
 
-    private boolean layoutDirty = true;
+    protected boolean layoutDirty = true;
 
     public UIElement() {
         this.id = ID++;
@@ -63,23 +65,25 @@ public abstract class UIElement {
 
     public abstract boolean handleInput(InputEvent e);
 
-    public UILayout getLayout() {
-        return layout;
-    }
-
     public void invalidateLayout() {
         layoutDirty = true;
     }
 
-    public boolean isLayoutDirty() {
-        return layoutDirty;
+    protected void onLayout(UILayoutEngine.UILayoutContext ctx) {}
+
+    public abstract void measure(UILayoutEngine.UILayoutContext ctx);
+
+    public float getMeasuredWidth() {
+        return prefWidth;
     }
 
-    public void updateLayout(UILayoutEngine.UILayoutContext ctx) {
-        if(!layoutDirty) return;
+    public float getMeasuredHeight() {
+        return prefHeight;
+    }
 
-        UILayoutEngine.computeLayout(this, ctx);
-        layoutDirty = false;
+    public void arrange(UILayoutEngine.UILayoutContext ctx, float x, float y, float width, float height) {
+        setBounds(x, y, width, height, ctx.uiScaleY());
+        onLayout(ctx);
     }
 
     public boolean hit(float mx, float my) {
@@ -87,7 +91,7 @@ public abstract class UIElement {
         return MathUtil.AABB(mx, mouseY, getX(), getY(), getRight(), getTop());
     }
 
-    public void setParent(UIElement parent) {
+    public final void setParent(UIElement parent) {
         this.parent = parent;
         invalidateLayout();
     }
@@ -164,14 +168,6 @@ public abstract class UIElement {
         return height - 2*cBorderThickness - cpTop - cpBottom;
     }
 
-    public float getPreferredWidth(float scale) {
-        return 100 * scale;
-    }
-
-    public float getPreferredHeight(float scale) {
-        return 100 * scale;
-    }
-
     public float getBorderThickness() {
         return cBorderThickness;
     }
@@ -202,20 +198,16 @@ public abstract class UIElement {
 
     //############################ internal only #######################################################################
 
-    void setBounds(float x, float y, float width, float height) {
-        if(this.x == x && this.y == y && this.width == width && this.height == height) return;
+    void setBounds(float x, float y, float width, float height, float uiScale) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-    }
 
-    void updateMetrics(float uiScale) {
         cpLeft = padLeft * uiScale;
         cpRight = padRight * uiScale;
         cpTop = padTop * uiScale;
         cpBottom = padBottom * uiScale;
-
         cBorderThickness = borderThickness * uiScale;
     }
 

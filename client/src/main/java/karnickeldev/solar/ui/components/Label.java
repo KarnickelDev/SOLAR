@@ -1,6 +1,5 @@
 package karnickeldev.solar.ui.components;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -8,10 +7,8 @@ import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.fontutil.TextRun;
 import karnickeldev.solar.ui.fontutil.TextStyle;
-import karnickeldev.solar.ui.fontutil.kernel.MSDFBatch;
 import karnickeldev.solar.ui.fontutil.kernel.MSDFFont;
 import karnickeldev.solar.ui.fontutil.kernel.TextLayout;
-import org.lwjgl.opengl.GL20;
 
 /**
  * @author KarnickelDev
@@ -38,8 +35,6 @@ public class Label extends UIElement {
     private float cachedPrefWidth = 100f;
     private float cachedPrefHeight = 100f;
 
-    private boolean dirty = true;
-
     public Label(String text, Texture backgroundTex) {
         this.backgroundTex = backgroundTex;
         this.textRun = new TextRun[]{new TextRun(text, 0xFFFFFFFF, fontSize, 0)};
@@ -57,7 +52,7 @@ public class Label extends UIElement {
     public void setText(String text) {
         if(text.equals(textRun[0].text())) return;
         textRun[0].setText(text);
-        dirty = true;
+        invalidateLayout();
     }
 
     public String getText() {
@@ -69,22 +64,22 @@ public class Label extends UIElement {
     }
 
     public void setTextAlign(int align) {
-        if(this.textAlign == align) return;
+        if (this.textAlign == align) return;
         this.textAlign = align;
-        dirty = true;
+        invalidateLayout();
     }
 
     public void setFontSize(int fontSize) {
         if(this.fontSize == fontSize) return;
         this.fontSize = fontSize;
         this.textRun[0].setScale(fontSize);
-        dirty = true;
+        invalidateLayout();
     }
 
     public void setFontColor(int fontColor) {
         if(this.textRun[0].color() == fontColor) return;
         this.textRun[0].setColor(fontColor);
-        dirty = true;
+        invalidateLayout();
     }
 
     public void setBackgroundColor(Color backgroundColor) {
@@ -92,26 +87,18 @@ public class Label extends UIElement {
     }
 
     @Override
-    public float getPreferredWidth(float scale) {
-        return 1.1f*scale*(cachedPrefWidth + padLeft + padRight + 2*borderThickness);
+    public void measure(UILayoutEngine.UILayoutContext ctx) {
+        prefLayoutCache.layout(font, textRun, textAlign, 1e4f, 1f);
+        cachedPrefWidth = prefLayoutCache.getBoundsWidth();
+        cachedPrefHeight = prefLayoutCache.getBoundsHeight();
+
+        prefWidth = 1.1f*ctx.uiScaleY()*(cachedPrefWidth + padLeft + padRight + 2*borderThickness);
+        prefHeight = 1.1f*ctx.uiScaleY()*(cachedPrefHeight + padTop + padBottom + 2*borderThickness);
     }
 
     @Override
-    public float getPreferredHeight(float scale) {
-        return 1.1f*scale*(cachedPrefHeight + padTop + padBottom + 2*borderThickness);
-    }
-
-    @Override
-    public void updateLayout(UILayoutEngine.UILayoutContext ctx) {
-        if(dirty) {
-            prefLayoutCache.layout(font, textRun, textAlign, ctx.screenWidth(), 1f);
-            cachedPrefWidth = prefLayoutCache.getBoundsWidth();
-            cachedPrefHeight = prefLayoutCache.getBoundsHeight();
-        }
-        super.updateLayout(ctx);
-        if(dirty) {
-            layout.layout(font, textRun, textAlign, getContentWidth(), ctx.uiScaleY());
-        }
+    public void onLayout(UILayoutEngine.UILayoutContext ctx) {
+        layout.layout(font, textRun, textAlign, getContentWidth(), ctx.uiScaleY());
     }
 
     @Override

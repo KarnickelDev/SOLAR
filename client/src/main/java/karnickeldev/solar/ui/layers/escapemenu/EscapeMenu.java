@@ -2,6 +2,7 @@ package karnickeldev.solar.ui.layers.escapemenu;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateManager;
@@ -38,13 +39,8 @@ public class EscapeMenu extends UIContainer {
 
         setPadding(0);
         setBorderThickness(0);
-        getLayout().anchor = UILayout.Anchor.CENTER;
-        getLayout().fixedWidth(300);
-        getLayout().fixedHeight(460);
 
         panel = new Panel(new Color(backgroundColor), new Color(borderColor));
-        panel.getLayout().percentWidth(1f);
-        panel.getLayout().percentHeight(1f);
         panel.setBorderThickness(2f);
 
         Color buttonColorObj = new Color(buttonColor);
@@ -56,7 +52,6 @@ public class EscapeMenu extends UIContainer {
         resume.setBackgroundColor(buttonColorObj);
         resume.setBorderColor(borderColor);
         resume.setFontColor(fontColor);
-        resume.getLayout().percentWidth(1f).fixedHeight(48);
 
         saveOrPlayerlist = new TextButton(GameContext.get().isSingleplayer() ? "Save" : "Playerlist");
         saveOrPlayerlist.setPadding(10f);
@@ -64,7 +59,6 @@ public class EscapeMenu extends UIContainer {
         saveOrPlayerlist.setBackgroundColor(buttonColorObj);
         saveOrPlayerlist.setBorderColor(borderColor);
         saveOrPlayerlist.setFontColor(fontColor);
-        saveOrPlayerlist.getLayout().percentWidth(1f).fixedHeight(48);
 
         settings = new TextButton("Settings");
         settings.setPadding(10f);
@@ -73,7 +67,6 @@ public class EscapeMenu extends UIContainer {
         settings.setBackgroundColor(buttonColorObj);
         settings.setBorderColor(borderColor);
         settings.setFontColor(fontColor);
-        settings.getLayout().percentWidth(1f).fixedHeight(48);
 
         back = new TextButton(GameContext.get().isSingleplayer() ? "Back" : "Disconnect");
         back.setPadding(10f);
@@ -82,7 +75,6 @@ public class EscapeMenu extends UIContainer {
         back.setBackgroundColor(buttonColorObj);
         back.setBorderColor(borderColor);
         back.setFontColor(fontColor);
-        back.getLayout().percentWidth(1f).fixedHeight(48);
 
         exit = new TextButton("Exit");
         exit.setPadding(10f);
@@ -91,30 +83,26 @@ public class EscapeMenu extends UIContainer {
         exit.setBackgroundColor(buttonColorObj);
         exit.setBorderColor(borderColor);
         exit.setFontColor(fontColor);
-        exit.getLayout().percentWidth(1f).fixedHeight(48);
 
         Spacer[] spacers = new Spacer[6];
         for (int i = 0; i < spacers.length; i++) {
-            spacers[i] = new Spacer(100,100);
-            spacers[i].getLayout().percentWidth(1f);
-            spacers[i].getLayout().fillHeight((i == 0 || i == spacers.length-1) ? 0.5f : 1f);
+            spacers[i] = new Spacer(0,0);
         }
 
         VerticalGroup verticalGroup = new VerticalGroup();
-        verticalGroup.getLayout().fill();
         verticalGroup.setPadding(15f);
 
-        verticalGroup.add(spacers[0]);
-        verticalGroup.add(resume);
-        verticalGroup.add(spacers[1]);
-        verticalGroup.add(saveOrPlayerlist);
-        verticalGroup.add(spacers[2]);
-        verticalGroup.add(settings);
-        verticalGroup.add(spacers[3]);
-        verticalGroup.add(back);
-        verticalGroup.add(spacers[4]);
-        verticalGroup.add(exit);
-        verticalGroup.add(spacers[5]);
+        verticalGroup.add(spacers[0], new UILayout().percentWidth(1f).fillHeight(0.5f));
+        verticalGroup.add(resume, new UILayout().percentWidth(1f).fixedHeight(48));
+        verticalGroup.add(spacers[1], new UILayout().percentWidth(1f).fillHeight(1f));
+        verticalGroup.add(saveOrPlayerlist, new UILayout().percentWidth(1f).fixedHeight(48));
+        verticalGroup.add(spacers[2], new UILayout().percentWidth(1f).fillHeight(1f));
+        verticalGroup.add(settings, new UILayout().percentWidth(1f).fixedHeight(48));
+        verticalGroup.add(spacers[3], new UILayout().percentWidth(1f).fillHeight(1f));
+        verticalGroup.add(back, new UILayout().percentWidth(1f).fixedHeight(48));
+        verticalGroup.add(spacers[4], new UILayout().percentWidth(1f).fillHeight(1f));
+        verticalGroup.add(exit, new UILayout().percentWidth(1f).fixedHeight(48));
+        verticalGroup.add(spacers[5], new UILayout().percentWidth(1f).fillHeight(0.5f));
 
         OptionCycler.OptionDefinition<Integer> def = new  OptionCycler.OptionDefinition<>(
             new String[]{"25%", "50%", "75%", "100%"},
@@ -122,17 +110,26 @@ public class EscapeMenu extends UIContainer {
         );
 
         OptionCycler<Integer> cycler = new OptionCycler<>(def);
-        cycler.getLayout().fixedHeight(48).percentWidth(1f);
-        verticalGroup.add(cycler);
+        cycler.getUILabel().setContentAlignment(Align.left);
+        cycler.getUILabel().setPadding(10,10,0,0);
+        cycler.setBorderColor(new Color(borderColor));
+        cycler.setBorderThickness(2f);
+        cycler.setBackgroundColor(new Color(backgroundColor));
+        cycler.setFontColor(fontColor);
+        verticalGroup.add(cycler, new UILayout().fixedHeight(48).percentWidth(1f));
+
+        CheckButton b = new CheckButton("Hi", "Bye");
+        b.setOnClick(System.out::println);
+        verticalGroup.add(b);
 
         add(panel);
-        add(verticalGroup);
+        add(verticalGroup, new UILayout().percentHeight(1).percentWidth(1));
     }
 
     @Override
     public boolean handleInput(InputEvent e) {
-        for(UIElement child : children) {
-            if(child.hit(e.getStageX(), e.getStageY()) && child.handleInput(e)) return true;
+        for(Slot child : children) {
+            if(child.child().hit(e.getStageX(), e.getStageY()) && child.child().handleInput(e)) return true;
         }
         return false;
     }
