@@ -1,12 +1,13 @@
-package karnickeldev.solar.ui.components;
+package karnickeldev.solar.ui.components.widgets;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.components.UIElement;
+import karnickeldev.solar.ui.components.UIHelper;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 
 /**
  * @author KarnickelDev
@@ -48,12 +49,7 @@ public class Panel extends UIElement {
         if(!isVisible() || color.a == 0) return;
 
         UIHelper.drawBackground(ctx.uiRenderer(), this, color, texture);
-        UIHelper.drawBorder(ctx.uiRenderer(), this, borderColor, texture);
-    }
-
-    @Override
-    public boolean handleInput(InputEvent e) {
-        return false;
+        UIHelper.drawBorder(ctx.uiRenderer(), this, Color.rgba8888(borderColor), getBorderThickness(), texture);
     }
 
     @Override

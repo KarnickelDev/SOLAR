@@ -1,9 +1,7 @@
 package karnickeldev.solar.ui.layers.dialog;
 
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import karnickeldev.solar.ui.components.Message;
+import karnickeldev.solar.ui.components.widgets.Message;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.core.UIExitReason;
 import karnickeldev.solar.ui.core.UILayer;
@@ -21,7 +19,7 @@ public class MessageLayer extends UILayer {
     private final String message;
 
     public MessageLayer(String message) {
-        super("message-" + refCounter.getAndAdd(1), new Stage(new FitViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT)));
+        super("message-" + refCounter.getAndAdd(1));
         this.message = message;
     }
 
@@ -50,6 +48,11 @@ public class MessageLayer extends UILayer {
     @Override
     public void onBlur() {
         hideComponent("message");
+    }
+
+    @Override
+    public void act(float delta) {
+
     }
 
     @Override

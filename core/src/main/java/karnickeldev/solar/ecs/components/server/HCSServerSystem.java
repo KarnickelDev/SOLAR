@@ -1,8 +1,8 @@
 package karnickeldev.solar.ecs.components.server;
 
 import karnickeldev.solar.ecs.components.HCSPositionComponent;
-import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
+import karnickeldev.solar.util.WorldPos;
 
 public class HCSServerSystem {
 

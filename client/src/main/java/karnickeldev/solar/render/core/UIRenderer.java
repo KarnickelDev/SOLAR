@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import karnickeldev.solar.ui.fontutil.kernel.MSDFBatch;
 import karnickeldev.solar.ui.fontutil.kernel.MSDFFont;
 import karnickeldev.solar.ui.fontutil.kernel.TextLayout;
+import karnickeldev.solar.util.MathUtil;
 
 /**
  * @author KarnickelDev
@@ -38,6 +39,10 @@ public final class UIRenderer {
 
     public void setQuadColor(Color color) {
         quadBatch.setColor(color);
+    }
+
+    public void setQuadColor(int rgba8888) {
+        quadBatch.setPackedColor(MathUtil.packColor(rgba8888));
     }
 
     public boolean pushScissors(float x, float y, float width, float height) {

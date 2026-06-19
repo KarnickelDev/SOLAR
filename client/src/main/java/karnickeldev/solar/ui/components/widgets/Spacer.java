@@ -1,7 +1,9 @@
-package karnickeldev.solar.ui.components;
+package karnickeldev.solar.ui.components.widgets;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.components.UIElement;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 
 /**
  * @author KarnickelDev
@@ -33,8 +35,4 @@ public class Spacer extends UIElement {
         // nop
     }
 
-    @Override
-    public boolean handleInput(InputEvent e) {
-        return false;
-    }
 }

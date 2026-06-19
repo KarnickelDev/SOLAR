@@ -1,18 +1,26 @@
 package karnickeldev.solar.ui.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import karnickeldev.solar.assetmanager.AssetWrapper;
+import karnickeldev.solar.core.Engine;
+import karnickeldev.solar.core.SimTestScreen;
 import karnickeldev.solar.core.SolarMain;
-import karnickeldev.solar.core.gamestates.GameStateID;
-import karnickeldev.solar.core.gamestates.LoadingPlan;
-import karnickeldev.solar.core.gamestates.GameStateScreen;
-import karnickeldev.solar.core.gamestates.LoadingPlanBuilder;
-import karnickeldev.solar.input.GameplayInputManager;
+import karnickeldev.solar.core.gamestates.*;
 import karnickeldev.solar.render.StarField;
+import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.render.core.UIRenderer;
 import karnickeldev.solar.ui.components.UILayoutEngine;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.fontutil.kernel.JSONLoader;
+import karnickeldev.solar.ui.fontutil.kernel.MSDFBatch;
 import karnickeldev.solar.ui.layers.mainmenu.MainMenuLayer;
 
 /**
@@ -24,7 +32,7 @@ public class MainMenuScreen implements GameStateScreen {
     private final SolarMain game;
     private final Viewport backgroundViewport;
 
-    private final MainMenuLayer mainMenuLayer = new MainMenuLayer();
+    private RendererContext renderCtx;
 
     private Runnable onInitRunnable;
 
@@ -40,7 +48,23 @@ public class MainMenuScreen implements GameStateScreen {
 
     @Override
     public LoadingPlan preEnterLoadingPlan() {
-        return LoadingPlanBuilder.empty();
+        return new LoadingPlanBuilder()
+            .syncTask(() -> {
+                Engine.shaderManager().registerFromInternalFile("msdf", "shaders/msdf/msdf.vert", "shaders/msdf/msdf.frag");
+
+                AssetWrapper.getInstance().getAssetManager().load("fonts/atlas.png", Texture.class);
+                AssetWrapper.getInstance().getAssetManager().finishLoading();
+                Texture atlas = AssetWrapper.getInstance().getAssetManager().get("fonts/atlas.png", Texture.class);
+                atlas.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+                SimTestScreen.font = JSONLoader.loadFont(Gdx.files.internal("fonts/atlas.json"), atlas);
+
+                ShaderProgram shaderProgram = Engine.shaderManager().get("msdf");
+                MSDFBatch msdfBatch = new MSDFBatch(1024, shaderProgram);
+                renderCtx = new RendererContext(SolarMain.getInstance().getBatch(), new UIRenderer(new SpriteBatch(), msdfBatch), new ShapeRenderer());
+            })
+            .syncTask(() -> UI.getThemeManager().loadThemes())
+            .build();
     }
 
     @Override
@@ -48,9 +72,10 @@ public class MainMenuScreen implements GameStateScreen {
         SolarMain.getInstance().setScreen(this);
 
         UI.getUIManager().clear();
-        UI.getUIManager().push(mainMenuLayer);
+        UI.getUIManager().push(new MainMenuLayer());
 
-        Gdx.input.setInputProcessor(UI.getUIManager().getInputManager());
+        //Gdx.input.setInputProcessor(UI.getUIManager().getInputManager());
+        Engine.input().addListener(UI.getUIManager());
 
         SolarMain.getInstance().getSettingsManager().setFpsOverride(30);
     }
@@ -88,20 +113,37 @@ public class MainMenuScreen implements GameStateScreen {
         time += 10*delta;
         //GasGiantTest.genPlanet(shapeRenderer, backgroundViewport, time);
 
-        UI.getUIManager().update(UILayoutEngine.computeLayoutContext(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()), delta);
-        UI.getUIManager().draw();
+        Engine.input().poll();
+        Engine.input().dispatchEvents();
+        Engine.input().beginFrame();
+
+        renderCtx.batch().setColor(1,1,1,1);
+        renderCtx.debug().setProjectionMatrix(new Matrix4().setToOrtho2D(0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
+        renderCtx.debug().begin(ShapeRenderer.ShapeType.Line);
+
+        UILayoutEngine.UILayoutContext uiContext = UILayoutEngine.computeLayoutContext(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        renderCtx.uiRenderer().updateViewport(0,0, uiContext.screenWidth(), uiContext.screenHeight());
+        renderCtx.uiRenderer().begin();
+
+        UI.getUIManager().update(uiContext, delta);
+        UI.getUIManager().render(renderCtx);
+
+        renderCtx.uiRenderer().end();
+        renderCtx.debug().end();
 
         if(onInitRunnable != null) {
             onInitRunnable.run();
             onInitRunnable = null;
         }
+
+        //GameStateManager.get().requestStateLoading(new GameplayLoadScreen(false, null));
     }
 
     @Override
     public void resize(int width, int height) {
         backgroundViewport.update(width, height, true);
         StarField.regenerateStarTexture(LoadingScreen.background);
-        UI.getSkinManager().reload(height);
+        //UI.getSkinManager().reload(height);
         UI.getUIManager().resize(width, height);
     }
 

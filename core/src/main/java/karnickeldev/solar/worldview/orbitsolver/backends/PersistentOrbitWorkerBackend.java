@@ -7,11 +7,11 @@ import karnickeldev.solar.util.spinbarrier.SyncBarrier;
 import karnickeldev.solar.util.threadlayout.ClientThreadLayout;
 import karnickeldev.solar.util.threadlayout.ThreadAffinity;
 import karnickeldev.solar.util.threadlayout.ThreadContext;
+import karnickeldev.solar.worldview.orbitsolver.OrbitExecutionBackend;
 import karnickeldev.solar.worldview.orbitsolver.OrbitJob;
+import karnickeldev.solar.worldview.orbitsolver.OrbitLocalFrame;
 import karnickeldev.solar.worldview.orbitsolver.OrbitMathKernel;
 import karnickeldev.solar.worldview.orbitsolver.mathkernel.OrbitDataSoA;
-import karnickeldev.solar.worldview.orbitsolver.OrbitExecutionBackend;
-import karnickeldev.solar.worldview.orbitsolver.OrbitLocalFrame;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

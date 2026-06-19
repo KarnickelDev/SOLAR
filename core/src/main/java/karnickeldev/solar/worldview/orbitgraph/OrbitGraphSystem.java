@@ -3,7 +3,6 @@ package karnickeldev.solar.worldview.orbitgraph;
 import karnickeldev.solar.ecs.ECSContext;
 import karnickeldev.solar.ecs.EntityManager;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
-import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
 
 /**

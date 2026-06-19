@@ -1,9 +1,7 @@
 package karnickeldev.solar.worldview.orbitsolver.backends;
 
-import karnickeldev.solar.worldview.orbitsolver.OrbitJob;
-import karnickeldev.solar.worldview.orbitsolver.OrbitMathKernel;
-import karnickeldev.solar.worldview.orbitsolver.mathkernel.OrbitDataSoA;
 import karnickeldev.solar.worldview.orbitsolver.OrbitExecutionBackend;
+import karnickeldev.solar.worldview.orbitsolver.OrbitJob;
 import karnickeldev.solar.worldview.orbitsolver.OrbitLocalFrame;
 
 /**

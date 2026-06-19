@@ -12,13 +12,13 @@ import io.netty.handler.timeout.IdleStateHandler;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.network.net.core.ServerNetwork;
-import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.net.handlers.HandlerRegistry;
 import karnickeldev.solar.network.net.listener.ServerNetworkListener;
 import karnickeldev.solar.network.packets.HandshakePacket;
 import karnickeldev.solar.network.packets.HandshakeResponsePacket;
 import karnickeldev.solar.network.packets.Packet;
 import karnickeldev.solar.network.packets.PacketTypes;
+import karnickeldev.solar.scheduler.Dispatcher;
 
 import java.util.Map;
 import java.util.Queue;

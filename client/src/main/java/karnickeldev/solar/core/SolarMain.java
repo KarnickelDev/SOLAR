@@ -2,6 +2,7 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.assetmanager.AssetWrapper;
@@ -11,7 +12,6 @@ import karnickeldev.solar.context.GameContextContainer;
 import karnickeldev.solar.context.ServerContext;
 import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.core.gamestates.LoadingPlanBuilder;
-import karnickeldev.solar.input.InputManager;
 import karnickeldev.solar.logging.LogManager;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
@@ -34,8 +34,6 @@ public class SolarMain extends Game {
 
     private final SettingsManager settingsManager;
 
-    private final InputManager inputManager;
-
     public static float tps;
 
     SpriteBatch batch;
@@ -44,7 +42,6 @@ public class SolarMain extends Game {
         instance = this;
 
         this.settingsManager = new SettingsManager(settings);
-        this.inputManager = new InputManager();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutdown hook triggered");
@@ -69,10 +66,6 @@ public class SolarMain extends Game {
         return settingsManager.getSettings();
     }
 
-    public InputManager getInputManager() {
-        return inputManager;
-    }
-
     public SpriteBatch getBatch() {
         return batch;
     }
@@ -81,6 +74,9 @@ public class SolarMain extends Game {
     public void create() {
         Thread.currentThread().setName("Solar-Main-Thread");
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+
+        long windowHandle = ((Lwjgl3Graphics) Gdx.graphics).getWindow().getWindowHandle();
+        Engine.init(windowHandle);
 
         getSettingsManager().applySettings();
 

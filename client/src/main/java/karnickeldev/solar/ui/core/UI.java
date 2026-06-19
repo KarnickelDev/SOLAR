@@ -1,7 +1,6 @@
 package karnickeldev.solar.ui.core;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 /**
@@ -30,6 +29,10 @@ public final class UI {
 
     public static UIManager getUIManager() {
         return UIManager.get();
+    }
+
+    public static ThemeManager getThemeManager() {
+        return ThemeManager.get();
     }
 
 }

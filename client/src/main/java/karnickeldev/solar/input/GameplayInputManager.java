@@ -1,8 +1,7 @@
 package karnickeldev.solar.input;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import karnickeldev.solar.context.GameContext;
+import karnickeldev.solar.core.Engine;
 import karnickeldev.solar.ecs.ClientECS;
 import karnickeldev.solar.ecs.systems.HCSClientSystem;
 import karnickeldev.solar.physics.Vector2D;
@@ -41,55 +40,55 @@ public class GameplayInputManager implements InputHandler {
 
         CameraPlayerInput signal = camera.getPlayerInput();
 
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) signal.dirY = 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) signal.dirY = -1;
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) signal.dirX = -1;
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) signal.dirX = 1;
+        if (Engine.input().isKeyDown(Keys.W)) signal.dirY = 1;
+        if (Engine.input().isKeyDown(Keys.S)) signal.dirY = -1;
+        if (Engine.input().isKeyDown(Keys.A)) signal.dirX = -1;
+        if (Engine.input().isKeyDown(Keys.D)) signal.dirX = 1;
 
-        if (Gdx.input.isKeyPressed(Input.Keys.E)) {
-            signal.rotationRad = -ROTATION_SPEED * Gdx.graphics.getDeltaTime();
+        if (Engine.input().isKeyDown(Keys.E)) {
+            signal.rotationRad = -ROTATION_SPEED * Engine.getDeltaTime();
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
-            signal.rotationRad = +ROTATION_SPEED * Gdx.graphics.getDeltaTime();
+        if (Engine.input().isKeyDown(Keys.Q)) {
+            signal.rotationRad = +ROTATION_SPEED * Engine.getDeltaTime();
         }
 
-        if(Gdx.input.isKeyPressed(Input.Keys.UP) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            float scrollDir = Gdx.input.isKeyPressed(Input.Keys.UP) ? -1 : +1;
-            signal.zoomImpulse += scrollDir * ZOOM_KEY_SPEED * Gdx.graphics.getDeltaTime();
-            signal.zoomCursor.set(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f);
+        if(Engine.input().isKeyDown(Keys.UP) || Engine.input().isKeyDown(Keys.DOWN)) {
+            float scrollDir = Engine.input().isKeyDown(Keys.UP) ? -1 : +1;
+            signal.zoomImpulse += scrollDir * ZOOM_KEY_SPEED * Engine.getDeltaTime();
+            signal.zoomCursor.set(Engine.getWidth() / 2f, Engine.getHeight() / 2f);
         }
     }
 
     @Override
     public boolean keyDown(int keycode) {
 
-        if (keycode == Input.Keys.R) {
-            if(Gdx.input.isKeyPressed(Input.Keys.F3)) {
+        if (keycode == Keys.R) {
+            if(Engine.input().isKeyDown(Keys.F3)) {
                 if(GameContext.isSet()) {
-                    GameContext.get().getShaderManager().reload();
+                    Engine.shaderManager().reload();
                     return true;
                 }
             }
         }
 
-        if(keycode == Input.Keys.G) {
-            if(Gdx.input.isKeyPressed(Input.Keys.F3)) {
+        if(keycode == Keys.G) {
+            if(Engine.input().isKeyDown(Keys.F3)) {
                 BackgroundGridRenderer.toggleRender();
             }
         }
 
-        if(keycode == Input.Keys.C) {
-            if(Gdx.input.isKeyPressed(Input.Keys.F3)) {
+        if(keycode == Keys.C) {
+            if(Engine.input().isKeyDown(Keys.F3)) {
                 RingRenderer.toggleRender();
             }
         }
 
-        if(keycode == Input.Keys.NUMPAD_ADD) {
+        if(keycode == Keys.KP_ADD) {
             GameContext.get().getClock().getSimSpeedController().changeSpeed(+1);
             return true;
         }
 
-        if(keycode == Input.Keys.NUMPAD_SUBTRACT) {
+        if(keycode == Keys.KP_SUBTRACT) {
             GameContext.get().getClock().getSimSpeedController().changeSpeed(-1);
             return true;
         }
@@ -104,12 +103,12 @@ public class GameplayInputManager implements InputHandler {
 //            return true;
 //        }
 
-        if(keycode == Input.Keys.SPACE) {
+        if(keycode == Keys.SPACE) {
             GameContext.get().getClock().getSimSpeedController().togglePause();
             return true;
         }
 
-        if(keycode == Input.Keys.ESCAPE) {
+        if(keycode == Keys.ESCAPE) {
             UI.getUIManager().push(new EscapeMenuLayer());
             return true;
         }
@@ -130,27 +129,27 @@ public class GameplayInputManager implements InputHandler {
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         boolean processed = false;
-        if (button == Input.Buttons.LEFT) {
-            HCSClientSystem hcs = ecs.hcs;
-            for (int entity = 0; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
-                if (ecs.getEntityManager().isValid(entity)) {
-                    //if (!hcs.getCurrent().has(entity)) continue;
-                    Vector2D screen = camera.project(ecs.toRelativeSpace(entity, PlanetoidRenderSystem.track, hcs.getAlpha()));
+//        if (button == Buttons.LEFT) {
+//            HCSClientSystem hcs = ecs.hcs;
+//            for (int entity = 0; entity < ecs.getEntityManager().getCapacityUsed(); entity++) {
+//                if (ecs.getEntityManager().isValid(entity)) {
+//                    //if (!hcs.getCurrent().has(entity)) continue;
+//                    Vector2D screen = camera.project(ecs.toRelativeSpace(entity, PlanetoidRenderSystem.track, hcs.getAlpha()));
+//
+//                    double dx = screenX - screen.getX();
+//                    double dy = screenY - screen.getY();
+//                    if (dx * dx + dy * dy < 16 * 16) {
+//                        PlanetoidRenderSystem.track = entity;
+//                        break;
+//                    }
+//
+//                }
+//            }
+//
+//            processed = true;
+//        }
 
-                    double dx = screenX - screen.getX();
-                    double dy = screenY - screen.getY();
-                    if (dx * dx + dy * dy < 16 * 16) {
-                        PlanetoidRenderSystem.track = entity;
-                        break;
-                    }
-
-                }
-            }
-
-            processed = true;
-        }
-
-        if (button == Input.Buttons.RIGHT) {
+        if (button == Buttons.RIGHT) {
             dragging = true;
             lastMouseX = screenX;
             lastMouseY = screenY;
@@ -162,15 +161,10 @@ public class GameplayInputManager implements InputHandler {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if (button == Input.Buttons.RIGHT) {
+        if (button == Buttons.RIGHT) {
             dragging = false;
             return true;
         }
-        return false;
-    }
-
-    @Override
-    public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
         return false;
     }
 
@@ -200,7 +194,7 @@ public class GameplayInputManager implements InputHandler {
         CameraPlayerInput signal = camera.getPlayerInput();
 
         signal.zoomImpulse += amountY * ZOOM_SCROLL_SPEED;
-        signal.zoomCursor.set(Gdx.input.getX(), Gdx.input.getY());
+        signal.zoomCursor.set(Engine.input().mouseX(), Engine.input().mouseY());
 
         return true;
     }

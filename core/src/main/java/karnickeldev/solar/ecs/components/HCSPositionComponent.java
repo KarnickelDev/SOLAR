@@ -1,8 +1,8 @@
 package karnickeldev.solar.ecs.components;
 
 import karnickeldev.solar.ecs.EntityManager;
-import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
+import karnickeldev.solar.util.WorldPos;
 
 import java.util.BitSet;
 

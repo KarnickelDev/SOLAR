@@ -7,7 +7,6 @@ import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.fontutil.RichTextBuilder;
 import karnickeldev.solar.ui.fontutil.TextBlock;
 import karnickeldev.solar.ui.layers.hud.HudLayer;
-import karnickeldev.solar.ui.layers.hud.chat.ChatWindow;
 import karnickeldev.solar.ui.layers.hud.chat.MessageRenderer;
 
 /**
@@ -16,17 +15,13 @@ import karnickeldev.solar.ui.layers.hud.chat.MessageRenderer;
  **/
 public class ChatLogAppender implements LogAppender{
 
-    private final ChatWindow chatWindow;
-
-    public ChatLogAppender(ChatWindow chatWindow) {
-        this.chatWindow = chatWindow;
-    }
+    public ChatLogAppender() {}
 
     @Override
     public void append(LogEvent event) {
         if(!GameContext.isSet()) return;
 
-        RichTextBuilder b = new RichTextBuilder(MessageRenderer.DEFAULT_CHAT_FONT_SIZE);
+        RichTextBuilder b = new RichTextBuilder();
 
         // Log Level
         b.color(getColor(event.level));
@@ -45,7 +40,9 @@ public class ChatLogAppender implements LogAppender{
         }
         b.text(msg);
 
-        GameContext.get().getScheduler().schedule(() -> HudLayer.INSTANCE.renderer.addMessage(new TextBlock(b.build())));
+        GameContext.get().getScheduler().schedule(() -> HudLayer.INSTANCE.renderer.addMessage(
+            new TextBlock(b.build(), MessageRenderer.DEFAULT_CHAT_FONT_SIZE))
+        );
     }
 
     @Override

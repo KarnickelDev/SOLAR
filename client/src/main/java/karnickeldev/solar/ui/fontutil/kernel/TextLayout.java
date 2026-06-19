@@ -17,9 +17,9 @@ public final class TextLayout {
     float[] x;
     float[] y;
 
-    float[] scale;
     int[] color;
     byte[] flags;
+    float scale;
 
     short[] glyphId;
 
@@ -28,10 +28,14 @@ public final class TextLayout {
     int[] lineStart;
     int[] lineEnd;
 
+    float lineHeight;
+    float ascent;
+    float descent;
     float[] lineBaseline;
-    float[] lineAscent;
-    float[] lineDescent;
     float[] lineWidth;
+
+    // line offsets (for alignment)
+    float[] lineOffsetX;
 
     // overall metrics
     float width;
@@ -57,17 +61,19 @@ public final class TextLayout {
         lineCount = 0;
 
         width = height = 0;
+        scale = 1f;
+        ascent = descent = lineHeight = 0f;
 
         minX = minY = Float.POSITIVE_INFINITY;
         maxX = maxY = Float.NEGATIVE_INFINITY;
     }
 
-    public void layout(MSDFFont font, TextRun[] runs, int align, float maxWidth, float uiScale) {
-        TextLayoutEngine.layout(font, runs, maxWidth, align, this, uiScale);
+    public void layout(MSDFFont font, TextRun[] runs, int align, float maxWidth, float scale) {
+        TextLayoutEngine.layout(font, runs, maxWidth, align, this, scale);
     }
 
-    public void layout(MSDFFont font, RichText richText, int align, float maxWidth, float uiScale) {
-        layout(font, richText.runs(), align, maxWidth, uiScale);
+    public void layout(MSDFFont font, RichText richText, int align, float maxWidth, float scale) {
+        layout(font, richText.runs(), align, maxWidth, scale);
     }
 
     public float getLeft() {
@@ -102,26 +108,23 @@ public final class TextLayout {
         return getTop() - getBottom();
     }
 
-    void setGlyph(int i, float x, float y, float scale, short glyphIndex, int color, byte flags) {
+    void setGlyph(int i, float x, float y, short glyphIndex, int color, byte flags) {
         ensureGlyphCapacity(i);
 
         this.x[i] = x;
         this.y[i] = y;
 
-        this.scale[i] = scale;
         this.glyphId[i] = glyphIndex;
         this.color[i] = color;
         this.flags[i] = flags;
     }
 
-    void setLine(int i, int startGlyph, int endGlyph, float baseline, float ascent, float descent, float width) {
+    void setLine(int i, int startGlyph, int endGlyph, float baseline, float width) {
         ensureLineCapacity(i);
 
         lineStart[i] = startGlyph;
         lineEnd[i] = endGlyph;
         lineBaseline[i] = baseline;
-        lineAscent[i] = ascent;
-        lineDescent[i] = descent;
         lineWidth[i] = width;
     }
 
@@ -153,8 +156,8 @@ public final class TextLayout {
         return lineEnd[line] - lineStart[line];
     }
 
-    public float getLineHeight(int line) {
-        return lineAscent[line] + lineDescent[line];
+    public float getLineHeight() {
+        return lineHeight;
     }
 
     //################################# CAPACITY MANAGEMENT ############################################################
@@ -162,13 +165,12 @@ public final class TextLayout {
     private void ensureGlyphCapacity(int required) {
         if(glyphId.length >= required) return;
 
-        int newCap = glyphId.length;
+        int newCap = Math.max(1, glyphId.length);
         while(newCap < required) newCap *= 2;
 
         x = Arrays.copyOf(x, newCap);
         y = Arrays.copyOf(y, newCap);
 
-        scale = Arrays.copyOf(scale, newCap);
         color = Arrays.copyOf(color, newCap);
         flags = Arrays.copyOf(flags, newCap);
         glyphId = Arrays.copyOf(glyphId, newCap);
@@ -177,22 +179,21 @@ public final class TextLayout {
     private void ensureLineCapacity(int required) {
         if (lineStart.length >= required) return;
 
-        int newCap = lineStart.length;
+        int newCap = Math.max(1, lineStart.length);
         while(newCap < required) newCap *= 2;
 
         lineStart = Arrays.copyOf(lineStart, newCap);
         lineEnd = Arrays.copyOf(lineEnd, newCap);
         lineBaseline = Arrays.copyOf(lineBaseline, newCap);
-        lineAscent = Arrays.copyOf(lineAscent, newCap);
-        lineDescent = Arrays.copyOf(lineDescent, newCap);
         lineWidth = Arrays.copyOf(lineWidth, newCap);
+
+        lineOffsetX = Arrays.copyOf(lineOffsetX, newCap);
     }
 
     private void allocateGlyphArrays(int capacity) {
         x = new float[capacity];
         y = new float[capacity];
 
-        scale = new float[capacity];
         color = new int[capacity];
         glyphId = new short[capacity];
         flags = new byte[capacity];
@@ -203,9 +204,9 @@ public final class TextLayout {
         lineEnd = new int[capacity];
 
         lineBaseline = new float[capacity];
-        lineAscent = new float[capacity];
-        lineDescent = new float[capacity];
         lineWidth = new float[capacity];
+
+        lineOffsetX = new float[capacity];
     }
 
     //################################# DEBUG OUTPUT ###################################################################

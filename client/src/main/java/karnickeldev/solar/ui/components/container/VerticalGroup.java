@@ -1,4 +1,9 @@
-package karnickeldev.solar.ui.components;
+package karnickeldev.solar.ui.components.container;
+
+import karnickeldev.solar.ui.components.UIContainer;
+import karnickeldev.solar.ui.components.UIElement;
+import karnickeldev.solar.ui.components.UILayout;
+import karnickeldev.solar.ui.components.UILayoutEngine;
 
 /**
  * @author KarnickelDev

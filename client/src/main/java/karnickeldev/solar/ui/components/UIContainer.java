@@ -2,6 +2,7 @@ package karnickeldev.solar.ui.components;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.util.MathUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,11 @@ public abstract class UIContainer extends UIElement {
         children.add(new Slot(child, layout));
         child.setParent(this);
         child.invalidateLayout();
+    }
+
+    public void remove(UIElement child) {
+        child.setParent(null);
+        children.removeIf(slot -> slot.child.equals(child));
     }
 
     @Override
@@ -56,7 +62,7 @@ public abstract class UIContainer extends UIElement {
         onLayout(ctx);
     }
 
-    static float computeAnchorX(Canvas.Anchor anchor, float baseW, float w) {
+    public static float computeAnchorX(Canvas.Anchor anchor, float baseW, float w) {
         return switch (anchor) {
             case LEFT, TOP_LEFT, BOTTOM_LEFT -> 0;
             case RIGHT, TOP_RIGHT, BOTTOM_RIGHT -> baseW - w;
@@ -64,13 +70,26 @@ public abstract class UIContainer extends UIElement {
         };
     }
 
-    static float computeAnchorY(Canvas.Anchor anchor, float baseH, float h) {
+    public static float computeAnchorY(Canvas.Anchor anchor, float baseH, float h) {
         return switch (anchor) {
             case BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT -> 0;
             case TOP, TOP_LEFT, TOP_RIGHT -> baseH - h;
             case CENTER, LEFT, RIGHT -> (baseH - h) * 0.5f;
         };
     }
+
+    @Override
+    public UIElement hit(float mx, float my) {
+        for (int i = children.size() - 1; i >= 0; i--) {
+            UIElement child = children.get(i).child();
+
+            UIElement hit = child.hit(mx, my);
+            if(hit != null) return hit;
+        }
+
+        return super.hit(mx, my);
+    }
+
 
     @Override
     public void act(float dt) {
@@ -87,14 +106,6 @@ public abstract class UIContainer extends UIElement {
         for(Slot child : children) {
             child.child.render(ctx);
         }
-    }
-
-    @Override
-    public boolean handleInput(InputEvent e) {
-        for(Slot child : children) {
-            if(child.child.handleInput(e)) return true;
-        }
-        return false;
     }
 
     @Override

@@ -1,7 +1,5 @@
 package karnickeldev.solar.worldview.orbitsolver;
 
-import karnickeldev.solar.worldview.orbitsolver.mathkernel.OrbitDataSoA;
-
 /**
  * @author KarnickelDev
  * @since 03.03.2026

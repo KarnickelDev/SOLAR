@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui.components;
 
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.render.core.RendererContext;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.List;
  * @author KarnickelDev
  * @since 15.06.2026
  **/
-public class Canvas extends UIContainer {
+public class Canvas extends UIElement {
 
     public enum Anchor {
         TOP_LEFT, TOP_RIGHT,
@@ -64,8 +65,38 @@ public class Canvas extends UIContainer {
 
     private final List<CanvasEntry> entries = new ArrayList<>(4);
 
-    public Canvas() {
-        setDebug(true);
+    public Canvas() {}
+
+    public void add(UIElement child, CanvasSlot slot) {
+        entries.add(new CanvasEntry(child, slot));
+        child.setParent(this);
+        child.invalidateLayout();
+    }
+
+    public void remove(UIElement child) {
+        child.setParent(null);
+        entries.removeIf(entry -> entry.child.equals(child));
+    }
+
+    @Override
+    public UIElement hit(float mx, float my) {
+        for (int i = entries.size() - 1; i >= 0; i--) {
+            UIElement child = entries.get(i).child();
+
+            UIElement hit = child.hit(mx, my);
+            if(hit != null) return hit;
+        }
+
+        return super.hit(mx, my);
+    }
+
+    @Override
+    public void invalidateLayout() {
+        super.invalidateLayout();
+
+        for(CanvasEntry entry : entries) {
+            entry.child().invalidateLayout();
+        }
     }
 
     @Override
@@ -73,11 +104,6 @@ public class Canvas extends UIContainer {
         for(CanvasEntry entry : entries) {
             entry.child.render(ctx);
         }
-    }
-
-    public void add(UIElement child, CanvasSlot slot) {
-        entries.add(new CanvasEntry(child, slot));
-        child.setParent(this);
     }
 
     @Override
@@ -132,8 +158,8 @@ public class Canvas extends UIContainer {
             default -> child.getMeasuredHeight();
         };
 
-        float px = computeAnchorX(slot.anchor, getContentWidth(), w);
-        float py = computeAnchorY(slot.anchor, getContentHeight(), h);
+        float px = UIContainer.computeAnchorX(slot.anchor, getContentWidth(), w);
+        float py = UIContainer.computeAnchorY(slot.anchor, getContentHeight(), h);
 
         child.arrange(ctx, getContentX() + px + slot.offsetX * scale, getContentY() + py + slot.offsetY * scale, w, h);
     }

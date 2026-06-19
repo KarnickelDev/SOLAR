@@ -8,30 +8,28 @@ public final class TextRun {
 
     String text;
     int rgba;
-    float scale;
     byte flags;
 
-    public TextRun(String text, int rgba, float scale, byte flags) {
+    public TextRun(String text, int rgba, byte flags) {
         this.text = text;
         this.rgba = rgba;
-        this.scale = scale;
         this.flags = flags;
     }
 
     public TextRun(String text, int rgba) {
-        this(text, rgba, 15f, (byte) 0);
+        this(text, rgba, (byte) 0);
     }
 
-    public TextRun(String text, int rgba, float scale, int flags) {
-        this(text, rgba, scale, (byte) flags);
+    public TextRun(String text, int rgba, int flags) {
+        this(text, rgba, (byte) flags);
     }
 
     boolean isSameStyle(TextRun other) {
-        return isSameStyle(other.rgba, other.scale, other.flags);
+        return isSameStyle(other.rgba, other.flags);
     }
 
-    boolean isSameStyle(int color, float scale, byte flags) {
-        return this.rgba == color && this.scale == scale && this.flags == flags;
+    boolean isSameStyle(int color, byte flags) {
+        return this.rgba == color && this.flags == flags;
     }
 
     public String text() {
@@ -40,10 +38,6 @@ public final class TextRun {
 
     public int color() {
         return rgba;
-    }
-
-    public float scale() {
-        return scale;
     }
 
     public byte flags() {
@@ -58,11 +52,6 @@ public final class TextRun {
     @Deprecated
     public void setColor(int rgba) {
         this.rgba = rgba;
-    }
-
-    @Deprecated
-    public void setScale(float scale) {
-        this.scale = scale;
     }
 
     @Deprecated

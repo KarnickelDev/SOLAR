@@ -31,13 +31,11 @@ public class GameContextContainer {
 
     private final boolean multiplayer;
 
-    private final ShaderManager shaderManager;
-
     private final ClientThreadLayout clientThreadLayout;
 
     public GameContextContainer(boolean multiplayer, WorldManager<ClientWorld> worldManager, ClientScheduler scheduler,
                                 ClientNetwork clientNetwork, ClientNetworkListener clientListener,
-                                ClientClock clientClock, OrbitSolver orbitSolver, PacketSyncLayer syncLayer, ShaderManager shaderManager,
+                                ClientClock clientClock, OrbitSolver orbitSolver, PacketSyncLayer syncLayer,
                                 ClientThreadLayout clientThreadLayout) {
         this.multiplayer = multiplayer;
         this.worldManager = worldManager;
@@ -47,7 +45,6 @@ public class GameContextContainer {
         this.clientClock = clientClock;
         this.orbitSolver = orbitSolver;
         this.syncLayer = syncLayer;
-        this.shaderManager = shaderManager;
         this.clientThreadLayout = clientThreadLayout;
     }
 
@@ -85,10 +82,6 @@ public class GameContextContainer {
 
     public PacketSyncLayer getSyncLayer() {
         return syncLayer;
-    }
-
-    public ShaderManager getShaderManager() {
-        return shaderManager;
     }
 
     public ClientThreadLayout getThreadLayout() {

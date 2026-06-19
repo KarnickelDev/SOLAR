@@ -16,26 +16,37 @@ public final class TextBlock {
 
     private float maxWidth = -1;
 
+    private float fontScale;
     private float uiScale = 1f;
 
     private int alignment = Align.left;
 
     private boolean dirty = true;
 
-    public TextBlock(RichText text) {
+    public TextBlock(RichText text, float fontSize) {
         this.text = text;
         this.layout = new TextLayout();
+        this.fontScale = fontSize;
+    }
+
+    public TextBlock(RichText text) {
+        this(text, 20f);
     }
 
     public TextBlock() {
         this(RichText.empty());
     }
 
-    public void setText(RichText text) {
-        if(this.text == text) return;
+    public void setText(RichText text, float fontSize) {
+        if(this.text == text && this.fontScale == fontSize) return;
 
+        this.fontScale = fontSize;
         this.text = text;
         dirty = true;
+    }
+
+    public void setText(RichText text) {
+        setText(text, this.fontScale);
     }
 
     public void setMaxWidth(float maxWidth) {
@@ -72,7 +83,7 @@ public final class TextBlock {
     }
 
     private void rebuild(MSDFFont font, int align) {
-        layout.layout(font, text, align, maxWidth, uiScale);
+        layout.layout(font, text, align, maxWidth, fontScale * uiScale);
         dirty = false;
     }
 

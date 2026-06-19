@@ -1,11 +1,8 @@
-package karnickeldev.solar.ui.components;
+package karnickeldev.solar.ui.components.widgets;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.logging.Logger;
-import karnickeldev.solar.util.MathUtil;
+import karnickeldev.solar.ui.components.interaction.Clickable;
+import karnickeldev.solar.ui.components.styles.TextWidgetStyle;
 
 import java.util.function.Consumer;
 
@@ -13,27 +10,23 @@ import java.util.function.Consumer;
  * @author KarnickelDev
  * @since 08.06.2026
  **/
-public class CheckButton extends Label {
-
-    private final Color a = Color.RED;
-    private final Color b = Color.GREEN;
+public class CheckButton extends TextWidget implements Clickable {
 
     private final String textOff, textOn;
     private Consumer<Boolean> onClick;
 
     private boolean checked = false;
 
-    public CheckButton(String textOff, String textOn, Consumer<Boolean> onClick) {
-        super(textOff);
+    public CheckButton(String textOff, String textOn, TextWidgetStyle style, Consumer<Boolean> onClick) {
+        super(textOff, style);
         this.textOff = textOff;
         this.textOn = textOn;
 
-        setBackgroundColor(a);
         setOnClick(onClick);
     }
 
     public CheckButton(String textOff, String textOn) {
-        this(textOff, textOn, null);
+        this(textOff, textOn, new TextWidgetStyle(), null);
     }
 
     public boolean isChecked() {
@@ -50,31 +43,12 @@ public class CheckButton extends Label {
         this.onClick = onClick;
     }
 
-    @Override
-    public boolean handleInput(InputEvent event) {
-        float my = Gdx.graphics.getHeight() - event.getStageY();
-        if(!MathUtil.AABB(event.getStageX(), my, getX(), getY(), getRight(), getTop())) {
-            return false;
-        }
-
-        if(event.getType() == InputEvent.Type.touchDown) {
-            if(event.getButton() == Input.Buttons.LEFT) {
-                toggle();
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private void toggle() {
         if(checked) {
             checked = false;
-            setBackgroundColor(a);
             setText(textOff);
         } else {
             checked = true;
-            setBackgroundColor(b);
             setText(textOn);
         }
 
@@ -85,4 +59,19 @@ public class CheckButton extends Label {
         }
     }
 
+    @Override
+    public boolean onMouseDown(int x, int y, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean onMouseUp(int x, int y, int button) {
+        return false;
+    }
+
+    @Override
+    public boolean onPressed(int x, int y, int button) {
+        toggle();
+        return true;
+    }
 }

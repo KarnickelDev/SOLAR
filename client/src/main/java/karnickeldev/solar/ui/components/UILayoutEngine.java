@@ -47,7 +47,7 @@ public class UILayoutEngine {
         return new UILayoutContext(screenWidth, screenHeight, aspectRatio,  viewportX, viewportY, viewportWidth, viewportHeight, uiScaleY);
     }
 
-    static float resolveWidth(UIElement e, UILayout l, float baseW, float scale) {
+    public static float resolveWidth(UIElement e, UILayout l, float baseW, float scale) {
         return switch(l.getWidthMode()) {
 
             case FIXED -> l.getWidthValue() * scale;
@@ -60,7 +60,7 @@ public class UILayoutEngine {
         };
     }
 
-     static float resolveHeight(UIElement e, UILayout l, float baseH, float scale) {
+    public static float resolveHeight(UIElement e, UILayout l, float baseH, float scale) {
         return switch(l.getHeightMode()) {
 
             case FIXED -> l.getHeightValue() * scale;

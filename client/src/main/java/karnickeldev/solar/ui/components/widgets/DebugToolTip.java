@@ -1,4 +1,4 @@
-package karnickeldev.solar.ui.components;
+package karnickeldev.solar.ui.components.widgets;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;

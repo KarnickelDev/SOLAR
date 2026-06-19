@@ -1,31 +1,63 @@
 package karnickeldev.solar.ui.layers.mainmenu;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.scenes.scene2d.Group;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.Align;
-import com.badlogic.gdx.utils.Scaling;
-import karnickeldev.solar.Metadata;
-import karnickeldev.solar.assetmanager.Asset;
-import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateManager;
-import karnickeldev.solar.ui.core.UIComponent;
-import karnickeldev.solar.ui.core.UI;
-import karnickeldev.solar.ui.layers.settings.SettingsMenuLayer;
+import karnickeldev.solar.ui.components.*;
+import karnickeldev.solar.ui.components.container.VerticalGroup;
+import karnickeldev.solar.ui.components.styles.TextWidgetStyle;
+import karnickeldev.solar.ui.components.widgets.Spacer;
+import karnickeldev.solar.ui.components.widgets.TextButton;
 import karnickeldev.solar.ui.screens.GameplayLoadScreen;
 
 /**
  * @author KarnickelDev
  * @since 08.07.2025
  **/
+public final class MainMenu extends VerticalGroup {
+
+    public MainMenu(TextWidgetStyle textStyle) {
+
+        setPadding(15f);
+
+        float buttonPad = 10f;
+
+        TextButton singleplayer = new TextButton("Singleplayer", textStyle, () ->
+            GameStateManager.get().requestStateLoading(new GameplayLoadScreen(false, "localhost")));
+        singleplayer.setPadding(buttonPad);
+
+        TextButton multiplayer = new TextButton("Multiplayer", textStyle, null);
+        multiplayer.setPadding(buttonPad);
+
+        TextButton settings = new TextButton("Settings", textStyle, null);
+        settings.setPadding(buttonPad);
+
+        TextButton credits = new TextButton("Credits", textStyle, null);
+        credits.setPadding(buttonPad);
+
+        TextButton exit = new TextButton("Exit", textStyle, SolarMain::shutdown);
+        exit.setPadding(buttonPad);
+
+        Spacer spacer = new Spacer(10,10);
+
+        add(singleplayer, new UILayout());
+        add(spacer, new UILayout().fillHeight(1f));
+
+        add(multiplayer, new UILayout());
+        add(spacer, new UILayout().fillHeight(1f));
+
+        add(settings, new UILayout());
+        add(spacer, new UILayout().fillHeight(1f));
+
+        add(credits, new UILayout());
+        add(spacer, new UILayout().fillHeight(1f));
+
+        add(exit, new UILayout());
+    }
+
+}
+/*
 public class MainMenu implements UIComponent {
+
 
     private final MainMenuLayer mainMenuLayer;
 
@@ -110,7 +142,7 @@ public class MainMenu implements UIComponent {
         float padBottom = 15;
 
         BitmapFont titleFont = UI.getFontManager().getFont(100, true);
-        Label titleLabel = new Label(Metadata.APP_NAME, new Label.LabelStyle(titleFont, UI.WHITE));
+        TextWidget titleLabel = new TextWidget(Metadata.APP_NAME, new TextWidget.TextWidgetStyle(titleFont, UI.WHITE));
         titleLabel.setAlignment(Align.left);
 
         float fontDimension = 1.2f * titleFont.getCapHeight();
@@ -138,3 +170,4 @@ public class MainMenu implements UIComponent {
         table.layout();
     }
 }
+ */

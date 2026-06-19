@@ -1,8 +1,9 @@
-package karnickeldev.solar.ui.components;
+package karnickeldev.solar.ui.components.widgets;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.components.UIHelper;
+import karnickeldev.solar.ui.components.UILayout;
+import karnickeldev.solar.ui.components.container.HorizontalGroup;
 
 /**
  * @author KarnickelDev
@@ -10,14 +11,12 @@ import karnickeldev.solar.render.core.RendererContext;
  **/
 public class OptionCycler<T> extends HorizontalGroup {
 
-    private static final Color TRANSPARENT = new Color(0xFFFFFF00);
-
     public static class OptionDefinition<T> {
         final String[] labels;
         final T[] values;
 
         public OptionDefinition(String[] labels, T[] values) {
-            if(labels.length != values.length) throw new IllegalArgumentException("Each Value must have a Label!");
+            if(labels.length != values.length) throw new IllegalArgumentException("Each Value must have a TextWidget!");
 
             this.labels = labels;
             this.values = values;
@@ -28,12 +27,12 @@ public class OptionCycler<T> extends HorizontalGroup {
         }
     }
 
-    private final Color borderColor = new Color(1,1,1,1);
-    private final Color backgroundColor = new Color(1,1,1,1);
+    private int borderColor = 0xFFFFFFFF;
+    private int backgroundColor = 0xFFFFFFFF;
 
     private final TextButton left;
     private final TextButton right;
-    private final Label label;
+    private final TextWidget label;
 
     private final OptionDefinition<T> options;
     private int index;
@@ -44,24 +43,24 @@ public class OptionCycler<T> extends HorizontalGroup {
 
         left = new TextButton("<", this::prev);
         left.setBorderThickness(0);
-        left.setBackgroundColor(TRANSPARENT);
-        left.setBorderColor(0xFFFFFF00);
+        //left.setBackgroundColor(TRANSPARENT);
+        //left.setBorderColor(0xFFFFFF00);
 
         right = new TextButton(">", this::next);
         right.setBorderThickness(0);
-        right.setBackgroundColor(TRANSPARENT);
-        right.setBorderColor(0xFFFFFF00);
+        //right.setBackgroundColor(TRANSPARENT);
+        //right.setBorderColor(0xFFFFFF00);
 
-        label = new Label(getLabel());
+        label = new TextWidget(getLabel());
         label.setBorderThickness(0);
-        label.setBackgroundColor(TRANSPARENT);
-        label.setBorderColor(0xFFFFFF00);
+        //label.setBackgroundColor(TRANSPARENT);
+        //label.setBorderColor(0xFFFFFF00);
 
         add(left);
         add(label, new UILayout().fillWidth(1).percentHeight(1));
         add(right);
         setPadding(15);
-        setBorderColor(Color.WHITE);
+        setBorderColor(0xFFFFFFFF);
         setBorderThickness(2f);
     }
 
@@ -77,13 +76,13 @@ public class OptionCycler<T> extends HorizontalGroup {
         right.setFontColor(rgba);
     }
 
-    public void setBorderColor(Color borderColor) {
-        this.borderColor.set(borderColor);
-        label.setBorderColor(Color.rgba8888(borderColor));
+    public void setBorderColor(int rgba8888) {
+        this.borderColor = rgba8888;
+        //label.setBorderColor(Color.rgba8888(borderColor));
     }
 
-    public void setBackgroundColor(Color backgroundColor) {
-        this.backgroundColor.set(backgroundColor);
+    public void setBackgroundColor(int rgba8888) {
+        this.backgroundColor = rgba8888;
     }
 
     @Override
@@ -118,7 +117,7 @@ public class OptionCycler<T> extends HorizontalGroup {
         onChange();
     }
 
-    public Label getUILabel() {
+    public TextWidget getUILabel() {
         return label;
     }
 
@@ -130,7 +129,7 @@ public class OptionCycler<T> extends HorizontalGroup {
     @Override
     public void render(RendererContext ctx) {
         UIHelper.drawBackground(ctx.uiRenderer(), this, backgroundColor, Panel.WHITE);
-        UIHelper.drawBorder(ctx.uiRenderer(), this, borderColor, Panel.WHITE);
+        UIHelper.drawBorder(ctx.uiRenderer(), this, borderColor, getBorderThickness(), Panel.WHITE);
         label.render(ctx);
         left.render(ctx);
         right.render(ctx);

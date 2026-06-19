@@ -1,8 +1,5 @@
 package karnickeldev.solar.ui.layers.dialog;
 
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.core.UIExitReason;
 import karnickeldev.solar.ui.core.UILayer;
 
@@ -17,7 +14,7 @@ public class DialogLayer extends UILayer {
     private static final AtomicInteger refCounter = new AtomicInteger(0);
 
     public DialogLayer() {
-        super("dialog-" + refCounter.get(), new Stage(new FitViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT)));
+        super("dialog-" + refCounter.get());
     }
 
     @Override
@@ -37,6 +34,11 @@ public class DialogLayer extends UILayer {
 
     @Override
     public void onBlur() {
+
+    }
+
+    @Override
+    public void act(float delta) {
 
     }
 }

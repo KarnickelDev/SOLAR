@@ -48,8 +48,6 @@ public class GameContextBuilder {
 
         OrbitSolver orbitSolver = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, threadLayout);
 
-        ShaderManager shaderManager = new ShaderManager();
-
         if(threadLayout.getMainContext().useCoreAffinity()) ThreadAffinity.pinToCore(threadLayout.getMainContext().nextCpuId());
 
         return new GameContextContainer(
@@ -61,7 +59,6 @@ public class GameContextBuilder {
             clientClock,
             orbitSolver,
             syncLayer,
-            shaderManager,
             threadLayout
         );
     }
@@ -98,8 +95,6 @@ public class GameContextBuilder {
 
         OrbitSolver orbitSolver = new ClientOrbitSolveSystem(EntityManager.MAX_ENTITIES, 1);
 
-        ShaderManager shaderManager = new ShaderManager();
-
         if(threadLayout.getMainContext().useCoreAffinity()) ThreadAffinity.pinToCore(threadLayout.getMainContext().nextCpuId());
 
         return new GameContextContainer(
@@ -111,7 +106,6 @@ public class GameContextBuilder {
             time,
             orbitSolver,
             syncLayer,
-            shaderManager,
             threadLayout
             );
     }

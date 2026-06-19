@@ -1,18 +1,25 @@
 package karnickeldev.solar.ui.layers.escapemenu;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.SolarMain;
 import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.ui.components.*;
+import karnickeldev.solar.ui.components.container.HorizontalGroup;
+import karnickeldev.solar.ui.components.container.VerticalGroup;
+import karnickeldev.solar.ui.components.styles.TextWidgetStyle;
+import karnickeldev.solar.ui.components.widgets.*;
+import karnickeldev.solar.ui.core.Align;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.components.UILayout;
 import karnickeldev.solar.ui.layers.settings.SettingsMenuLayer;
 import karnickeldev.solar.ui.screens.MainMenuScreen;
+import karnickeldev.solar.ui.theme.ThemeColors;
+import karnickeldev.solar.ui.theme.UITheme;
+
+import java.util.Locale;
 
 /**
  * @author KarnickelDev
@@ -20,118 +27,122 @@ import karnickeldev.solar.ui.screens.MainMenuScreen;
  **/
 public class EscapeMenu extends UIContainer {
 
-    private static final int backgroundColor = 0x0F1215F0;
-    private static final int borderColor =     0x34312FFF;
-    private static final int buttonColor =     0x0F1215FF;
-    private static final int fontColor =       0xF9D2B6FF;
+    private static final class MenuButton extends TextButton {
+
+        private final String rawText;
+        public MenuButton(String text, TextWidgetStyle style, Runnable onClick) {
+            super("  " + text.toLowerCase(Locale.ENGLISH), style, onClick);
+            this.rawText = text.toLowerCase(Locale.ENGLISH);
+        }
+
+        @Override
+        public void onHoverEnter() {
+            super.onHoverEnter();
+            setText("> " + rawText);
+        }
+        @Override
+        public void onHoverExit() {
+            super.onHoverExit();
+            setText("  " + rawText);
+        }
+    }
 
     private final Runnable onClose;
 
     private final Panel panel;
+    private final TextWidget title;
     private final TextButton resume;
     private final TextButton saveOrPlayerlist;
     private final TextButton settings;
     private final TextButton back;
     private final TextButton exit;
 
+    private final HorizontalLine seperator;
+
+    private final TextWidget controlsInfo;
+
     public EscapeMenu(Runnable onClose) {
         this.onClose = onClose;
+
+        float buttonBorder = 0f;
 
         setPadding(0);
         setBorderThickness(0);
 
-        panel = new Panel(new Color(backgroundColor), new Color(borderColor));
+        UITheme theme = UI.getThemeManager().getTheme("default");
+        ThemeColors colors = theme.colors();
+
+        TextWidgetStyle textStyle = new TextWidgetStyle(theme.textWidgetStyle());
+        textStyle.setBackgroundColor(0x16181AFF, UIState.all());
+        textStyle.setBackgroundColor(0x1E2124FF, UIState.HOVERED);
+
+        textStyle.setBorderColor(0x2A2D30FF, UIState.all());
+        textStyle.setBorderColor(0x4B4F54FF, UIState.HOVERED);
+        textStyle.setBorderColor(0, UIState.all());
+
+        textStyle.setBackgroundColor(0x101214FF, UIState.all());
+        textStyle.setBackgroundColor(0x1E2124FF, UIState.HOVERED, UIState.ARMED);
+
+        textStyle.setFontColor(colors.textPrimary(), UIState.all());
+        textStyle.fontSize = 22;
+
+        TextWidgetStyle titleStyle = new TextWidgetStyle(theme.textWidgetStyle());
+        titleStyle.fontSize = 28;
+        titleStyle.setFontColor(colors.textSecondary(), UIState.all());
+        titleStyle.textAlign = Align.CENTER;
+        titleStyle.contentAlign = Align.CENTER | Align.MIDDLE;
+
+        title = new TextWidget("SOLAR", titleStyle);
+        title.setPadding(5f);
+
+        panel = new Panel(new Color(0x101214FF), new Color(colors.border()));
         panel.setBorderThickness(2f);
 
-        Color buttonColorObj = new Color(buttonColor);
+        seperator = new HorizontalLine(colors.textPrimary(), 1f);
+        seperator.setPadding(0, 0, 5f, 5f);
 
-        resume = new TextButton("Resume");
-        resume.setPadding(10f);
-        resume.setBorderThickness(2f);
-        resume.setOnClick(this::onResume);
-        resume.setBackgroundColor(buttonColorObj);
-        resume.setBorderColor(borderColor);
-        resume.setFontColor(fontColor);
+        resume = new MenuButton("Resume", textStyle, this::onResume);
+        resume.setPadding(20f);
+        resume.setBorderThickness(buttonBorder);
 
-        saveOrPlayerlist = new TextButton(GameContext.get().isSingleplayer() ? "Save" : "Playerlist");
-        saveOrPlayerlist.setPadding(10f);
-        saveOrPlayerlist.setBorderThickness(2f);
-        saveOrPlayerlist.setBackgroundColor(buttonColorObj);
-        saveOrPlayerlist.setBorderColor(borderColor);
-        saveOrPlayerlist.setFontColor(fontColor);
+        saveOrPlayerlist = new MenuButton(GameContext.get().isSingleplayer() ? "Save" : "Playerlist", textStyle, null);
+        saveOrPlayerlist.setPadding(20f);
+        saveOrPlayerlist.setBorderThickness(buttonBorder);
 
-        settings = new TextButton("Settings");
-        settings.setPadding(10f);
-        settings.setBorderThickness(2f);
-        settings.setOnClick(this::onSettings);
-        settings.setBackgroundColor(buttonColorObj);
-        settings.setBorderColor(borderColor);
-        settings.setFontColor(fontColor);
+        settings = new MenuButton("Settings", textStyle, this::onSettings);
+        settings.setPadding(20f);
+        settings.setBorderThickness(buttonBorder);
 
-        back = new TextButton(GameContext.get().isSingleplayer() ? "Back" : "Disconnect");
-        back.setPadding(10f);
-        back.setBorderThickness(2f);
-        back.setOnClick(this::onBack);
-        back.setBackgroundColor(buttonColorObj);
-        back.setBorderColor(borderColor);
-        back.setFontColor(fontColor);
+        back = new MenuButton(GameContext.get().isSingleplayer() ? "Back" : "Disconnect", textStyle, this::onBack);
+        back.setPadding(20f);
+        back.setBorderThickness(buttonBorder);
 
-        exit = new TextButton("Exit");
-        exit.setPadding(10f);
-        exit.setBorderThickness(2f);
-        exit.setOnClick(this::onExit);
-        exit.setBackgroundColor(buttonColorObj);
-        exit.setBorderColor(borderColor);
-        exit.setFontColor(fontColor);
+        exit = new MenuButton("Exit", textStyle, this::onExit);
+        exit.setPadding(20f);
+        exit.setBorderThickness(buttonBorder);
 
-        Spacer[] spacers = new Spacer[6];
-        for (int i = 0; i < spacers.length; i++) {
-            spacers[i] = new Spacer(0,0);
-        }
+        Spacer spacer = new Spacer(0,0);
+
+        TextWidgetStyle ciStyle = new TextWidgetStyle(textStyle);
+        ciStyle.fontSize = 12;
+        controlsInfo = new TextWidget("[enter]: select\n[esc]: close", ciStyle);
 
         VerticalGroup verticalGroup = new VerticalGroup();
-        verticalGroup.setPadding(15f);
+        verticalGroup.setPadding(40, 40, 15, 15);
 
-        verticalGroup.add(spacers[0], new UILayout().percentWidth(1f).fillHeight(0.5f));
+        verticalGroup.add(title, new UILayout().percentWidth(1f));
+        verticalGroup.add(spacer, new UILayout().percentWidth(1f).fillHeight(1f));
         verticalGroup.add(resume, new UILayout().percentWidth(1f).fixedHeight(48));
-        verticalGroup.add(spacers[1], new UILayout().percentWidth(1f).fillHeight(1f));
         verticalGroup.add(saveOrPlayerlist, new UILayout().percentWidth(1f).fixedHeight(48));
-        verticalGroup.add(spacers[2], new UILayout().percentWidth(1f).fillHeight(1f));
         verticalGroup.add(settings, new UILayout().percentWidth(1f).fixedHeight(48));
-        verticalGroup.add(spacers[3], new UILayout().percentWidth(1f).fillHeight(1f));
         verticalGroup.add(back, new UILayout().percentWidth(1f).fixedHeight(48));
-        verticalGroup.add(spacers[4], new UILayout().percentWidth(1f).fillHeight(1f));
         verticalGroup.add(exit, new UILayout().percentWidth(1f).fixedHeight(48));
-        verticalGroup.add(spacers[5], new UILayout().percentWidth(1f).fillHeight(0.5f));
-
-        OptionCycler.OptionDefinition<Integer> def = new  OptionCycler.OptionDefinition<>(
-            new String[]{"25%", "50%", "75%", "100%"},
-            new Integer[]{25, 50, 75, 100}
-        );
-
-        OptionCycler<Integer> cycler = new OptionCycler<>(def);
-        cycler.getUILabel().setContentAlignment(Align.left);
-        cycler.getUILabel().setPadding(10,10,0,0);
-        cycler.setBorderColor(new Color(borderColor));
-        cycler.setBorderThickness(2f);
-        cycler.setBackgroundColor(new Color(backgroundColor));
-        cycler.setFontColor(fontColor);
-        verticalGroup.add(cycler, new UILayout().fixedHeight(48).percentWidth(1f));
-
-        CheckButton b = new CheckButton("Hi", "Bye");
-        b.setOnClick(System.out::println);
-        verticalGroup.add(b);
+        verticalGroup.add(spacer, new UILayout().percentWidth(1f).fillHeight(1f));
+        verticalGroup.add(seperator, new UILayout().percentWidth(1f).fixedHeight(60));
+        verticalGroup.add(controlsInfo, new UILayout().percentWidth(1f).fixedHeight(48));
 
         add(panel);
         add(verticalGroup, new UILayout().percentHeight(1).percentWidth(1));
-    }
-
-    @Override
-    public boolean handleInput(InputEvent e) {
-        for(Slot child : children) {
-            if(child.child().hit(e.getStageX(), e.getStageY()) && child.child().handleInput(e)) return true;
-        }
-        return false;
     }
 
     private void onResume() {

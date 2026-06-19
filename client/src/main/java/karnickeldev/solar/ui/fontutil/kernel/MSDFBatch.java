@@ -106,8 +106,10 @@ public final class MSDFBatch implements Disposable {
         currentTexture = texture;
         currentFont = font;
 
-        float drawX = x - layout.minX;
-        float drawY = y - layout.minY;
+        float drawX = x;
+        float drawY = y;
+
+        float scale = layout.scale;
 
         for (int i = 0; i < layout.glyphCount; i++) {
             if(isFlushRequired()) flush();
@@ -115,11 +117,9 @@ public final class MSDFBatch implements Disposable {
             Glyph g = font.getGlyphUnsafe(layout.glyphId[i]);
 
             boolean italic = (layout.flags[i] & TextStyle.ITALIC) != 0;
-            float italicSkew = italic ? g.getHeight() * 0.3f * layout.scale[i] : 0f;
+            float italicSkew = italic ? g.getHeight() * 0.3f * scale : 0f;
 
             float style = (layout.flags[i] & TextStyle.BOLD) != 0 ? 1f : 0f;
-
-            float scale = layout.scale[i];
 
             float gx = layout.x[i];
             float gy = layout.y[i];

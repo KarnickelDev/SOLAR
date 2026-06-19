@@ -31,8 +31,8 @@ public record RichText(TextRun[] runs, int length) {
         return new RichText(new TextRun[]{new TextRun("", 0xFFFFFFFF)}, 0);
     }
 
-    public static RichText of(String text, float scale) {
-        return new RichText(new TextRun[]{new TextRun(text, 0xFFFFFFFF, scale, 0)}, text.length());
+    public static RichText of(String text) {
+        return new RichText(new TextRun[]{new TextRun(text, 0xFFFFFFFF, 0)}, text.length());
     }
 
 }

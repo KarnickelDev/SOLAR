@@ -1,7 +1,6 @@
 package karnickeldev.solar.ui.core;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import karnickeldev.solar.input.InputHandler;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
@@ -20,33 +19,18 @@ public abstract class UILayer implements InputHandler {
 
     private final Logger logger = Logger.get(LogTag.UI);
 
-    protected final Stage stage;
     private final String name;
 
     protected boolean visible = true;
 
-    private final Map<String, UIComponent> uiComponents = new HashMap<>();
-
-    private final List<UIElement> uiElements = new ArrayList<>(16);
-
     protected final Canvas canvas = new Canvas();
 
-    public UILayer(String name, Stage stage) {
+    public UILayer(String name) {
         this.name = name;
-        this.stage = stage;
     }
 
     public Canvas getCanvas() {
         return canvas;
-    }
-
-    public void layout(UILayoutEngine.UILayoutContext ctx) {
-        canvas.measure(ctx);
-        canvas.arrange(ctx, ctx.viewportX(), ctx.viewportY(), ctx.viewportWidth(), ctx.viewportHeight());
-    }
-
-    public Stage getStage() {
-        return stage;
     }
 
     public String getName() {
@@ -81,39 +65,26 @@ public abstract class UILayer implements InputHandler {
 
     public abstract void onBlur();
 
-    public void addElement(UIElement element) {
-        if(uiElements.contains(element)) return;
+    /** Updates all UI logic (called from render loop) */
+    public abstract void act(float delta);
 
-        uiElements.add(element);
+    public final void addToCanvas(UIElement element, Canvas.CanvasSlot slot) {
+        getCanvas().add(element, slot);
     }
 
-    public void removeElement(UIElement element) {
-        uiElements.remove(element);
+    public final void removeFromCanvas(UIElement element) {
+        canvas.remove(element);
     }
 
-    public void update(UILayoutEngine.UILayoutContext ctx, float delta) {
-        for(UIElement uiElement : uiElements) {
-            uiElement.measure(ctx);
-            uiElement.arrange(ctx, 0, 0, ctx.screenWidth(), ctx.screenHeight());
-        }
-
-        layout(ctx);
-
+    public final void update(UILayoutEngine.UILayoutContext ctx, float delta) {
+        act(delta);
         canvas.act(delta);
 
-        for(UIElement uiElement : uiElements) {
-            if(isActive()) uiElement.act(delta);
-        }
-
-        act(delta);
+        canvas.measure(ctx);
+        canvas.arrange(ctx, ctx.viewportX(), ctx.viewportY(), ctx.viewportWidth(), ctx.viewportHeight());
     }
 
-    public void render(RendererContext ctx) {
-        for(UIElement uiElement : uiElements) {
-            uiElement.render(ctx);
-            uiElement.renderDebug(ctx);
-        }
-
+    public final void render(RendererContext ctx) {
         canvas.render(ctx);
         canvas.renderDebug(ctx);
     }
@@ -121,94 +92,39 @@ public abstract class UILayer implements InputHandler {
     /** Handles resizing all UI component (called from resize in screens) */
     public void resize(int width, int height) {
         logger.debug("resizing {}", getName());
-        for(UIComponent component: uiComponents.values()) {
-            component.resize(width, height);
-        }
-        stage.getViewport().update(width, height, true);
+        getCanvas().invalidateLayout();
     }
 
-    /** Updates all UI logic (called from render loop) */
-    public void act(float delta) {
-        stage.getViewport().apply();
-        for(UIComponent component: uiComponents.values()) {
-            component.update(delta);
-        }
-        stage.act(delta);
-    }
-
-    /** Renders all visible UI groups */
-    public void draw() {
-        stage.draw();
-    }
+    // TODO: remove LEGACY (below)
 
     /** Adds a Component by name if it's not present */
     public void addComponent(String name, UIComponent component) {
-        if(uiComponents.containsKey(name)) {
-            logger.warn("Component {} already exists", name);
-            getStage().addActor(uiComponents.get(name).getGroup());
-            return;
-        }
-        uiComponents.put(name, component);
-        getStage().addActor(uiComponents.get(name).getGroup());
-        uiComponents.get(name).resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
     }
 
     /** Adds a Component by name, overwriting existing Components of that name*/
     public void addForceComponent(String name, UIComponent component) {
-        uiComponents.put(name, component);
-        getStage().addActor(uiComponents.get(name).getGroup());
-        uiComponents.get(name).resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
     }
 
     /** Gets an existing component or null if not found */
     public UIComponent getComponent(String name) {
-        return uiComponents.get(name);
+        return null;
     }
 
     /** Shows a component by name */
     public void showComponent(String... names) {
-        for(String name: names) {
-            UIComponent component = uiComponents.get(name);
-            if (component != null) {
-                component.show();
-            } else {
-                logger.warn("showComponent: {} not found", name);
-            }
-        }
+
     }
 
     /** Hides a component by name */
     public void hideComponent(String... names) {
-        for(String name: names) {
-            UIComponent component = uiComponents.get(name);
-            if (component != null) {
-                component.hide();
-            } else {
-                logger.warn("hideComponent: {} not found", name);
-            }
-        }
+
     }
 
     /** Removes a component from stage and internal map */
     public void removeComponent(String... names) {
-        for(String name: names) {
-            UIComponent component = uiComponents.remove(name);
-            if (component != null) {
-                component.getGroup().remove();
-            } else {
-                logger.warn("removeComponent: {} not found", name);
-            }
-        }
-    }
 
-    public Collection<UIComponent> getComponents() {
-        return uiComponents.values();
-    }
-
-    public void hideAll() {
-        for(UIComponent component: uiComponents.values()) {
-            component.hide();
-        }
     }
 
 }

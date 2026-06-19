@@ -24,10 +24,10 @@ public class ClientChatMessageHandler implements PacketHandler<ChatMessagePacket
             return;
         }
 
-        HudLayer.INSTANCE.renderer.addMessage(new TextBlock(new RichTextBuilder(MessageRenderer.DEFAULT_CHAT_FONT_SIZE)
+        HudLayer.INSTANCE.renderer.addMessage(new TextBlock(new RichTextBuilder()
             .color(Color.CYAN).text(packet.getSender() + ": ")
             .color(UI.WHITE).text(packet.getText())
-            .build()));
+            .build(), MessageRenderer.DEFAULT_CHAT_FONT_SIZE));
         Logger.get(LogTag.NETWORK).debug("Client received ChatMessagePacket");
     }
 

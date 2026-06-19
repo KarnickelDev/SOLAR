@@ -8,7 +8,7 @@ import karnickeldev.solar.ui.fontutil.TextBlock;
  **/
 public final class ChatMessageStore implements MessageProvider {
 
-    public static final int MAX_MESSAGES = 64;
+    public static final int MAX_MESSAGES = 128;
 
     private final TextBlock[] buffer = new TextBlock[MAX_MESSAGES];
 

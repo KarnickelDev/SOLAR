@@ -10,9 +10,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import karnickeldev.solar.context.GameContext;
-import karnickeldev.solar.ui.core.UIComponent;
 import karnickeldev.solar.ui.core.FontManager;
 import karnickeldev.solar.ui.core.UI;
+import karnickeldev.solar.ui.core.UIComponent;
 
 /**
  * @author KarnickelDev

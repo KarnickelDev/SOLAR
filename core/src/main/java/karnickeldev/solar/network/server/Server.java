@@ -3,7 +3,6 @@ package karnickeldev.solar.network.server;
 import karnickeldev.solar.ecs.components.ComponentType;
 import karnickeldev.solar.network.net.core.ServerNetwork;
 import karnickeldev.solar.network.net.handlers.ServerChatMessageHandler;
-import karnickeldev.solar.scheduler.Dispatcher;
 import karnickeldev.solar.network.packets.PacketTypes;
 import karnickeldev.solar.scheduler.Scheduler;
 import karnickeldev.solar.simulation.execution.SimulationManagerThread;

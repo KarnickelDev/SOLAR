@@ -1,19 +1,15 @@
 package karnickeldev.solar.ui.layers.hud.chat;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import karnickeldev.solar.core.SimTestScreen;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.render.core.UIRenderer;
-import karnickeldev.solar.ui.components.Panel;
-import karnickeldev.solar.ui.components.UIHelper;
+import karnickeldev.solar.ui.components.interaction.Scrollable;
+import karnickeldev.solar.ui.components.widgets.Panel;
 import karnickeldev.solar.ui.components.UIElement;
+import karnickeldev.solar.ui.components.UIHelper;
 import karnickeldev.solar.ui.components.UILayoutEngine;
 import karnickeldev.solar.ui.core.UIManager;
 import karnickeldev.solar.ui.fontutil.TextBlock;
-import karnickeldev.solar.ui.fontutil.kernel.MSDFBatch;
 import karnickeldev.solar.ui.fontutil.kernel.MSDFFont;
 import karnickeldev.solar.util.MathUtil;
 
@@ -21,9 +17,9 @@ import karnickeldev.solar.util.MathUtil;
  * @author KarnickelDev
  * @since 06.04.2026
  **/
-public class MessageRenderer extends UIElement {
+public class MessageRenderer extends UIElement implements Scrollable {
 
-    public static float DEFAULT_CHAT_FONT_SIZE = 11f;
+    public static float DEFAULT_CHAT_FONT_SIZE = 14f;
 
     private static final float AUTO_SCROLL_THRESHOLD = 50f;
     private static final float AUTO_SCROLL_SPEED = 300f;
@@ -43,8 +39,6 @@ public class MessageRenderer extends UIElement {
     private float paddingMessages = 0;
     private float padMessages = 0;
 
-    private final Rectangle bounds = new Rectangle();
-
     private float totalHeight = 0f;
 
     public MessageRenderer(MessageProvider provider) {
@@ -53,18 +47,14 @@ public class MessageRenderer extends UIElement {
     }
 
     @Override
-    public boolean handleInput(InputEvent e) {
-        if (e.getType() == InputEvent.Type.scrolled) {
-            scrollVelocity += e.getScrollAmountY() * 300f;
-            scrollVelocity = MathUtil.clamp(scrollVelocity, -MAX_SCROLL_SPEED, MAX_SCROLL_SPEED);
+    public boolean onScrolled(float dx, float dy) {
+        scrollVelocity += dy * 300f;
+        scrollVelocity = MathUtil.clamp(scrollVelocity, -MAX_SCROLL_SPEED, MAX_SCROLL_SPEED);
 
-            autoScroll = false;
-            animationOffset = 0f;
+        autoScroll = false;
+        animationOffset = 0f;
 
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     public void setMessageProvider(MessageProvider provider) {
@@ -165,8 +155,8 @@ public class MessageRenderer extends UIElement {
     }
 
     public void draw(RendererContext ctx) {
-        UIHelper.drawBackground(ctx.uiRenderer(), this, new Color(0x0E0B0AC0), Panel.WHITE);
-        UIHelper.drawBorder(ctx.uiRenderer(), this, new Color(0xD94A3A2A), Panel.WHITE);
+        UIHelper.drawBackground(ctx.uiRenderer(), this, 0x0E0B0AC0, Panel.WHITE);
+        UIHelper.drawBorder(ctx.uiRenderer(), this, 0xD94A3A2A, getBorderThickness(), Panel.WHITE);
 
         if (ctx.uiRenderer().pushScissors(getContentX(), getContentY(), getContentWidth(), getContentHeight())) {
             drawMessages(ctx.uiRenderer());
@@ -221,7 +211,13 @@ public class MessageRenderer extends UIElement {
     }
 
     private void clampScroll() {
-        float max = Math.max(0f, totalHeight - getHeight());
+        float firstMsgHeight = 0f;
+        if(messageProvider.size() > 0) {
+            /*TODO: why does it not work without this?*/
+            firstMsgHeight = messageProvider.getMessage(0).getLayout().getBoundsHeight();
+        }
+
+        float max = Math.max(0f, totalHeight - getHeight() + firstMsgHeight);
         scrollOffset = MathUtil.clamp(scrollOffset, -max, 0f);
     }
 

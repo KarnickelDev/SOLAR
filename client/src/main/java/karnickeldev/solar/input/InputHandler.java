@@ -55,14 +55,6 @@ public interface InputHandler {
      * Works like in LibGDX's InputProcessor
      * @return true to prevent event to bubble
      */
-    default boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
-        return false;
-    }
-
-    /**
-     * Works like in LibGDX's InputProcessor
-     * @return true to prevent event to bubble
-     */
     default boolean touchDragged(int screenX, int screenY, int pointer) {
         return false;
     }

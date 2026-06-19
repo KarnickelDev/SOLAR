@@ -1,8 +1,11 @@
 package karnickeldev.solar.ui.core;
 
-import karnickeldev.solar.input.InputManager;
+import karnickeldev.solar.core.Engine;
+import karnickeldev.solar.input.InputHandler;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.components.UIElement;
 import karnickeldev.solar.ui.components.UILayoutEngine;
+import karnickeldev.solar.ui.components.interaction.*;
 
 import java.util.*;
 
@@ -10,7 +13,7 @@ import java.util.*;
  * @author KarnickelDev
  * @since 03.07.2025
  **/
-public class UIManager {
+public class UIManager implements InputHandler {
 
     private static final UIManager instance = new UIManager();
 
@@ -20,18 +23,219 @@ public class UIManager {
 
     private final Deque<UILayer> uiLayers = new ArrayDeque<>();
 
-    private final InputManager inputManager = new InputManager();
-
     private UILayoutEngine.UILayoutContext  uiLayoutContext;
 
-    public InputManager getInputManager() {
-        return inputManager;
-    }
+    /** element currently under mouse */
+    private UIElement hovered;
+
+    /** element last pressed */
+    private UIElement pressed;
+
+    /** element receiving keyboard input */
+    private UIElement focused;
+
+    /** element receiving mouse input */
+    private UIElement captured;
+
+    /** element being dragged */
+    private UIElement dragged;
+    private UIElement dragCandidate;
+
+    private float pressX, pressY;
+    private float lastX, lastY;
+    private boolean dragging = false;
 
     private UIManager() {}
 
     public UILayoutEngine.UILayoutContext getLayoutContext() {
         return uiLayoutContext;
+    }
+
+    private void setCapture(UIElement e) {
+        captured = e;
+        dragged = e;
+    }
+
+    private UIElement hit(float x, float y) {
+        for(UILayer layer : getLayersTopToBottom()) {
+            if(!layer.isVisible() || !layer.receivesInput()) continue;
+
+            UIElement hit = layer.getCanvas().hit(x, y);
+            if(hit != null) return hit;
+
+            if(layer.isModal()) return null;
+        }
+
+        return null;
+    }
+
+    private void updateHover(UIElement current) {
+        if(current != hovered) {
+            if(hovered instanceof Hoverable h) {
+                h.onHoverExit();
+            }
+
+            hovered = current;
+
+            if(hovered instanceof Hoverable h) {
+                h.onHoverEnter();
+            }
+        }
+    }
+
+    @Override
+    public boolean mouseMoved(int mx, int my) {
+        UIElement current = hit(mx, my);
+        updateHover(current);
+
+        return false;
+    }
+
+    @Override
+    public boolean touchDown(int x, int y, int pointer, int button) {
+        pressed = hit(x, y);
+
+        dragCandidate = pressed;
+        dragging = false;
+
+        pressX = x;
+        pressY = y;
+
+        lastX = x;
+        lastY = y;
+
+        if(pressed instanceof Clickable c) {
+            return c.onMouseDown(x, y, button);
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean touchUp(int x, int y, int pointer, int button) {
+        UIElement released = hit(x, y);
+
+        boolean consumed = false;
+
+        // finish drag FIRST
+        if(captured instanceof Draggable d) {
+            consumed |= d.onDragEnd(x, y);
+        }
+
+        // click only if not dragging
+        if(!dragging && pressed instanceof Clickable c) {
+            consumed |= c.onMouseUp(x, y, button);
+        }
+
+        // normal click release
+        if(released instanceof Clickable c) {
+            consumed |= c.onMouseUp(x, y, button);
+
+            if(c == pressed) {
+                consumed |= c.onPressed(x, y, button);
+            }
+        }
+
+        pressed = null;
+        dragCandidate = null;
+        dragged = null;
+        captured = null;
+        dragging = false;
+
+        return consumed;
+    }
+
+    @Override
+    public boolean touchDragged(int x, int y, int pointer) {
+        float dxTotal = x - pressX;
+        float dyTotal = y - pressY;
+
+        boolean consumed = false;
+
+        if (!dragging && dragCandidate != null) {
+            if (dxTotal * dxTotal + dyTotal * dyTotal > 6*6) {
+                dragging = true;
+                dragged = dragCandidate;
+                setCapture(dragged);
+
+                if (dragged instanceof Draggable d) {
+                    consumed |= d.onDragStart(pressX, pressY);
+                }
+            }
+        }
+
+        if (captured instanceof Draggable d) {
+            float dx = x - lastX;
+            float dy = y - lastY;
+
+            consumed |= d.onDrag(x, y, dx, dy);
+        }
+
+        lastX = x;
+        lastY = y;
+
+        return consumed;
+    }
+
+    @Override
+    public boolean scrolled(float dx, float dy) {
+        if (hit(Engine.input().mouseX(), Engine.input().mouseY()) instanceof Scrollable s) {
+            return s.onScrolled((int) dx, (int) dy);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean keyDown(int key) {
+        if(focused instanceof KeyInputTarget t) {
+            if(t.keyDown(key)) return true;
+        }
+
+        for(UILayer layer : getLayersTopToBottom()) {
+            if(!layer.receivesInput() || !layer.isVisible()) continue;
+
+            if(layer.keyDown(key)) return true;
+
+            if(layer.isModal()) return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean keyUp(int key) {
+
+        if(focused instanceof KeyInputTarget t) {
+            if(t.keyUp(key)) return true;
+        }
+
+        for(UILayer layer : getLayersTopToBottom()) {
+            if(!layer.receivesInput() || !layer.isVisible()) continue;
+
+            if(layer.keyUp(key)) return true;
+
+            if(layer.isModal()) return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean keyTyped(char c) {
+
+        if(focused instanceof KeyInputTarget t) {
+            if(t.keyTyped(c)) return true;
+        }
+
+        for(UILayer layer : getLayersTopToBottom()) {
+            if(!layer.receivesInput() || !layer.isVisible()) continue;
+
+            if(layer.keyTyped(c)) return true;
+
+            if(layer.isModal()) return true;
+        }
+
+        return false;
     }
 
     public void push(UILayer uiLayer) {
@@ -46,6 +250,8 @@ public class UIManager {
 
         uiLayer.onEnter();
         uiLayer.onFocus();
+
+        updateHover(null);
     }
 
     public void pop(UIExitReason reason) {
@@ -58,6 +264,11 @@ public class UIManager {
         if(newTop != null) {
             newTop.onFocus();
         }
+
+        updateHover(null);
+        pressed = null;
+        captured = null;
+        focused = null;
     }
 
     public void clear() {
@@ -65,6 +276,11 @@ public class UIManager {
             UILayer uiLayer = uiLayers.removeFirst();
             uiLayer.onExit(UIExitReason.TRANSITION);
         }
+
+        updateHover(null);
+        pressed = null;
+        captured = null;
+        focused = null;
     }
 
     public void requestPop(UILayer layer, UIExitReason reason) {
@@ -84,6 +300,11 @@ public class UIManager {
                 newTop.onFocus();
             }
         }
+
+        updateHover(null);
+        pressed = null;
+        captured = null;
+        focused = null;
     }
 
     public UILayer top() {
@@ -112,13 +333,6 @@ public class UIManager {
         uiLayoutContext = ctx;
         for (UILayer layer : getLayersTopToBottom()) {
             layer.update(ctx, delta);
-        }
-    }
-
-    /** Renders all visible UI groups */
-    public void draw() {
-        for (UILayer layer : getLayersBottomToTop()) {
-            if(layer.isVisible()) layer.draw();
         }
     }
 

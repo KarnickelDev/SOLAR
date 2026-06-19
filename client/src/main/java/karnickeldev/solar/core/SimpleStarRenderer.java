@@ -38,13 +38,13 @@ public class SimpleStarRenderer {
         // compile shader
         ShaderProgram.pedantic = false;
 
-        GameContext.get().getShaderManager().registerFromInternalFile(
+        Engine.shaderManager().registerFromInternalFile(
             "star_shader",
             "shaders/stars/minimalist/star_vertex.glsl",
             "shaders/stars/minimalist/star_fragment.glsl"
         );
 
-        GameContext.get().getShaderManager().registerFromInternalFile(
+        Engine.shaderManager().registerFromInternalFile(
             "corona_shader",
             "shaders/stars/minimalist/corona_vertex.glsl",
             "shaders/stars/minimalist/corona_fragment.glsl"
@@ -125,8 +125,8 @@ public class SimpleStarRenderer {
     }
 
     public void renderStar(double worldX, double worldY, double worldRadius) {
-        ShaderProgram starShader = GameContext.get().getShaderManager().get("star_shader");
-        ShaderProgram coronaShader = GameContext.get().getShaderManager().get("corona_shader");
+        ShaderProgram starShader = Engine.shaderManager().get("star_shader");
+        ShaderProgram coronaShader = Engine.shaderManager().get("corona_shader");
 
         elapsedTime += Gdx.graphics.getDeltaTime();
         double t = elapsedTime % 30;
@@ -229,8 +229,8 @@ public class SimpleStarRenderer {
     }
 
     public void dispose() {
-        GameContext.get().getShaderManager().unload("star_shader");
-        GameContext.get().getShaderManager().unload("corona_shader");
+        Engine.shaderManager().unload("star_shader");
+        Engine.shaderManager().unload("corona_shader");
         whiteTex.dispose();
         blackBodyColorTexture.dispose();
         noiseTex.dispose();

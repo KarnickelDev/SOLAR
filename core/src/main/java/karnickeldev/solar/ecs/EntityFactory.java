@@ -3,8 +3,8 @@ package karnickeldev.solar.ecs;
 import karnickeldev.solar.assetmanager.Asset;
 import karnickeldev.solar.ecs.components.*;
 import karnickeldev.solar.physics.PhysicsUtil;
-import karnickeldev.solar.util.WorldPos;
 import karnickeldev.solar.util.SplitCoordMath;
+import karnickeldev.solar.util.WorldPos;
 
 public class EntityFactory {
 

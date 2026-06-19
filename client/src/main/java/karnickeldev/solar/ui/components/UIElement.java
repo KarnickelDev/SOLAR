@@ -63,8 +63,6 @@ public abstract class UIElement {
         ctx.debug().rect(getX(), getY(), getWidth(), getHeight());
     }
 
-    public abstract boolean handleInput(InputEvent e);
-
     public void invalidateLayout() {
         layoutDirty = true;
     }
@@ -86,9 +84,9 @@ public abstract class UIElement {
         onLayout(ctx);
     }
 
-    public boolean hit(float mx, float my) {
+    public UIElement hit(float mx, float my) {
         float mouseY = Gdx.graphics.getHeight() - my;
-        return MathUtil.AABB(mx, mouseY, getX(), getY(), getRight(), getTop());
+        return MathUtil.AABB(mx, mouseY, getX(), getY(), getRight(), getTop()) ? this : null;
     }
 
     public final void setParent(UIElement parent) {

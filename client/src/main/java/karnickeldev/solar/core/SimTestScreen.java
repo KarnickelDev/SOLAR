@@ -2,21 +2,18 @@ package karnickeldev.solar.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import karnickeldev.solar.assetmanager.AssetWrapper;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.context.GameContextContainer;
 import karnickeldev.solar.ecs.components.MassComponent;
 import karnickeldev.solar.ecs.components.OrbitDataComponent;
-import karnickeldev.solar.input.GameplayInputManager;
+import karnickeldev.solar.input.*;
 import karnickeldev.solar.logging.ChatLogAppender;
 import karnickeldev.solar.logging.LogManager;
 import karnickeldev.solar.network.packets.PacketFactory;
@@ -28,7 +25,6 @@ import karnickeldev.solar.render.background.RingRenderer;
 import karnickeldev.solar.render.core.RenderPipeline;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.render.core.UIRenderer;
-import karnickeldev.solar.ui.components.Label;
 import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.components.UILayoutEngine;
 import karnickeldev.solar.ui.fontutil.*;
@@ -57,13 +53,18 @@ public class SimTestScreen implements Screen {
     TextBlock textCache;
     public static MSDFFont font;
 
+    private final InputRouter inputRouter;
+
     public SimTestScreen() {
         backgroundViewport = new ExtendViewport(UI.VIRTUAL_WIDTH, UI.VIRTUAL_HEIGHT);
         screenViewport = new ScreenViewport();
 
+        inputRouter = new InputRouter();
 
-        GameContext.get().getShaderManager().registerFromInternalFile("msdf", "shaders/msdf/msdf.vert", "shaders/msdf/msdf.frag");
-        shaderProgram = GameContext.get().getShaderManager().get("msdf");
+        inputRouter.setUiInputManager(UI.getUIManager());
+        inputRouter.setGameplayInputManager(new GameplayInputManager());
+
+        shaderProgram = Engine.shaderManager().get("msdf");
         msdfBatch = new MSDFBatch(1024, shaderProgram);
 
         renderCtx = new RendererContext(SolarMain.getInstance().getBatch(), new UIRenderer(new SpriteBatch(), msdfBatch), new ShapeRenderer());
@@ -81,28 +82,19 @@ public class SimTestScreen implements Screen {
     public void show() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
-        SolarMain.getInstance().getInputManager().setGameplayInputManager(new GameplayInputManager());
-
         HudLayer.INSTANCE = new HudLayer();
         UI.getUIManager().push(HudLayer.INSTANCE);
 
-        LogManager.addAppender(new ChatLogAppender(HudLayer.INSTANCE.chatActor));
+        LogManager.addAppender(new ChatLogAppender());
 
-        Gdx.input.setInputProcessor(SolarMain.getInstance().getInputManager());
+        Gdx.input.setInputProcessor(null);
 
         starRenderer = new SimpleStarRenderer(SolarMain.getInstance().getBatch());
 
-        AssetWrapper.getInstance().getAssetManager().load("fonts/atlas.png", Texture.class);
-        AssetWrapper.getInstance().getAssetManager().finishLoading();
-        Texture atlas = AssetWrapper.getInstance().getAssetManager().get("fonts/atlas.png", Texture.class);
-
-        atlas.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-
-        font = JSONLoader.loadFont(Gdx.files.internal("fonts/atlas.json"), atlas);
-
         textCache = new TextBlock(new RichTextBuilder().scale(18).text("Test: 123456\nHallo Welt! \udb80\udc18").build());
 
-        Label.font = font;
+        Engine.input().clearListeners();
+        Engine.input().addListener(inputRouter);
     }
 
     private void test(float uiScale) {
@@ -142,7 +134,9 @@ public class SimTestScreen implements Screen {
             gameContext.getClientNetwork().send(camPacket);
         }
 
-        SolarMain.getInstance().getInputManager().pollInputs();
+        Engine.input().poll();
+        Engine.input().dispatchEvents();
+        Engine.input().beginFrame();
 
         // camera
         clientWorldManager.getActiveWorld().getCamera().update(delta);
@@ -202,7 +196,6 @@ public class SimTestScreen implements Screen {
         renderCtx.uiRenderer().begin();
 
         UI.getUIManager().update(uiContext, delta);
-        UI.getUIManager().draw();
         UI.getUIManager().render(renderCtx);
 
         renderCtx.uiRenderer().end();
@@ -235,7 +228,7 @@ public class SimTestScreen implements Screen {
     public void hide() {
         UI.getUIManager().clear();
 
-        SolarMain.getInstance().getInputManager().setGameplayInputManager(null);
+        Engine.input().clearListeners();
     }
 
     @Override
