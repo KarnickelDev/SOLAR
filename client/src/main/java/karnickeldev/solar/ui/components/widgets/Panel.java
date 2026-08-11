@@ -46,7 +46,7 @@ public class Panel extends UIElement {
 
     @Override
     public void render(RendererContext ctx) {
-        if(!isVisible() || color.a == 0) return;
+        if(color.a == 0) return;
 
         UIHelper.drawBackground(ctx.uiRenderer(), this, color, texture);
         UIHelper.drawBorder(ctx.uiRenderer(), this, Color.rgba8888(borderColor), getBorderThickness(), texture);

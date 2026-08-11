@@ -1,6 +1,5 @@
 package karnickeldev.solar.input;
 
-import karnickeldev.solar.ui.core.UI;
 import karnickeldev.solar.ui.core.UIManager;
 
 import java.util.function.Function;
@@ -38,11 +37,13 @@ public final class InputRouter implements InputHandler {
             uiInputManager.handleInput();
         }
 
-        if(gameplayInputManager != null) {
-            if(!UI.getUIManager().top().isModal() && !UI.getUIManager().top().blocksInput()) {
-                gameplayInputManager.handleInput();
-            }
+        if(gameplayInputManager != null && !uiBlocksGameplayInput()) {
+            gameplayInputManager.handleInput();
         }
+    }
+
+    private boolean uiBlocksGameplayInput() {
+        return uiInputManager != null && uiInputManager.blocksGameplayInput();
     }
 
     private boolean route(Function<InputHandler, Boolean> function) {
@@ -50,6 +51,7 @@ public final class InputRouter implements InputHandler {
         // UI first
         if(uiInputManager != null) {
             if(function.apply(uiInputManager)) return true;
+            if(uiBlocksGameplayInput()) return true;
         }
 
         // gameplay

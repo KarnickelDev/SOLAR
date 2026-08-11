@@ -63,13 +63,35 @@ public final class GLFWInputBackend implements InputBackend {
 
     @Override
     public void dispose() {
-        if(keyCallback != null) keyCallback.free();
+        if(keyCallback != null) {
+            glfwSetKeyCallback(window, null);
+            keyCallback.free();
+            keyCallback = null;
+        }
 
-        if(buttonCallback != null) buttonCallback.free();
+        if(buttonCallback != null) {
+            glfwSetMouseButtonCallback(window, null);
+            buttonCallback.free();
+            buttonCallback = null;
+        }
 
-        if(cursorPosCallback != null) cursorPosCallback.free();
+        if(cursorPosCallback != null) {
+            glfwSetCursorPosCallback(window, null);
+            cursorPosCallback.free();
+            cursorPosCallback = null;
+        }
 
-        if(scrollCallback != null) scrollCallback.free();
+        if(scrollCallback != null) {
+            glfwSetScrollCallback(window, null);
+            scrollCallback.free();
+            scrollCallback = null;
+        }
+
+        if(charCallback != null) {
+            glfwSetCharCallback(window, null);
+            charCallback.free();
+            charCallback = null;
+        }
     }
 
 }

@@ -1,8 +1,6 @@
 package karnickeldev.solar.ui.components;
 
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.render.core.RendererContext;
-import karnickeldev.solar.util.MathUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +77,7 @@ public abstract class UIContainer extends UIElement {
     }
 
     @Override
-    public UIElement hit(float mx, float my) {
+    protected UIElement hitChildren(float mx, float my) {
         for (int i = children.size() - 1; i >= 0; i--) {
             UIElement child = children.get(i).child();
 
@@ -87,7 +85,7 @@ public abstract class UIContainer extends UIElement {
             if(hit != null) return hit;
         }
 
-        return super.hit(mx, my);
+        return null;
     }
 
 
@@ -100,11 +98,12 @@ public abstract class UIContainer extends UIElement {
 
     @Override
     public void render(RendererContext ctx) {
-        if(!isVisible()) return;
+    }
 
-        // last, render children
+    @Override
+    protected void renderChildren(RendererContext ctx) {
         for(Slot child : children) {
-            child.child.render(ctx);
+            child.child.renderTree(ctx);
         }
     }
 
@@ -126,12 +125,9 @@ public abstract class UIContainer extends UIElement {
     }
 
     @Override
-    public void renderDebug(RendererContext ctx) {
-        // IMPORTANT: render in reverse, so child debug outline not obscured
-        super.renderDebug(ctx);
-
+    protected void renderDebugChildren(RendererContext ctx) {
         for(Slot child : children) {
-            child.child.renderDebug(ctx);
+            child.child.renderDebugTree(ctx);
         }
     }
 

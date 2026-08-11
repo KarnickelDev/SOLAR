@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui.core;
 
+import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.Engine;
 import karnickeldev.solar.input.InputHandler;
 import karnickeldev.solar.render.core.RendererContext;
@@ -83,6 +84,55 @@ public class UIManager implements InputHandler {
         }
     }
 
+    public void clearInteraction(UIElement element, boolean includeDescendants) {
+        if(element == null) return;
+
+        if(matches(hovered, element, includeDescendants)) updateHover(null);
+        if(matches(pressed, element, includeDescendants)) pressed = null;
+        if(matches(focused, element, includeDescendants)) focused = null;
+        if(matches(captured, element, includeDescendants)) captured = null;
+        if(matches(dragged, element, includeDescendants)) dragged = null;
+        if(matches(dragCandidate, element, includeDescendants)) dragCandidate = null;
+
+        if(captured == null || dragged == null || dragCandidate == null) dragging = false;
+    }
+
+    private boolean matches(UIElement current, UIElement element, boolean includeDescendants) {
+        if(current == null) return false;
+        if(current == element) return true;
+        if(!includeDescendants) return false;
+
+        for(UIElement parent = current.getParent(); parent != null; parent = parent.getParent()) {
+            if(parent == element) return true;
+        }
+
+        return false;
+    }
+
+    private void clearInteraction() {
+        updateHover(null);
+        pressed = null;
+        focused = null;
+        captured = null;
+        dragged = null;
+        dragCandidate = null;
+        dragging = false;
+    }
+
+    public void setFocus(UIElement e) {
+        focused = e;
+    }
+
+    public UIElement getFocused() {
+        return focused;
+    }
+
+    /** Whether the current UI layer prevents input from reaching gameplay. */
+    public boolean blocksGameplayInput() {
+        UILayer layer = top();
+        return layer != null && (layer.isModal() || layer.blocksInput());
+    }
+
     @Override
     public boolean mouseMoved(int mx, int my) {
         UIElement current = hit(mx, my);
@@ -153,7 +203,7 @@ public class UIManager implements InputHandler {
         boolean consumed = false;
 
         if (!dragging && dragCandidate != null) {
-            if (dxTotal * dxTotal + dyTotal * dyTotal > 6*6) {
+            if (dxTotal * dxTotal + dyTotal * dyTotal > 4*4) {
                 dragging = true;
                 dragged = dragCandidate;
                 setCapture(dragged);
@@ -259,6 +309,7 @@ public class UIManager implements InputHandler {
 
         UILayer top = uiLayers.removeFirst();
         top.onExit(reason != null ? reason : UIExitReason.SYSTEM);
+        clearInteraction(top.getCanvas(), true);
 
         UILayer newTop = top();
         if(newTop != null) {
@@ -266,9 +317,6 @@ public class UIManager implements InputHandler {
         }
 
         updateHover(null);
-        pressed = null;
-        captured = null;
-        focused = null;
     }
 
     public void clear() {
@@ -277,10 +325,7 @@ public class UIManager implements InputHandler {
             uiLayer.onExit(UIExitReason.TRANSITION);
         }
 
-        updateHover(null);
-        pressed = null;
-        captured = null;
-        focused = null;
+        clearInteraction();
     }
 
     public void requestPop(UILayer layer, UIExitReason reason) {
@@ -292,6 +337,7 @@ public class UIManager implements InputHandler {
 
         // Always call exit
         layer.onExit(reason != null ? reason : UIExitReason.SYSTEM);
+        clearInteraction(layer.getCanvas(), true);
 
         // If it was top, restore focus to new top
         if (wasTop) {
@@ -301,10 +347,6 @@ public class UIManager implements InputHandler {
             }
         }
 
-        updateHover(null);
-        pressed = null;
-        captured = null;
-        focused = null;
     }
 
     public UILayer top() {
@@ -332,7 +374,7 @@ public class UIManager implements InputHandler {
     public void update(UILayoutEngine.UILayoutContext ctx, float delta) {
         uiLayoutContext = ctx;
         for (UILayer layer : getLayersTopToBottom()) {
-            layer.update(ctx, delta);
+            if(layer.isActive()) layer.update(ctx, delta);
         }
     }
 
@@ -342,4 +384,3 @@ public class UIManager implements InputHandler {
         }
     }
 }
-

@@ -1,6 +1,5 @@
 package karnickeldev.solar.ui.components;
 
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.render.core.RendererContext;
 
 import java.util.ArrayList;
@@ -79,7 +78,7 @@ public class Canvas extends UIElement {
     }
 
     @Override
-    public UIElement hit(float mx, float my) {
+    protected UIElement hitChildren(float mx, float my) {
         for (int i = entries.size() - 1; i >= 0; i--) {
             UIElement child = entries.get(i).child();
 
@@ -87,7 +86,7 @@ public class Canvas extends UIElement {
             if(hit != null) return hit;
         }
 
-        return super.hit(mx, my);
+        return null;
     }
 
     @Override
@@ -101,8 +100,19 @@ public class Canvas extends UIElement {
 
     @Override
     public void render(RendererContext ctx) {
+    }
+
+    @Override
+    protected void renderChildren(RendererContext ctx) {
         for(CanvasEntry entry : entries) {
-            entry.child.render(ctx);
+            entry.child.renderTree(ctx);
+        }
+    }
+
+    @Override
+    protected void renderDebugChildren(RendererContext ctx) {
+        for(CanvasEntry entry : entries) {
+            entry.child.renderDebugTree(ctx);
         }
     }
 

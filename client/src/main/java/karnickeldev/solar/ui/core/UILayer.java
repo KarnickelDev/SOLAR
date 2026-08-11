@@ -21,7 +21,7 @@ public abstract class UILayer implements InputHandler {
 
     private final String name;
 
-    protected boolean visible = true;
+    private boolean visible = true;
 
     protected final Canvas canvas = new Canvas();
 
@@ -43,6 +43,13 @@ public abstract class UILayer implements InputHandler {
 
     public boolean isVisible() {
         return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        if(this.visible == visible) return;
+
+        this.visible = visible;
+        if(!visible) UIManager.get().clearInteraction(canvas, true);
     }
 
     public boolean isModal() {
@@ -85,8 +92,8 @@ public abstract class UILayer implements InputHandler {
     }
 
     public final void render(RendererContext ctx) {
-        canvas.render(ctx);
-        canvas.renderDebug(ctx);
+        canvas.renderTree(ctx);
+        canvas.renderDebugTree(ctx);
     }
 
     /** Handles resizing all UI component (called from resize in screens) */

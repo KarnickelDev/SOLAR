@@ -22,14 +22,20 @@ public final class Engine {
         init = true;
 
         // setup input handling
-        GLFWInputBackend inputBackend = new GLFWInputBackend(windowHandle);
         input = new InputManager(new GLFWInputBackend(windowHandle));
-        inputBackend.init(input);
     }
 
     public static InputManager input() {
         if(!init) throw new IllegalStateException("Engine not initialized");
         return input;
+    }
+
+    public static void dispose() {
+        if(!init) return;
+
+        input.dispose();
+        input = null;
+        init = false;
     }
 
     public static ShaderManager shaderManager() {

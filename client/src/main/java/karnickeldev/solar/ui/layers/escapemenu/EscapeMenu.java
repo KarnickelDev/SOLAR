@@ -9,6 +9,7 @@ import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.ui.components.*;
 import karnickeldev.solar.ui.components.container.HorizontalGroup;
 import karnickeldev.solar.ui.components.container.VerticalGroup;
+import karnickeldev.solar.ui.components.styles.SliderStyle;
 import karnickeldev.solar.ui.components.styles.TextWidgetStyle;
 import karnickeldev.solar.ui.components.widgets.*;
 import karnickeldev.solar.ui.core.Align;
@@ -137,6 +138,19 @@ public class EscapeMenu extends UIContainer {
         verticalGroup.add(settings, new UILayout().percentWidth(1f).fixedHeight(48));
         verticalGroup.add(back, new UILayout().percentWidth(1f).fixedHeight(48));
         verticalGroup.add(exit, new UILayout().percentWidth(1f).fixedHeight(48));
+
+        SliderStyle sliderStyle = new SliderStyle(SliderStyle.SliderChar.STEPPED_SQUARE, true, textStyle);
+        Slider slider = new Slider(0,10, -1, true, sliderStyle, v -> (int)(v*10) + "%");
+        verticalGroup.add(slider, new UILayout().percentWidth(1f).fixedHeight(50));
+
+        OptionCycler.OptionDefinition<Integer> options = new OptionCycler.OptionDefinition<>(
+            new String[]{"a", "b", "c"},
+            new Integer[]{0, 1, 2}
+        );
+
+        OptionCycler<Integer> cycler = new OptionCycler<>(options, textStyle);
+        //verticalGroup.add(cycler, new UILayout().percentWidth(1f).fixedHeight(48));
+
         verticalGroup.add(spacer, new UILayout().percentWidth(1f).fillHeight(1f));
         verticalGroup.add(seperator, new UILayout().percentWidth(1f).fixedHeight(60));
         verticalGroup.add(controlsInfo, new UILayout().percentWidth(1f).fixedHeight(48));

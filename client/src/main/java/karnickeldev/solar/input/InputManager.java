@@ -1,12 +1,14 @@
 package karnickeldev.solar.input;
 
+import com.badlogic.gdx.utils.Disposable;
+
 import java.util.*;
 
 /**
  * @author KarnickelDev
  * @since 19.06.2026
  **/
-public final class InputManager {
+public final class InputManager implements Disposable {
 
     private static final short MAX_KEYS = 512;
     private static final byte MAX_BUTTONS = 8;
@@ -32,11 +34,12 @@ public final class InputManager {
 
     private final List<InputHandler> inputHandlers = new ArrayList<>(4);
 
-    private InputBackend backend;
+    private final InputBackend backend;
+    private boolean disposed;
 
     public InputManager(InputBackend backend) {
-        this.backend = backend;
-        backend.init(this);
+        this.backend = Objects.requireNonNull(backend, "backend");
+        this.backend.init(this);
     }
 
     public void beginFrame() {
@@ -51,6 +54,15 @@ public final class InputManager {
 
     public void poll() {
         backend.poll();
+    }
+
+    @Override
+    public void dispose() {
+        if(disposed) return;
+        disposed = true;
+
+        clearListeners();
+        backend.dispose();
     }
 
     public void addListener(InputHandler handler) {
@@ -205,6 +217,8 @@ public final class InputManager {
     }
 
     void setKey(int key, boolean down) {
+        if(key < 0 || key >= MAX_KEYS) return;
+
         if(down) {
             if(!keysDown[key]) {
                 keysPressed[key] = true;
@@ -219,6 +233,8 @@ public final class InputManager {
     }
 
     void setButton(int button, boolean down) {
+        if(button < 0 || button >= MAX_BUTTONS) return;
+
         if (down) {
 
             if (!buttonsDown[button]) {

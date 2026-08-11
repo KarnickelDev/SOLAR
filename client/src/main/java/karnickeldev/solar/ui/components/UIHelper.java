@@ -2,13 +2,20 @@ package karnickeldev.solar.ui.components;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import karnickeldev.solar.core.Engine;
 import karnickeldev.solar.render.core.UIRenderer;
+import karnickeldev.solar.util.MathUtil;
 
 /**
  * @author KarnickelDev
  * @since 01.06.2026
  **/
 public final class UIHelper {
+
+    public static boolean hit(UIElement e, float x, float y) {
+        float my = Engine.getHeight() - y;
+        return MathUtil.AABB(x, my, e.getX(), e.getY(), e.getRight(), e.getTop());
+    }
 
     public static void drawBackground(UIRenderer renderer, UIElement element, int backgroundColor, Texture tex) {
         if((backgroundColor & 0x000000FF) > 0) {

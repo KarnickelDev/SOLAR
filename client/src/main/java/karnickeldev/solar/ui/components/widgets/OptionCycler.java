@@ -3,7 +3,10 @@ package karnickeldev.solar.ui.components.widgets;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.components.UIHelper;
 import karnickeldev.solar.ui.components.UILayout;
+import karnickeldev.solar.ui.components.UIState;
 import karnickeldev.solar.ui.components.container.HorizontalGroup;
+import karnickeldev.solar.ui.components.styles.TextWidgetStyle;
+import karnickeldev.solar.ui.core.Align;
 
 /**
  * @author KarnickelDev
@@ -27,8 +30,7 @@ public class OptionCycler<T> extends HorizontalGroup {
         }
     }
 
-    private int borderColor = 0xFFFFFFFF;
-    private int backgroundColor = 0xFFFFFFFF;
+    private TextWidgetStyle textStyle;
 
     private final TextButton left;
     private final TextButton right;
@@ -37,58 +39,29 @@ public class OptionCycler<T> extends HorizontalGroup {
     private final OptionDefinition<T> options;
     private int index;
 
-    public OptionCycler(OptionDefinition<T> options) {
+    public OptionCycler(OptionDefinition<T> options, TextWidgetStyle style) {
         this.options = options;
         this.index = 0;
 
-        left = new TextButton("<", this::prev);
+        this.textStyle = new TextWidgetStyle(style);
+        textStyle.contentAlign = Align.CENTER | Align.MIDDLE;
+
+        left = new TextButton("<", textStyle, this::prev);
         left.setBorderThickness(0);
-        //left.setBackgroundColor(TRANSPARENT);
-        //left.setBorderColor(0xFFFFFF00);
+        left.setPadding(10f);
 
-        right = new TextButton(">", this::next);
+        right = new TextButton(">", textStyle, this::next);
         right.setBorderThickness(0);
-        //right.setBackgroundColor(TRANSPARENT);
-        //right.setBorderColor(0xFFFFFF00);
+        right.setPadding(10f);
 
-        label = new TextWidget(getLabel());
+        label = new TextWidget(getLabel(), textStyle);
         label.setBorderThickness(0);
-        //label.setBackgroundColor(TRANSPARENT);
-        //label.setBorderColor(0xFFFFFF00);
+        label.setPadding(10f);
 
-        add(left);
+        add(left, new UILayout().percentHeight(1));
         add(label, new UILayout().fillWidth(1).percentHeight(1));
-        add(right);
-        setPadding(15);
-        setBorderColor(0xFFFFFFFF);
-        setBorderThickness(2f);
-    }
-
-    @Override
-    public void setPadding(float padLeft, float padRight, float padTop, float padBottom) {
-        right.setPadding(padLeft, padRight, padTop, padBottom);
-        left.setPadding(padLeft, padRight, padTop, padBottom);
-    }
-
-    public void setFontColor(int rgba) {
-        label.setFontColor(rgba);
-        left.setFontColor(rgba);
-        right.setFontColor(rgba);
-    }
-
-    public void setBorderColor(int rgba8888) {
-        this.borderColor = rgba8888;
-        //label.setBorderColor(Color.rgba8888(borderColor));
-    }
-
-    public void setBackgroundColor(int rgba8888) {
-        this.backgroundColor = rgba8888;
-    }
-
-    @Override
-    public void setBorderThickness(float borderThickness) {
-        this.borderThickness = borderThickness;
-        label.setBorderThickness(-borderThickness);
+        add(right, new UILayout().percentHeight(1));
+        setPadding(0);
     }
 
     public String getLabel() {
@@ -128,11 +101,9 @@ public class OptionCycler<T> extends HorizontalGroup {
 
     @Override
     public void render(RendererContext ctx) {
-        UIHelper.drawBackground(ctx.uiRenderer(), this, backgroundColor, Panel.WHITE);
-        UIHelper.drawBorder(ctx.uiRenderer(), this, borderColor, getBorderThickness(), Panel.WHITE);
-        label.render(ctx);
-        left.render(ctx);
-        right.render(ctx);
+        UIHelper.drawBackground(ctx.uiRenderer(), this, textStyle.backgroundColor(UIState.NORMAL), Panel.WHITE);
+        UIHelper.drawBorder(ctx.uiRenderer(), this, textStyle.borderColor(UIState.NORMAL), getBorderThickness(), Panel.WHITE);
+        super.render(ctx);
     }
 
 }

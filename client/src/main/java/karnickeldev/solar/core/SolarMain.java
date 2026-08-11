@@ -121,6 +121,7 @@ public class SolarMain extends Game {
 
         // disposing MUST be AFTER orderly shutdown
         // (shutdown might use stuff disposed of here, causing error)
+        Engine.dispose();
         batch.dispose();
         AssetWrapper.getInstance().dispose();
     }

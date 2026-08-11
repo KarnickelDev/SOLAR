@@ -2,8 +2,8 @@ package karnickeldev.solar.ui.components;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import karnickeldev.solar.render.core.RendererContext;
+import karnickeldev.solar.ui.core.UIManager;
 import karnickeldev.solar.util.MathUtil;
 
 /**
@@ -56,12 +56,30 @@ public abstract class UIElement {
 
     public abstract void render(RendererContext ctx);
 
+    public final void renderTree(RendererContext ctx) {
+        if(!visible) return;
+
+        render(ctx);
+        renderChildren(ctx);
+    }
+
+    protected void renderChildren(RendererContext ctx) {}
+
     public void renderDebug(RendererContext ctx) {
         if(!debug) return;
 
         ctx.debug().setColor(DEBUG_COLORS[id % DEBUG_COLORS.length]);
         ctx.debug().rect(getX(), getY(), getWidth(), getHeight());
     }
+
+    public final void renderDebugTree(RendererContext ctx) {
+        if(!visible) return;
+
+        renderDebug(ctx);
+        renderDebugChildren(ctx);
+    }
+
+    protected void renderDebugChildren(RendererContext ctx) {}
 
     public void invalidateLayout() {
         layoutDirty = true;
@@ -84,12 +102,33 @@ public abstract class UIElement {
         onLayout(ctx);
     }
 
-    public UIElement hit(float mx, float my) {
+    public final UIElement hit(float mx, float my) {
+        if(!visible || !contains(mx, my)) return null;
+
+        UIElement child = hitChildren(mx, my);
+        if(child != null) return child;
+
+        return touchable ? hitSelf(mx, my) : null;
+    }
+
+    protected UIElement hitChildren(float mx, float my) {
+        return null;
+    }
+
+    protected UIElement hitSelf(float mx, float my) {
+        return this;
+    }
+
+    private boolean contains(float mx, float my) {
         float mouseY = Gdx.graphics.getHeight() - my;
-        return MathUtil.AABB(mx, mouseY, getX(), getY(), getRight(), getTop()) ? this : null;
+        return MathUtil.AABB(mx, mouseY, getX(), getY(), getRight(), getTop());
     }
 
     public final void setParent(UIElement parent) {
+        if(this.parent != null && parent == null) {
+            UIManager.get().clearInteraction(this, true);
+        }
+
         this.parent = parent;
         invalidateLayout();
     }
@@ -103,7 +142,10 @@ public abstract class UIElement {
     }
 
     public void setVisible(boolean visible) {
+        if(this.visible == visible) return;
+
         this.visible = visible;
+        if(!visible) UIManager.get().clearInteraction(this, true);
     }
 
     public boolean isVisible() {
@@ -111,7 +153,10 @@ public abstract class UIElement {
     }
 
     public void setTouchable(boolean touchable) {
+        if(this.touchable == touchable) return;
+
         this.touchable = touchable;
+        if(!touchable) UIManager.get().clearInteraction(this, false);
     }
 
     public boolean isTouchable() {

@@ -1,6 +1,5 @@
 package karnickeldev.solar.render.core;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -92,6 +91,20 @@ public final class UIRenderer {
         }
 
         quadBatch.draw(texture, x, y, width, height);
+    }
+
+    public void drawQuad(Texture texture, float x, float y, float width, float height, float rotationDeg) {
+        if(!quadMode) {
+            msdfBatch.end();
+            quadBatch.begin();
+            quadMode = true;
+        }
+
+        quadBatch.draw(
+            texture, x, y,
+            width * 0.5f, height * 0.5f, width, height, 1f, 1f, rotationDeg,
+            0, 0, texture.getWidth(), texture.getHeight(), false, false
+        );
     }
 
     public void drawText(MSDFFont font, TextLayout text, float x, float y) {
