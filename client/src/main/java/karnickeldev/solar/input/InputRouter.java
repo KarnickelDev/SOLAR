@@ -42,6 +42,12 @@ public final class InputRouter implements InputHandler {
         }
     }
 
+    @Override
+    public void inputCancelled() {
+        if(uiInputManager != null) uiInputManager.inputCancelled();
+        if(gameplayInputManager != null) gameplayInputManager.inputCancelled();
+    }
+
     private boolean uiBlocksGameplayInput() {
         return uiInputManager != null && uiInputManager.blocksGameplayInput();
     }
@@ -88,8 +94,8 @@ public final class InputRouter implements InputHandler {
     }
 
     @Override
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
-        return route(p -> p.touchDragged(screenX, screenY, pointer));
+    public boolean touchDragged(int screenX, int screenY, int pointer, int button) {
+        return route(p -> p.touchDragged(screenX, screenY, pointer, button));
     }
 
     @Override

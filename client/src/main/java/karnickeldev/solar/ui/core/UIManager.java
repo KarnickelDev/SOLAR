@@ -119,6 +119,11 @@ public class UIManager implements InputHandler {
         dragging = false;
     }
 
+    @Override
+    public void inputCancelled() {
+        clearInteraction();
+    }
+
     public void setFocus(UIElement e) {
         focused = e;
     }
@@ -196,7 +201,7 @@ public class UIManager implements InputHandler {
     }
 
     @Override
-    public boolean touchDragged(int x, int y, int pointer) {
+    public boolean touchDragged(int x, int y, int pointer, int button) {
         float dxTotal = x - pressX;
         float dyTotal = y - pressY;
 

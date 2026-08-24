@@ -11,6 +11,13 @@ public interface InputHandler {
         // nop
     }
 
+    /** Called when held input and in-progress gestures must be abandoned.
+     * One example is when the game window goes out of focus
+     * */
+    default void inputCancelled() {
+        // nop
+    }
+
     /**
      * Works like in LibGDX's InputProcessor
      * @return true to prevent event to bubble
@@ -55,7 +62,7 @@ public interface InputHandler {
      * Works like in LibGDX's InputProcessor
      * @return true to prevent event to bubble
      */
-    default boolean touchDragged(int screenX, int screenY, int pointer) {
+    default boolean touchDragged(int screenX, int screenY, int pointer, int button) {
         return false;
     }
 

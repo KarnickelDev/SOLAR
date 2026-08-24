@@ -33,10 +33,14 @@ public class GameplayInputManager implements InputHandler {
 
     }
 
-    @Override
-    public void handleInput() {
+    private void refreshContext() {
         this.camera = GameContext.get().getWorldManager().getActiveWorld().getCamera();
         this.ecs = GameContext.get().getWorldManager().getActiveWorld().getECS();
+    }
+
+    @Override
+    public void handleInput() {
+        refreshContext();
 
         CameraPlayerInput signal = camera.getPlayerInput();
 
@@ -169,9 +173,10 @@ public class GameplayInputManager implements InputHandler {
     }
 
     @Override
-    public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (!dragging) return false;
+    public boolean touchDragged(int screenX, int screenY, int pointer, int button) {
+        if (!dragging || button != Buttons.RIGHT) return false;
 
+        refreshContext();
         CameraPlayerInput signal = camera.getPlayerInput();
         signal.clear();
         signal.dirX = -(screenX - lastMouseX);
@@ -185,12 +190,13 @@ public class GameplayInputManager implements InputHandler {
     }
 
     @Override
-    public boolean mouseMoved(int screenX, int screenY) {
-        return false;
+    public void inputCancelled() {
+        dragging = false;
     }
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
+        refreshContext();
         CameraPlayerInput signal = camera.getPlayerInput();
 
         signal.zoomImpulse += amountY * ZOOM_SCROLL_SPEED;

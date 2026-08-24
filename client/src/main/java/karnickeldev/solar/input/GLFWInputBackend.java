@@ -46,9 +46,7 @@ public final class GLFWInputBackend implements InputBackend {
             input.addScroll((float)xOffset, (float)yOffset);
         });
 
-        charCallback = GLFWCharCallback.create((window, character) -> {
-           if(character >= 0 && character < Character.MAX_VALUE) input.addChar((char)character);
-        });
+        charCallback = GLFWCharCallback.create((window, codePoint) -> input.addCodePoint(codePoint));
 
         glfwSetKeyCallback(window, keyCallback);
         glfwSetMouseButtonCallback(window, buttonCallback);

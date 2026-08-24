@@ -134,9 +134,7 @@ public class SimTestScreen implements Screen {
             gameContext.getClientNetwork().send(camPacket);
         }
 
-        Engine.input().poll();
-        Engine.input().dispatchEvents();
-        Engine.input().beginFrame();
+        Engine.input().update();
 
         // camera
         clientWorldManager.getActiveWorld().getCamera().update(delta);

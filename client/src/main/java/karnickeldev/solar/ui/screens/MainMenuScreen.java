@@ -113,9 +113,7 @@ public class MainMenuScreen implements GameStateScreen {
         time += 10*delta;
         //GasGiantTest.genPlanet(shapeRenderer, backgroundViewport, time);
 
-        Engine.input().poll();
-        Engine.input().dispatchEvents();
-        Engine.input().beginFrame();
+        Engine.input().update();
 
         renderCtx.batch().setColor(1,1,1,1);
         renderCtx.debug().setProjectionMatrix(new Matrix4().setToOrtho2D(0,0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
