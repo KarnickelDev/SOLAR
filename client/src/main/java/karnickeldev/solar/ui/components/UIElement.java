@@ -125,12 +125,27 @@ public abstract class UIElement {
         return MathUtil.AABB(mx, mouseY, getX(), getY(), getRight(), getTop());
     }
 
-    public final void setParent(UIElement parent) {
-        if(this.parent != null && parent == null) {
+    /** sets the parent UIElement. Cannot overwrite existing parent and avoids cycles */
+    final void setParent(UIElement parent) {
+        if(parent != null) {
+            if(this.parent != null) {
+                throw new IllegalStateException("UIElement already has a parent");
+            }
+
+            for(UIElement ancestor = parent; ancestor != null; ancestor = ancestor.parent) {
+                if(ancestor == this) {
+                    throw new IllegalArgumentException("A UIElement cannot be added below itself");
+                }
+            }
+
+            this.parent = parent;
+        } else {
+            if(this.parent == null) return;
+
+            // Detach first so interaction callbacks cannot recursively remove this element again.
+            this.parent = null;
             UIManager.get().clearInteraction(this, true);
         }
-
-        this.parent = parent;
         invalidateLayout();
     }
 

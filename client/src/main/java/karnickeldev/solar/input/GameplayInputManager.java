@@ -123,16 +123,6 @@ public class GameplayInputManager implements InputHandler {
     }
 
     @Override
-    public boolean keyUp(int keycode) {
-        return false;
-    }
-
-    @Override
-    public boolean keyTyped(char character) {
-        return false;
-    }
-
-    @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         boolean processed = false;
 //        if (button == Buttons.LEFT) {

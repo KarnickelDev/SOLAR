@@ -37,19 +37,17 @@ public final class MainMenu extends VerticalGroup {
         TextButton exit = new TextButton("Exit", textStyle, SolarMain::shutdown);
         exit.setPadding(buttonPad);
 
-        Spacer spacer = new Spacer(10,10);
-
         add(singleplayer, new UILayout());
-        add(spacer, new UILayout().fillHeight(1f));
+        add(new Spacer(10,10), new UILayout().fillHeight(1f));
 
         add(multiplayer, new UILayout());
-        add(spacer, new UILayout().fillHeight(1f));
+        add(new Spacer(10,10), new UILayout().fillHeight(1f));
 
         add(settings, new UILayout());
-        add(spacer, new UILayout().fillHeight(1f));
+        add(new Spacer(10,10), new UILayout().fillHeight(1f));
 
         add(credits, new UILayout());
-        add(spacer, new UILayout().fillHeight(1f));
+        add(new Spacer(10,10), new UILayout().fillHeight(1f));
 
         add(exit, new UILayout());
     }

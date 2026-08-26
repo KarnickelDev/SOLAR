@@ -4,6 +4,7 @@ import karnickeldev.solar.render.core.RendererContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author KarnickelDev
@@ -22,14 +23,30 @@ public abstract class UIContainer extends UIElement {
     }
 
     public void add(UIElement child, UILayout layout) {
-        children.add(new Slot(child, layout));
+        Objects.requireNonNull(child, "child");
+        Objects.requireNonNull(layout, "layout");
+
         child.setParent(this);
+        children.add(new Slot(child, layout));
         child.invalidateLayout();
     }
 
     public void remove(UIElement child) {
+        int index = indexOf(child);
+        if(index < 0) return;
+        if(child.getParent() != this) {
+            throw new IllegalStateException("UI tree ownership is inconsistent");
+        }
+
+        children.remove(index);
         child.setParent(null);
-        children.removeIf(slot -> slot.child.equals(child));
+    }
+
+    private int indexOf(UIElement child) {
+        for(int i = 0; i < children.size(); i++) {
+            if(children.get(i).child() == child) return i;
+        }
+        return -1;
     }
 
     @Override

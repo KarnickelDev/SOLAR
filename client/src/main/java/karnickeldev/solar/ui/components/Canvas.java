@@ -4,6 +4,7 @@ import karnickeldev.solar.render.core.RendererContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author KarnickelDev
@@ -67,14 +68,30 @@ public class Canvas extends UIElement {
     public Canvas() {}
 
     public void add(UIElement child, CanvasSlot slot) {
-        entries.add(new CanvasEntry(child, slot));
+        Objects.requireNonNull(child, "child");
+        Objects.requireNonNull(slot, "slot");
+
         child.setParent(this);
+        entries.add(new CanvasEntry(child, slot));
         child.invalidateLayout();
     }
 
     public void remove(UIElement child) {
+        int index = indexOf(child);
+        if(index < 0) return;
+        if(child.getParent() != this) {
+            throw new IllegalStateException("UI tree ownership is inconsistent");
+        }
+
+        entries.remove(index);
         child.setParent(null);
-        entries.removeIf(entry -> entry.child.equals(child));
+    }
+
+    private int indexOf(UIElement child) {
+        for(int i = 0; i < entries.size(); i++) {
+            if(entries.get(i).child() == child) return i;
+        }
+        return -1;
     }
 
     @Override

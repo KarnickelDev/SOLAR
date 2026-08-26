@@ -17,6 +17,7 @@ public final class GLFWInputBackend implements InputBackend {
     private GLFWCursorPosCallback cursorPosCallback;
     private GLFWScrollCallback scrollCallback;
     private GLFWCharCallback charCallback;
+    private GLFWWindowFocusCallback windowFocusCallback;
 
     public GLFWInputBackend(long window) {
         this.window = window;
@@ -48,11 +49,17 @@ public final class GLFWInputBackend implements InputBackend {
 
         charCallback = GLFWCharCallback.create((window, codePoint) -> input.addCodePoint(codePoint));
 
+        // TODO: probably move to future "Screen" class
+        windowFocusCallback = GLFWWindowFocusCallback.create((window, focused) -> {
+            if(!focused) input.cancelInput();
+        });
+
         glfwSetKeyCallback(window, keyCallback);
         glfwSetMouseButtonCallback(window, buttonCallback);
         glfwSetCursorPosCallback(window, cursorPosCallback);
         glfwSetScrollCallback(window, scrollCallback);
         glfwSetCharCallback(window, charCallback);
+        glfwSetWindowFocusCallback(window, windowFocusCallback);
     }
 
     public void poll() {
@@ -89,6 +96,12 @@ public final class GLFWInputBackend implements InputBackend {
             glfwSetCharCallback(window, null);
             charCallback.free();
             charCallback = null;
+        }
+
+        if(windowFocusCallback != null) {
+            glfwSetWindowFocusCallback(window, null);
+            windowFocusCallback.free();
+            windowFocusCallback = null;
         }
     }
 

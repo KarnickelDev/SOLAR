@@ -122,8 +122,6 @@ public class EscapeMenu extends UIContainer {
         exit.setPadding(20f);
         exit.setBorderThickness(buttonBorder);
 
-        Spacer spacer = new Spacer(0,0);
-
         TextWidgetStyle ciStyle = new TextWidgetStyle(textStyle);
         ciStyle.fontSize = 12;
         controlsInfo = new TextWidget("[enter]: select\n[esc]: close", ciStyle);
@@ -132,7 +130,7 @@ public class EscapeMenu extends UIContainer {
         verticalGroup.setPadding(40, 40, 15, 15);
 
         verticalGroup.add(title, new UILayout().percentWidth(1f));
-        verticalGroup.add(spacer, new UILayout().percentWidth(1f).fillHeight(1f));
+        verticalGroup.add(new Spacer(0,0), new UILayout().percentWidth(1f).fillHeight(1f));
         verticalGroup.add(resume, new UILayout().percentWidth(1f).fixedHeight(48));
         verticalGroup.add(saveOrPlayerlist, new UILayout().percentWidth(1f).fixedHeight(48));
         verticalGroup.add(settings, new UILayout().percentWidth(1f).fixedHeight(48));
@@ -151,7 +149,7 @@ public class EscapeMenu extends UIContainer {
         OptionCycler<Integer> cycler = new OptionCycler<>(options, textStyle);
         //verticalGroup.add(cycler, new UILayout().percentWidth(1f).fixedHeight(48));
 
-        verticalGroup.add(spacer, new UILayout().percentWidth(1f).fillHeight(1f));
+        verticalGroup.add(new Spacer(0,0), new UILayout().percentWidth(1f).fillHeight(1f));
         verticalGroup.add(seperator, new UILayout().percentWidth(1f).fixedHeight(60));
         verticalGroup.add(controlsInfo, new UILayout().percentWidth(1f).fixedHeight(48));
 

@@ -1,6 +1,5 @@
 package karnickeldev.solar.ui.core;
 
-import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.Engine;
 import karnickeldev.solar.input.InputHandler;
 import karnickeldev.solar.render.core.RendererContext;
@@ -33,9 +32,6 @@ public class UIManager implements InputHandler {
     private UIElement focused;
 
     private final PointerGesture pointerGesture = new PointerGesture();
-
-    /** Re-evaluate stationary-pointer hover after layer/layout lifecycle changes. */
-    private boolean hoverDirty = true;
 
     private UIManager() {}
 
@@ -112,7 +108,6 @@ public class UIManager implements InputHandler {
             pointerGesture.cancel();
         }
 
-        hoverDirty = true;
     }
 
     private boolean matches(UIElement current, UIElement element, boolean includeDescendants) {
@@ -181,7 +176,6 @@ public class UIManager implements InputHandler {
 
     @Override
     public boolean mouseMoved(int mx, int my) {
-        hoverDirty = false;
         updateHover(hoverTarget(mx, my));
 
         return false;
@@ -311,7 +305,6 @@ public class UIManager implements InputHandler {
 
         uiLayer.onEnter();
         uiLayer.onFocus();
-        hoverDirty = true;
     }
 
     public void pop(UIExitReason reason) {
@@ -325,7 +318,6 @@ public class UIManager implements InputHandler {
         if(newTop != null) {
             newTop.onFocus();
         }
-        hoverDirty = true;
     }
 
     public void clear() {
@@ -354,7 +346,6 @@ public class UIManager implements InputHandler {
                 newTop.onFocus();
             }
         }
-        hoverDirty = true;
     }
 
     public UILayer top() {
@@ -376,7 +367,6 @@ public class UIManager implements InputHandler {
         for (UILayer layer : getLayersBottomToTop()) {
             layer.resize(width, height);
         }
-        hoverDirty = true;
     }
 
     /** Updates all UI (called from render loop) */
@@ -388,10 +378,8 @@ public class UIManager implements InputHandler {
             layer.update(ctx, delta);
         }
 
-        if(hoverDirty) {
-            hoverDirty = false;
-            updateHover(hoverTarget(Engine.input().mouseX(), Engine.input().mouseY()));
-        }
+        // Layout may move, reveal, or insert elements without a mouse-move event.
+        updateHover(hoverTarget(Engine.input().mouseX(), Engine.input().mouseY()));
     }
 
     public void render(RendererContext ctx) {
