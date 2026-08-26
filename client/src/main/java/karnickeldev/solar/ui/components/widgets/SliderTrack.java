@@ -1,8 +1,10 @@
 package karnickeldev.solar.ui.components.widgets;
 
+import karnickeldev.solar.input.Buttons;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.components.UIElement;
 import karnickeldev.solar.ui.components.UILayoutEngine;
+import karnickeldev.solar.ui.components.interaction.Clickable;
 import karnickeldev.solar.ui.components.interaction.Draggable;
 import karnickeldev.solar.ui.components.interaction.Hoverable;
 import karnickeldev.solar.util.MathUtil;
@@ -11,7 +13,7 @@ import karnickeldev.solar.util.MathUtil;
  * @author KarnickelDev
  * @since 23.06.2026
  **/
-public class SliderTrack extends UIElement implements Draggable, Hoverable {
+public class SliderTrack extends UIElement implements Clickable, Draggable, Hoverable {
 
     private final float min;
     private final float max;
@@ -59,25 +61,31 @@ public class SliderTrack extends UIElement implements Draggable, Hoverable {
     }
 
     @Override
-    public boolean onDragStart(float x, float y) {
-        return false;
+    public boolean onMouseDown(int x, int y, int button) {
+        return button == Buttons.LEFT;
     }
 
     @Override
-    public boolean onDrag(float x, float y, float dx, float dy) {
+    public void onMouseUp(int x, int y, int button) {}
+
+    @Override
+    public void onPressed(int x, int y, int button) {}
+
+    @Override
+    public void onDragStart(float x, float y) {}
+
+    @Override
+    public void onDrag(float x, float y, float dx, float dy) {
 
         float tx = value * getContentWidth();
         tx += dx;
 
         value = MathUtil.clamp(tx / getContentWidth(), 0, 1);
 
-        return true;
     }
 
     @Override
-    public boolean onDragEnd(float x, float y) {
-        return false;
-    }
+    public void onDragEnd(float x, float y) {}
 
     @Override
     public void onHoverEnter() {

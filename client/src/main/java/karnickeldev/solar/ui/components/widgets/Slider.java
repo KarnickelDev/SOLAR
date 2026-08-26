@@ -84,14 +84,10 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
     }
 
     @Override
-    public boolean onMouseUp(int x, int y, int button) {
-        return false;
-    }
+    public void onMouseUp(int x, int y, int button) {}
 
     @Override
-    public boolean onPressed(int x, int y, int button) {
-        return false;
-    }
+    public void onPressed(int x, int y, int button) {}
 
     @Override
     public boolean keyDown(int key) {
@@ -256,30 +252,21 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
         }
 
         @Override
-        public boolean onMouseUp(int x, int y, int button) {
-            return false;
-        }
+        public void onMouseUp(int x, int y, int button) {}
 
         @Override
-        public boolean onPressed(int x, int y, int button) {
-            return false;
-        }
+        public void onPressed(int x, int y, int button) {}
 
         @Override
-        public boolean onDragStart(float x, float y) {
-            return false;
-        }
+        public void onDragStart(float x, float y) {}
 
         @Override
-        public boolean onDrag(float x, float y, float dx, float dy) {
+        public void onDrag(float x, float y, float dx, float dy) {
             setIndexFromMouseX(x);
-            return true;
         }
 
         @Override
-        public boolean onDragEnd(float x, float y) {
-            return false;
-        }
+        public void onDragEnd(float x, float y) {}
 
         @Override
         public void onHoverEnter() {

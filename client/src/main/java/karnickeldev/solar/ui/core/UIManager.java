@@ -29,32 +29,15 @@ public class UIManager implements InputHandler {
     /** element currently under mouse */
     private UIElement hovered;
 
-    /** element last pressed */
-    private UIElement pressed;
-
     /** element receiving keyboard input */
     private UIElement focused;
 
-    /** element receiving mouse input */
-    private UIElement captured;
-
-    /** element being dragged */
-    private UIElement dragged;
-    private UIElement dragCandidate;
-
-    private float pressX, pressY;
-    private float lastX, lastY;
-    private boolean dragging = false;
+    private final PointerGesture pointerGesture = new PointerGesture();
 
     private UIManager() {}
 
     public UILayoutEngine.UILayoutContext getLayoutContext() {
         return uiLayoutContext;
-    }
-
-    private void setCapture(UIElement e) {
-        captured = e;
-        dragged = e;
     }
 
     private UIElement hit(float x, float y) {
@@ -71,30 +54,33 @@ public class UIManager implements InputHandler {
     }
 
     private void updateHover(UIElement current) {
-        if(current != hovered) {
-            if(hovered instanceof Hoverable h) {
-                h.onHoverExit();
-            }
+        if(current == hovered) return;
 
-            hovered = current;
+        UIElement old = hovered;
+        hovered = current;
 
-            if(hovered instanceof Hoverable h) {
-                h.onHoverEnter();
-            }
+        if(old instanceof Hoverable h) {
+            h.onHoverExit();
         }
+
+        if(current instanceof Hoverable h) {
+            h.onHoverEnter();
+        }
+
     }
 
     public void clearInteraction(UIElement element, boolean includeDescendants) {
         if(element == null) return;
 
-        if(matches(hovered, element, includeDescendants)) updateHover(null);
-        if(matches(pressed, element, includeDescendants)) pressed = null;
-        if(matches(focused, element, includeDescendants)) focused = null;
-        if(matches(captured, element, includeDescendants)) captured = null;
-        if(matches(dragged, element, includeDescendants)) dragged = null;
-        if(matches(dragCandidate, element, includeDescendants)) dragCandidate = null;
-
-        if(captured == null || dragged == null || dragCandidate == null) dragging = false;
+        if(matches(hovered, element, includeDescendants)) {
+            updateHover(null);
+        }
+        if(matches(focused, element, includeDescendants)) {
+            setFocus(null);
+        }
+        if(pointerGesture.targets(element, includeDescendants)) {
+            pointerGesture.cancel();
+        }
     }
 
     private boolean matches(UIElement current, UIElement element, boolean includeDescendants) {
@@ -111,12 +97,8 @@ public class UIManager implements InputHandler {
 
     private void clearInteraction() {
         updateHover(null);
-        pressed = null;
-        focused = null;
-        captured = null;
-        dragged = null;
-        dragCandidate = null;
-        dragging = false;
+        setFocus(null);
+        pointerGesture.cancel();
     }
 
     @Override
@@ -124,8 +106,29 @@ public class UIManager implements InputHandler {
         clearInteraction();
     }
 
-    public void setFocus(UIElement e) {
-        focused = e;
+    public void setFocus(UIElement element) {
+        if (focused == element) return;
+
+        UIElement old = focused;
+        focused = element;
+
+        if(old instanceof Focusable f) {
+            f.onFocusLost();
+        }
+
+        if (element instanceof Focusable f) {
+            f.onFocusGained();
+        }
+    }
+
+    private boolean belongsToLayer(UIElement element, UILayer layer) {
+        if (element == null) return false;
+        for (UIElement current = element;
+             current != null;
+             current = current.getParent()) {
+            if (current == layer.getCanvas()) return true;
+        }
+        return false;
     }
 
     public UIElement getFocused() {
@@ -134,8 +137,13 @@ public class UIManager implements InputHandler {
 
     /** Whether the current UI layer prevents input from reaching gameplay. */
     public boolean blocksGameplayInput() {
-        UILayer layer = top();
-        return layer != null && (layer.isModal() || layer.blocksInput());
+        for (UILayer layer : getLayersTopToBottom()) {
+            if (!layer.isVisible() || !layer.receivesInput()) continue;
+
+            if (layer.isModal() || layer.blocksInput()) return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -148,106 +156,35 @@ public class UIManager implements InputHandler {
 
     @Override
     public boolean touchDown(int x, int y, int pointer, int button) {
-        pressed = hit(x, y);
-
-        dragCandidate = pressed;
-        dragging = false;
-
-        pressX = x;
-        pressY = y;
-
-        lastX = x;
-        lastY = y;
-
-        if(pressed instanceof Clickable c) {
-            return c.onMouseDown(x, y, button);
-        }
-
-        return false;
+        return pointerGesture.begin(hit(x, y), x, y, pointer, button);
     }
 
     @Override
     public boolean touchUp(int x, int y, int pointer, int button) {
-        UIElement released = hit(x, y);
-
-        boolean consumed = false;
-
-        // finish drag FIRST
-        if(captured instanceof Draggable d) {
-            consumed |= d.onDragEnd(x, y);
-        }
-
-        // click only if not dragging
-        if(!dragging && pressed instanceof Clickable c) {
-            consumed |= c.onMouseUp(x, y, button);
-        }
-
-        // normal click release
-        if(released instanceof Clickable c) {
-            consumed |= c.onMouseUp(x, y, button);
-
-            if(c == pressed) {
-                consumed |= c.onPressed(x, y, button);
-            }
-        }
-
-        pressed = null;
-        dragCandidate = null;
-        dragged = null;
-        captured = null;
-        dragging = false;
-
-        return consumed;
+        return pointerGesture.release(hit(x, y), x, y, pointer, button);
     }
 
     @Override
     public boolean touchDragged(int x, int y, int pointer, int button) {
-        float dxTotal = x - pressX;
-        float dyTotal = y - pressY;
-
-        boolean consumed = false;
-
-        if (!dragging && dragCandidate != null) {
-            if (dxTotal * dxTotal + dyTotal * dyTotal > 4*4) {
-                dragging = true;
-                dragged = dragCandidate;
-                setCapture(dragged);
-
-                if (dragged instanceof Draggable d) {
-                    consumed |= d.onDragStart(pressX, pressY);
-                }
-            }
-        }
-
-        if (captured instanceof Draggable d) {
-            float dx = x - lastX;
-            float dy = y - lastY;
-
-            consumed |= d.onDrag(x, y, dx, dy);
-        }
-
-        lastX = x;
-        lastY = y;
-
-        return consumed;
+        return pointerGesture.drag(x, y, pointer, button);
     }
 
     @Override
     public boolean scrolled(float dx, float dy) {
         if (hit(Engine.input().mouseX(), Engine.input().mouseY()) instanceof Scrollable s) {
-            return s.onScrolled((int) dx, (int) dy);
+            return s.onScrolled(dx, dy);
         }
         return false;
     }
 
     @Override
     public boolean keyDown(int key) {
-        if(focused instanceof KeyInputTarget t) {
-            if(t.keyDown(key)) return true;
-        }
-
         for(UILayer layer : getLayersTopToBottom()) {
             if(!layer.receivesInput() || !layer.isVisible()) continue;
+
+            if(belongsToLayer(focused, layer) && focused instanceof KeyInputTarget t) {
+                if(t.keyDown(key)) return true;
+            }
 
             if(layer.keyDown(key)) return true;
 
@@ -259,13 +196,12 @@ public class UIManager implements InputHandler {
 
     @Override
     public boolean keyUp(int key) {
-
-        if(focused instanceof KeyInputTarget t) {
-            if(t.keyUp(key)) return true;
-        }
-
         for(UILayer layer : getLayersTopToBottom()) {
             if(!layer.receivesInput() || !layer.isVisible()) continue;
+
+            if(belongsToLayer(focused, layer) && focused instanceof KeyInputTarget t) {
+                if(t.keyUp(key)) return true;
+            }
 
             if(layer.keyUp(key)) return true;
 
@@ -277,13 +213,12 @@ public class UIManager implements InputHandler {
 
     @Override
     public boolean keyTyped(char c) {
-
-        if(focused instanceof KeyInputTarget t) {
-            if(t.keyTyped(c)) return true;
-        }
-
         for(UILayer layer : getLayersTopToBottom()) {
             if(!layer.receivesInput() || !layer.isVisible()) continue;
+
+            if(belongsToLayer(focused, layer) && focused instanceof KeyInputTarget t) {
+                if(t.keyTyped(c)) return true;
+            }
 
             if(layer.keyTyped(c)) return true;
 
@@ -295,42 +230,41 @@ public class UIManager implements InputHandler {
 
     public void push(UILayer uiLayer) {
         if(uiLayer == null) return;
+
         UILayer previous = top();
 
         if (previous != null) {
             previous.onBlur();
         }
 
+        clearInteraction();
+
         uiLayers.addFirst(uiLayer);
 
         uiLayer.onEnter();
         uiLayer.onFocus();
-
-        updateHover(null);
     }
 
     public void pop(UIExitReason reason) {
         if(uiLayers.isEmpty()) return;
 
         UILayer top = uiLayers.removeFirst();
-        top.onExit(reason != null ? reason : UIExitReason.SYSTEM);
-        clearInteraction(top.getCanvas(), true);
+
+        removeLayer(top, reason);
 
         UILayer newTop = top();
         if(newTop != null) {
             newTop.onFocus();
         }
-
-        updateHover(null);
     }
 
     public void clear() {
+        clearInteraction();
+
         while(!uiLayers.isEmpty()) {
             UILayer uiLayer = uiLayers.removeFirst();
             uiLayer.onExit(UIExitReason.TRANSITION);
         }
-
-        clearInteraction();
     }
 
     public void requestPop(UILayer layer, UIExitReason reason) {
@@ -341,8 +275,7 @@ public class UIManager implements InputHandler {
         if (!uiLayers.remove(layer)) return;
 
         // Always call exit
-        layer.onExit(reason != null ? reason : UIExitReason.SYSTEM);
-        clearInteraction(layer.getCanvas(), true);
+        removeLayer(layer, reason);
 
         // If it was top, restore focus to new top
         if (wasTop) {
@@ -351,7 +284,6 @@ public class UIManager implements InputHandler {
                 newTop.onFocus();
             }
         }
-
     }
 
     public UILayer top() {
@@ -379,7 +311,9 @@ public class UIManager implements InputHandler {
     public void update(UILayoutEngine.UILayoutContext ctx, float delta) {
         uiLayoutContext = ctx;
         for (UILayer layer : getLayersTopToBottom()) {
-            if(layer.isActive()) layer.update(ctx, delta);
+            if(!layer.isVisible()) continue;
+            // if(!layer.isActive()) continue; // TODO: check isActive semantics
+            layer.update(ctx, delta);
         }
     }
 
@@ -388,4 +322,10 @@ public class UIManager implements InputHandler {
             if(layer.isVisible()) layer.render(ctx);
         }
     }
+
+    private void removeLayer(UILayer layer, UIExitReason reason) {
+        clearInteraction(layer.getCanvas(), true);
+        layer.onExit(reason != null ? reason : UIExitReason.SYSTEM);
+    }
+
 }

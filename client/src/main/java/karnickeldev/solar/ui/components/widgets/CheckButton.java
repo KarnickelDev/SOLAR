@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui.components.widgets;
 
+import karnickeldev.solar.input.Buttons;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.ui.components.interaction.Clickable;
 import karnickeldev.solar.ui.components.styles.TextWidgetStyle;
@@ -61,17 +62,14 @@ public class CheckButton extends TextWidget implements Clickable {
 
     @Override
     public boolean onMouseDown(int x, int y, int button) {
-        return false;
+        return button == Buttons.LEFT;
     }
 
     @Override
-    public boolean onMouseUp(int x, int y, int button) {
-        return false;
-    }
+    public void onMouseUp(int x, int y, int button) {}
 
     @Override
-    public boolean onPressed(int x, int y, int button) {
+    public void onPressed(int x, int y, int button) {
         toggle();
-        return true;
     }
 }

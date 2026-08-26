@@ -6,10 +6,10 @@ package karnickeldev.solar.ui.components.interaction;
  **/
 public interface Draggable {
 
-    boolean onDragStart(float x, float y);
+    void onDragStart(float x, float y);
 
-    boolean onDrag(float x, float y, float dx, float dy);
+    void onDrag(float x, float y, float dx, float dy);
 
-    boolean onDragEnd(float x, float y);
+    void onDragEnd(float x, float y);
 
 }

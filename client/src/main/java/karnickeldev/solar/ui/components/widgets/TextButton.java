@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui.components.widgets;
 
+import karnickeldev.solar.input.Buttons;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.ui.components.UIState;
 import karnickeldev.solar.ui.components.styles.TextWidgetStyle;
@@ -49,20 +50,19 @@ public class TextButton extends TextWidget implements Hoverable, Clickable {
 
     @Override
     public boolean onMouseDown(int x, int y, int button) {
+        if(button != Buttons.LEFT) return false;
         state = UIState.ARMED;
-        return false;
-    }
-
-    @Override
-    public boolean onMouseUp(int x, int y, int button) {
-        state = hovered ? UIState.HOVERED : UIState.NORMAL;
-        return false;
-    }
-
-    @Override
-    public boolean onPressed(int x, int y, int button) {
-        onClick();
         return true;
+    }
+
+    @Override
+    public void onMouseUp(int x, int y, int button) {
+        state = hovered ? UIState.HOVERED : UIState.NORMAL;
+    }
+
+    @Override
+    public void onPressed(int x, int y, int button) {
+        onClick();
     }
 
     @Override
