@@ -19,6 +19,7 @@ public class TextButton extends TextWidget implements Hoverable, Clickable {
 
     public TextButton(String text, TextWidgetStyle style, Runnable onClick) {
         super(text, style);
+        setTouchable(true);
         this.textStyle = style;
         this.onClick = onClick;
     }

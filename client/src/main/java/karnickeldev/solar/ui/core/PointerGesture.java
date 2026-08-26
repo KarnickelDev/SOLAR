@@ -97,10 +97,17 @@ final class PointerGesture {
             int screenX = Math.round(x);
             int screenY = Math.round(y);
             clickable.onMouseUp(screenX, screenY, finishedButton);
-            if(!cancelled && !wasDragging && releasedOver == finishedTarget) {
+            if(!cancelled && !wasDragging && isTargetOrDescendant(releasedOver, finishedTarget)) {
                 clickable.onPressed(screenX, screenY, finishedButton);
             }
         }
+    }
+
+    private boolean isTargetOrDescendant(UIElement element, UIElement possibleAncestor) {
+        for(UIElement current = element; current != null; current = current.getParent()) {
+            if(current == possibleAncestor) return true;
+        }
+        return false;
     }
 
     private boolean matches(int pointer, int button) {

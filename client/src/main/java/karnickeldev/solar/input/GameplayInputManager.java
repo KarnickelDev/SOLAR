@@ -42,24 +42,26 @@ public class GameplayInputManager implements InputHandler {
     public void handleInput() {
         refreshContext();
 
-        CameraPlayerInput signal = camera.getPlayerInput();
+        if(!dragging) {
+            CameraPlayerInput signal = camera.getPlayerInput();
 
-        if (Engine.input().isKeyDown(Keys.W)) signal.dirY = 1;
-        if (Engine.input().isKeyDown(Keys.S)) signal.dirY = -1;
-        if (Engine.input().isKeyDown(Keys.A)) signal.dirX = -1;
-        if (Engine.input().isKeyDown(Keys.D)) signal.dirX = 1;
+            if (Engine.input().isKeyDown(Keys.W)) signal.dirY = 1;
+            if (Engine.input().isKeyDown(Keys.S)) signal.dirY = -1;
+            if (Engine.input().isKeyDown(Keys.A)) signal.dirX = -1;
+            if (Engine.input().isKeyDown(Keys.D)) signal.dirX = 1;
 
-        if (Engine.input().isKeyDown(Keys.E)) {
-            signal.rotationRad = -ROTATION_SPEED * Engine.getDeltaTime();
-        }
-        if (Engine.input().isKeyDown(Keys.Q)) {
-            signal.rotationRad = +ROTATION_SPEED * Engine.getDeltaTime();
-        }
+            if (Engine.input().isKeyDown(Keys.E)) {
+                signal.rotationRad = -ROTATION_SPEED * Engine.getDeltaTime();
+            }
+            if (Engine.input().isKeyDown(Keys.Q)) {
+                signal.rotationRad = +ROTATION_SPEED * Engine.getDeltaTime();
+            }
 
-        if(Engine.input().isKeyDown(Keys.UP) || Engine.input().isKeyDown(Keys.DOWN)) {
-            float scrollDir = Engine.input().isKeyDown(Keys.UP) ? -1 : +1;
-            signal.zoomImpulse += scrollDir * ZOOM_KEY_SPEED * Engine.getDeltaTime();
-            signal.zoomCursor.set(Engine.getWidth() / 2f, Engine.getHeight() / 2f);
+            if(Engine.input().isKeyDown(Keys.UP) || Engine.input().isKeyDown(Keys.DOWN)) {
+                float scrollDir = Engine.input().isKeyDown(Keys.UP) ? -1 : +1;
+                signal.zoomImpulse += scrollDir * ZOOM_KEY_SPEED * Engine.getDeltaTime();
+                signal.zoomCursor.set(Engine.getWidth() / 2f, Engine.getHeight() / 2f);
+            }
         }
     }
 

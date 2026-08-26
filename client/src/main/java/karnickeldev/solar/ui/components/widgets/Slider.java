@@ -131,6 +131,7 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
 
         public SliderTrack(float min, float max, int charCount, boolean cumulativeFill, SliderStyle sliderStyle) {
             super("", sliderStyle.textStyle);
+            setTouchable(true);
             if(charCount > MAX_CHAR_COUNT) throw new IllegalStateException("SliderTrack can't use more than 32 chars");
             if(charCount == 0 || charCount == 1) throw new IllegalStateException("SliderTrack needs at least 2 chars");
 
@@ -140,25 +141,30 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
             this.min = min;
             this.max = max;
 
-            index = 0;
+            index = -1;
             cells = 1;
         }
 
         private float getValue() {
-            if(cells <= 1) return min;
+            if(cells <= 0 || index < 0) return min;
 
-            float t = index / (float) (cells - 1);
+            float t = (index + 1) / (float) cells;
             return Math.clamp(min + t * (max - min), min, max);
         }
 
         private void setValue(float value) {
             if (cells <= 1) {
-                index = 0;
+                index = -1;
                 return;
             }
 
             float t = (value - min) / (max - min);
-            index = Math.round(t * (cells - 1));
+            if(t <= 0f) {
+                index = -1;
+                return;
+            }
+
+            setIndex(Math.round(t * cells) - 1);
         }
 
         private int getIndex() {
@@ -166,7 +172,7 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
         }
 
         private void setIndex(int index) {
-            this.index = Math.clamp(index, 0, cells - 1);
+            this.index = Math.clamp(index, -1, cells - 1);
         }
 
         private void setIndexFromMouseX(float x) {
@@ -175,7 +181,14 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
 
             float trackX = getContentX() + contentAlignX(getContentWidth(), trackWidth, textStyle.contentAlign);
             float cellWidth = trackWidth / cells;
-            setIndex((int) ((x - trackX) / cellWidth));
+
+            // Before the first character = zero.
+            if(x < trackX) {
+                setIndex(-1);
+                return;
+            }
+
+            setIndex((int)((x - trackX) / cellWidth));
         }
 
         private int getCellCount() {
@@ -206,7 +219,7 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
                 cells = cellWidth > 0f ? Math.max(2, (int) (getContentWidth() / cellWidth)) : 2;
             }
 
-            index = Math.clamp(index, 0, cells - 1);
+            index = Math.clamp(index, -1, cells - 1);
             updateText();
 
             // Lay out the text after recomputing it so rendering and hit detection agree immediately.
@@ -247,6 +260,7 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
         @Override
         public boolean onMouseDown(int x, int y, int button) {
             if(button != Buttons.LEFT) return false;
+            UI.getUIManager().setFocus(this);
             setIndexFromMouseX(x);
             return true;
         }
@@ -270,12 +284,10 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
 
         @Override
         public void onHoverEnter() {
-            UI.getUIManager().setFocus(this);
         }
 
         @Override
         public void onHoverExit() {
-            if(UI.getUIManager().getFocused() == this) UI.getUIManager().setFocus(null);
         }
 
         @Override

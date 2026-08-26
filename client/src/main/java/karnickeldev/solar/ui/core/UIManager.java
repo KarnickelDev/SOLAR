@@ -34,18 +34,47 @@ public class UIManager implements InputHandler {
 
     private final PointerGesture pointerGesture = new PointerGesture();
 
+    /** Re-evaluate stationary-pointer hover after layer/layout lifecycle changes. */
+    private boolean hoverDirty = true;
+
     private UIManager() {}
 
     public UILayoutEngine.UILayoutContext getLayoutContext() {
         return uiLayoutContext;
     }
 
+    /** Returns the deepest pointer-occupying element from the first layer hit. */
     private UIElement hit(float x, float y) {
         for(UILayer layer : getLayersTopToBottom()) {
             if(!layer.isVisible() || !layer.receivesInput()) continue;
 
             UIElement hit = layer.getCanvas().hit(x, y);
             if(hit != null) return hit;
+
+            if(layer.isModal()) return null;
+        }
+
+        return null;
+    }
+
+    /** Finds the nearest ancestor (including the raw hit) with the requested input capability. */
+    private <T> T bubble(UIElement rawHit, Class<T> capability) {
+        for(UIElement current = rawHit; current != null; current = current.getParent()) {
+            if(capability.isInstance(current)) return capability.cast(current);
+        }
+        return null;
+    }
+
+    /** Hover is resolved per layer so an occupied region never falls through to a lower layer. */
+    private UIElement hoverTarget(float x, float y) {
+        for(UILayer layer : getLayersTopToBottom()) {
+            if(!layer.isVisible() || !layer.receivesInput()) continue;
+
+            UIElement rawHit = layer.getCanvas().hit(x, y);
+            if(rawHit != null) {
+                Hoverable hoverable = bubble(rawHit, Hoverable.class);
+                return hoverable instanceof UIElement element ? element : null;
+            }
 
             if(layer.isModal()) return null;
         }
@@ -63,7 +92,8 @@ public class UIManager implements InputHandler {
             h.onHoverExit();
         }
 
-        if(current instanceof Hoverable h) {
+        // An exit callback may have changed the hover target.
+        if(hovered == current && current instanceof Hoverable h) {
             h.onHoverEnter();
         }
 
@@ -81,6 +111,8 @@ public class UIManager implements InputHandler {
         if(pointerGesture.targets(element, includeDescendants)) {
             pointerGesture.cancel();
         }
+
+        hoverDirty = true;
     }
 
     private boolean matches(UIElement current, UIElement element, boolean includeDescendants) {
@@ -116,7 +148,8 @@ public class UIManager implements InputHandler {
             f.onFocusLost();
         }
 
-        if (element instanceof Focusable f) {
+        // A callback may have selected a different focus target.
+        if (focused == element && element instanceof Focusable f) {
             f.onFocusGained();
         }
     }
@@ -148,15 +181,33 @@ public class UIManager implements InputHandler {
 
     @Override
     public boolean mouseMoved(int mx, int my) {
-        UIElement current = hit(mx, my);
-        updateHover(current);
+        hoverDirty = false;
+        updateHover(hoverTarget(mx, my));
 
         return false;
     }
 
     @Override
     public boolean touchDown(int x, int y, int pointer, int button) {
-        return pointerGesture.begin(hit(x, y), x, y, pointer, button);
+        for(UILayer layer : getLayersTopToBottom()) {
+            if(!layer.isVisible() || !layer.receivesInput()) continue;
+
+            UIElement rawHit = layer.getCanvas().hit(x, y);
+            if(rawHit != null) {
+                for(UIElement current = rawHit; current != null; current = current.getParent()) {
+                    if(current instanceof Clickable && pointerGesture.begin(current, x, y, pointer, button)) {
+                        return true;
+                    }
+                }
+
+                // An occupied UI region blocks lower UI layers and gameplay even without a handler.
+                return true;
+            }
+
+            if(layer.isModal()) return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -171,9 +222,26 @@ public class UIManager implements InputHandler {
 
     @Override
     public boolean scrolled(float dx, float dy) {
-        if (hit(Engine.input().mouseX(), Engine.input().mouseY()) instanceof Scrollable s) {
-            return s.onScrolled(dx, dy);
+        float x = Engine.input().mouseX();
+        float y = Engine.input().mouseY();
+
+        for(UILayer layer : getLayersTopToBottom()) {
+            if(!layer.isVisible() || !layer.receivesInput()) continue;
+
+            UIElement rawHit = layer.getCanvas().hit(x, y);
+            if(rawHit != null) {
+                for(UIElement current = rawHit; current != null; current = current.getParent()) {
+                    if(current instanceof Scrollable scrollable && scrollable.onScrolled(dx, dy)) {
+                        return true;
+                    }
+                }
+
+                return true;
+            }
+
+            if(layer.isModal()) return true;
         }
+
         return false;
     }
 
@@ -243,6 +311,7 @@ public class UIManager implements InputHandler {
 
         uiLayer.onEnter();
         uiLayer.onFocus();
+        hoverDirty = true;
     }
 
     public void pop(UIExitReason reason) {
@@ -256,6 +325,7 @@ public class UIManager implements InputHandler {
         if(newTop != null) {
             newTop.onFocus();
         }
+        hoverDirty = true;
     }
 
     public void clear() {
@@ -284,6 +354,7 @@ public class UIManager implements InputHandler {
                 newTop.onFocus();
             }
         }
+        hoverDirty = true;
     }
 
     public UILayer top() {
@@ -305,6 +376,7 @@ public class UIManager implements InputHandler {
         for (UILayer layer : getLayersBottomToTop()) {
             layer.resize(width, height);
         }
+        hoverDirty = true;
     }
 
     /** Updates all UI (called from render loop) */
@@ -314,6 +386,11 @@ public class UIManager implements InputHandler {
             if(!layer.isVisible()) continue;
             // if(!layer.isActive()) continue; // TODO: check isActive semantics
             layer.update(ctx, delta);
+        }
+
+        if(hoverDirty) {
+            hoverDirty = false;
+            updateHover(hoverTarget(Engine.input().mouseX(), Engine.input().mouseY()));
         }
     }
 

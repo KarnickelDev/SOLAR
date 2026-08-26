@@ -20,6 +20,7 @@ public class CheckButton extends TextWidget implements Clickable {
 
     public CheckButton(String textOff, String textOn, TextWidgetStyle style, Consumer<Boolean> onClick) {
         super(textOff, style);
+        setTouchable(true);
         this.textOff = textOff;
         this.textOn = textOn;
 

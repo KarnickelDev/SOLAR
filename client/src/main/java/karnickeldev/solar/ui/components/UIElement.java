@@ -44,7 +44,8 @@ public abstract class UIElement {
     private boolean visible = true;
     private boolean debug = false;
 
-    private boolean touchable = true;
+    /** Whether this element itself occupies pointer space. Children are hit-tested independently. */
+    private boolean touchable = false;
 
     protected boolean layoutDirty = true;
 
