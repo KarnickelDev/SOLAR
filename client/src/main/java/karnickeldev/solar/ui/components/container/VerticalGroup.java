@@ -25,8 +25,8 @@ public class VerticalGroup extends UIContainer {
             h += child.getMeasuredHeight();
         }
 
-        prefWidth = w;
-        prefHeight = h;
+        prefWidth = w + (padLeft + padRight + 2*borderThickness) * ctx.uiScaleY();
+        prefHeight = h + (padTop + padBottom + 2*borderThickness) * ctx.uiScaleY();
     }
 
     @Override

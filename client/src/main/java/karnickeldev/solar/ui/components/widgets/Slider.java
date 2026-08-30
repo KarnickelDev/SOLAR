@@ -73,8 +73,7 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
     }
 
     @Override
-    public void act(float delta) {
-        super.act(delta);
+    public void onAct(float delta) {
         value.setText(valueFormatter.format(sliderTrack.getValue()));
     }
 
@@ -87,7 +86,12 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
     public void onMouseUp(int x, int y, int button) {}
 
     @Override
-    public void onPressed(int x, int y, int button) {}
+    public void onClicked(int x, int y, int button) {}
+
+    @Override
+    public void onClickCancel(int x, int y, int button) {
+
+    }
 
     @Override
     public boolean keyDown(int key) {
@@ -232,7 +236,7 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
         }
 
         @Override
-        public void act(float dt) {
+        public void onAct(float dt) {
             if(cells <= 0) {
                 invalidateLayout();
                 return;
@@ -269,7 +273,12 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
         public void onMouseUp(int x, int y, int button) {}
 
         @Override
-        public void onPressed(int x, int y, int button) {}
+        public void onClicked(int x, int y, int button) {}
+
+        @Override
+        public void onClickCancel(int x, int y, int button) {
+
+        }
 
         @Override
         public void onDragStart(float x, float y) {}
@@ -281,6 +290,9 @@ public class Slider extends HorizontalGroup implements Clickable, KeyInputTarget
 
         @Override
         public void onDragEnd(float x, float y) {}
+
+        @Override
+        public void onDragCancel(float x, float y) {}
 
         @Override
         public void onHoverEnter() {

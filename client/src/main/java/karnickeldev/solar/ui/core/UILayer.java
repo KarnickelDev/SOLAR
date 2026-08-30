@@ -1,6 +1,5 @@
 package karnickeldev.solar.ui.core;
 
-import com.badlogic.gdx.Gdx;
 import karnickeldev.solar.input.InputHandler;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
@@ -22,6 +21,7 @@ public abstract class UILayer implements InputHandler {
     private final String name;
 
     private boolean visible = true;
+    private boolean active = true;
 
     protected final Canvas canvas = new Canvas();
 
@@ -38,11 +38,22 @@ public abstract class UILayer implements InputHandler {
     }
 
     public boolean isActive() {
+        return active;
+    }
+
+    public boolean isTop() {
         return UIManager.get().top() == this;
     }
 
     public boolean isVisible() {
         return visible;
+    }
+
+    public void setActive(boolean active) {
+        if(this.active == active) return;
+
+        this.active = active;
+        if(!active) UIManager.get().clearInteraction(canvas, true);
     }
 
     public void setVisible(boolean visible) {
@@ -80,12 +91,16 @@ public abstract class UILayer implements InputHandler {
     }
 
     public final void removeFromCanvas(UIElement element) {
-        canvas.remove(element);
+        getCanvas().remove(element);
     }
 
     public final void update(UILayoutEngine.UILayoutContext ctx, float delta) {
-        act(delta);
-        canvas.act(delta);
+        if(isActive()) {
+            act(delta);
+
+            // update all (active) UI components of this layer
+            canvas.act(delta);
+        }
 
         canvas.measure(ctx);
         canvas.arrange(ctx, ctx.viewportX(), ctx.viewportY(), ctx.viewportWidth(), ctx.viewportHeight());

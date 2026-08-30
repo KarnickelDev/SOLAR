@@ -1,5 +1,6 @@
 package karnickeldev.solar.ui.components;
 
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import karnickeldev.solar.render.core.RendererContext;
 
 import java.util.ArrayList;
@@ -65,18 +66,33 @@ public class Canvas extends UIElement {
 
     private final List<CanvasEntry> entries = new ArrayList<>(4);
 
-    public Canvas() {}
+    public Canvas() {
+        setEnabled(true);
+        setActive(true);
+        setVisible(true);
+        setTouchable(false); // canvas itself should not be touchable, only its children
+    }
 
-    public void add(UIElement child, CanvasSlot slot) {
+    public final boolean contains(UIElement element) {
+        for(CanvasEntry entry : entries) {
+            if(entry.child.equals(element)) return true;
+        }
+        return false;
+    }
+
+    public final void add(UIElement child, CanvasSlot slot) {
         Objects.requireNonNull(child, "child");
         Objects.requireNonNull(slot, "slot");
+        if(child.getParent() != null) throw new IllegalArgumentException("element already has parent");
+        if(contains(child)) throw new IllegalArgumentException("element is already a child of this container");
+        if(child == this) throw new IllegalArgumentException("cannot add element as its own child");
 
         child.setParent(this);
         entries.add(new CanvasEntry(child, slot));
         child.invalidateLayout();
     }
 
-    public void remove(UIElement child) {
+    public final void remove(UIElement child) {
         int index = indexOf(child);
         if(index < 0) return;
         if(child.getParent() != this) {
@@ -85,6 +101,8 @@ public class Canvas extends UIElement {
 
         entries.remove(index);
         child.setParent(null);
+        child.invalidateLayout();
+        invalidateLayout();
     }
 
     private int indexOf(UIElement child) {
@@ -95,7 +113,7 @@ public class Canvas extends UIElement {
     }
 
     @Override
-    protected UIElement hitChildren(float mx, float my) {
+    protected final UIElement hitChildren(float mx, float my) {
         for (int i = entries.size() - 1; i >= 0; i--) {
             UIElement child = entries.get(i).child();
 
@@ -107,7 +125,7 @@ public class Canvas extends UIElement {
     }
 
     @Override
-    public void invalidateLayout() {
+    public final void invalidateLayout() {
         super.invalidateLayout();
 
         for(CanvasEntry entry : entries) {
@@ -116,25 +134,26 @@ public class Canvas extends UIElement {
     }
 
     @Override
-    public void render(RendererContext ctx) {
+    public final void render(RendererContext ctx) {
+        // the canvas does not need any rendering (except debug)
     }
 
     @Override
-    protected void renderChildren(RendererContext ctx) {
+    protected final void renderChildren(RendererContext ctx) {
         for(CanvasEntry entry : entries) {
             entry.child.renderTree(ctx);
         }
     }
 
     @Override
-    protected void renderDebugChildren(RendererContext ctx) {
+    protected final void renderDebugChildren(RendererContext ctx) {
         for(CanvasEntry entry : entries) {
             entry.child.renderDebugTree(ctx);
         }
     }
 
     @Override
-    public void measure(UILayoutEngine.UILayoutContext ctx) {
+    public final void measure(UILayoutEngine.UILayoutContext ctx) {
         prefWidth = ctx.viewportWidth();
         prefHeight = ctx.viewportHeight();
 
@@ -144,21 +163,17 @@ public class Canvas extends UIElement {
     }
 
     @Override
-    public void act(float dt) {
+    protected final void onAct(float dt) {
         for(CanvasEntry entry : entries) {
             entry.child().act(dt);
         }
     }
 
     @Override
-    public void arrange(UILayoutEngine.UILayoutContext ctx, float x, float y, float w, float h) {
-        setBounds(x, y, w, h, ctx.uiScaleY());
-
+    public final void onLayout(UILayoutEngine.UILayoutContext ctx) {
         for(CanvasEntry entry : entries) {
             arrangeEntry(ctx, entry);
         }
-
-        onLayout(ctx);
     }
 
     private void arrangeEntry(UILayoutEngine.UILayoutContext ctx, CanvasEntry entry) {

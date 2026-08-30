@@ -2,6 +2,7 @@ package karnickeldev.solar.ui.core;
 
 import karnickeldev.solar.core.Engine;
 import karnickeldev.solar.input.InputHandler;
+import karnickeldev.solar.input.PointerCapture;
 import karnickeldev.solar.render.core.RendererContext;
 import karnickeldev.solar.ui.components.UIElement;
 import karnickeldev.solar.ui.components.UILayoutEngine;
@@ -16,6 +17,7 @@ import java.util.*;
 public class UIManager implements InputHandler {
 
     private static final UIManager instance = new UIManager();
+    private static final float DRAG_THRESHOLD_SQUARED = (float) Math.pow(4, 2);
 
     public static UIManager get() {
         return instance;
@@ -31,7 +33,7 @@ public class UIManager implements InputHandler {
     /** element receiving keyboard input */
     private UIElement focused;
 
-    private final PointerGesture pointerGesture = new PointerGesture();
+    private final PointerCapture<UIElement> pointerCapture = new PointerCapture<>();
 
     private UIManager() {}
 
@@ -68,8 +70,13 @@ public class UIManager implements InputHandler {
 
             UIElement rawHit = layer.getCanvas().hit(x, y);
             if(rawHit != null) {
-                Hoverable hoverable = bubble(rawHit, Hoverable.class);
-                return hoverable instanceof UIElement element ? element : null;
+                // bubbling, check if any ancestor is Hoverable
+                // TODO: verify works as intended
+                for(UIElement current = rawHit; current != null; current = current.getParent()) {
+                    if(current instanceof Hoverable) {
+                        return current;
+                    }
+                }
             }
 
             if(layer.isModal()) return null;
@@ -104,8 +111,8 @@ public class UIManager implements InputHandler {
         if(matches(focused, element, includeDescendants)) {
             setFocus(null);
         }
-        if(pointerGesture.targets(element, includeDescendants)) {
-            pointerGesture.cancel();
+        if(matches(pointerCapture.target(), element, includeDescendants)) {
+            cancelPointerCapture();
         }
 
     }
@@ -125,12 +132,28 @@ public class UIManager implements InputHandler {
     private void clearInteraction() {
         updateHover(null);
         setFocus(null);
-        pointerGesture.cancel();
+        cancelPointerCapture();
     }
 
     @Override
     public void inputCancelled() {
         clearInteraction();
+    }
+
+    public boolean hasPointerCapture(int pointer, int button) {
+        return pointerCapture.matches(pointer, button);
+    }
+
+    public void cancelPointerCapture() {
+        PointerCapture.PointerState<UIElement> cancelled = pointerCapture.cancel();
+        if(cancelled == null) return;
+
+        if(cancelled.dragging() && cancelled.target() instanceof Draggable draggable) {
+            draggable.onDragCancel(cancelled.x(), cancelled.y());
+        }
+        if(cancelled.target() instanceof Clickable clickable) {
+            clickable.onClickCancel(Math.round(cancelled.x()), Math.round(cancelled.y()), cancelled.button());
+        }
     }
 
     public void setFocus(UIElement element) {
@@ -189,8 +212,12 @@ public class UIManager implements InputHandler {
             UIElement rawHit = layer.getCanvas().hit(x, y);
             if(rawHit != null) {
                 for(UIElement current = rawHit; current != null; current = current.getParent()) {
-                    if(current instanceof Clickable && pointerGesture.begin(current, x, y, pointer, button)) {
-                        return true;
+                    if(current instanceof Clickable clickable) {
+                        if(!pointerCapture.begin(current, x, y, pointer, button)) return true;
+                        if(clickable.onMouseDown(x, y, button)) return true;
+
+                        // Declined presses may continue bubbling to a clickable parent.
+                        pointerCapture.cancel();
                     }
                 }
 
@@ -206,12 +233,35 @@ public class UIManager implements InputHandler {
 
     @Override
     public boolean touchUp(int x, int y, int pointer, int button) {
-        return pointerGesture.release(hit(x, y), x, y, pointer, button);
+        PointerCapture.PointerState<UIElement> released = pointerCapture.release(x, y, pointer, button);
+        if(released == null) return false;
+
+        if(released.dragging() && released.target() instanceof Draggable draggable) {
+            draggable.onDragEnd(x, y);
+        }
+        if(released.target() instanceof Clickable clickable) {
+            clickable.onMouseUp(x, y, button);
+            if(!released.dragging() && matches(hit(x, y), released.target(), true)) {
+                clickable.onClicked(x, y, button);
+            }
+        }
+        return true;
     }
 
     @Override
     public boolean touchDragged(int x, int y, int pointer, int button) {
-        return pointerGesture.drag(x, y, pointer, button);
+        PointerCapture.PointerState<UIElement> moved = pointerCapture.move(x, y, pointer, button);
+        if(moved == null) return false;
+
+        if(moved.target() instanceof Draggable draggable) {
+            if(pointerCapture.tryStartDrag(x, y, DRAG_THRESHOLD_SQUARED)) {
+                draggable.onDragStart(moved.pressX(), moved.pressY());
+            }
+            if(pointerCapture.isDragging()) {
+                draggable.onDrag(x, y, moved.dx(), moved.dy());
+            }
+        }
+        return true;
     }
 
     @Override
@@ -373,9 +423,7 @@ public class UIManager implements InputHandler {
     public void update(UILayoutEngine.UILayoutContext ctx, float delta) {
         uiLayoutContext = ctx;
         for (UILayer layer : getLayersTopToBottom()) {
-            if(!layer.isVisible()) continue;
-            // if(!layer.isActive()) continue; // TODO: check isActive semantics
-            layer.update(ctx, delta);
+            layer.update(ctx, delta); // the layer checks isActive itself in update()
         }
 
         // Layout may move, reveal, or insert elements without a mouse-move event.

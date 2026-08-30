@@ -37,6 +37,8 @@ public final class InputRouter implements InputHandler {
             uiInputManager.handleInput();
         }
 
+        cancelBlockedGameplayCapture();
+
         if(gameplayInputManager != null && !uiBlocksGameplayInput()) {
             gameplayInputManager.handleInput();
         }
@@ -50,6 +52,12 @@ public final class InputRouter implements InputHandler {
 
     private boolean uiBlocksGameplayInput() {
         return uiInputManager != null && uiInputManager.blocksGameplayInput();
+    }
+
+    private void cancelBlockedGameplayCapture() {
+        if(gameplayInputManager != null && uiBlocksGameplayInput() && gameplayInputManager.hasPointerCapture()) {
+            gameplayInputManager.cancelPointerCapture();
+        }
     }
 
     private boolean route(Function<InputHandler, Boolean> function) {
@@ -90,11 +98,27 @@ public final class InputRouter implements InputHandler {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        cancelBlockedGameplayCapture();
+
+        if(uiInputManager != null && uiInputManager.hasPointerCapture(pointer, button)) {
+            return uiInputManager.touchUp(screenX, screenY, pointer, button);
+        }
+        if(gameplayInputManager != null && gameplayInputManager.hasPointerCapture(pointer, button)) {
+            return gameplayInputManager.touchUp(screenX, screenY, pointer, button);
+        }
         return route(p -> p.touchUp(screenX, screenY, pointer, button));
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer, int button) {
+        cancelBlockedGameplayCapture();
+
+        if(uiInputManager != null && uiInputManager.hasPointerCapture(pointer, button)) {
+            return uiInputManager.touchDragged(screenX, screenY, pointer, button);
+        }
+        if(gameplayInputManager != null && gameplayInputManager.hasPointerCapture(pointer, button)) {
+            return gameplayInputManager.touchDragged(screenX, screenY, pointer, button);
+        }
         return route(p -> p.touchDragged(screenX, screenY, pointer, button));
     }
 
@@ -107,7 +131,5 @@ public final class InputRouter implements InputHandler {
     public boolean scrolled(float amountX, float amountY) {
         return route(p -> p.scrolled(amountX, amountY));
     }
-
-
 
 }

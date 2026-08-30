@@ -13,7 +13,6 @@ import karnickeldev.solar.ui.components.interaction.Hoverable;
  **/
 public class TextButton extends TextWidget implements Hoverable, Clickable {
 
-    private boolean checked = false;
     private boolean hovered = false;
     private Runnable onClick;
 
@@ -40,19 +39,20 @@ public class TextButton extends TextWidget implements Hoverable, Clickable {
         this.textStyle = style;
     }
 
-    private void onClick() {
+    private void fireClick() {
+        if(onClick == null) return;
+
         try {
             onClick.run();
         } catch (Exception ex) {
             Logger.get(this.getClass().getSimpleName()).warn("error on click: " + ex.getMessage());
         }
-        checked = !checked;
     }
 
     @Override
     public boolean onMouseDown(int x, int y, int button) {
         if(button != Buttons.LEFT) return false;
-        state = UIState.ARMED;
+        state = UIState.PRESSED;
         return true;
     }
 
@@ -62,8 +62,13 @@ public class TextButton extends TextWidget implements Hoverable, Clickable {
     }
 
     @Override
-    public void onPressed(int x, int y, int button) {
-        onClick();
+    public void onClicked(int x, int y, int button) {
+        fireClick();
+    }
+
+    @Override
+    public void onClickCancel(int x, int y, int button) {
+        state = hovered ? UIState.HOVERED : UIState.NORMAL;
     }
 
     @Override

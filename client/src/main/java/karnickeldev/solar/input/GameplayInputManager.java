@@ -3,9 +3,6 @@ package karnickeldev.solar.input;
 import karnickeldev.solar.context.GameContext;
 import karnickeldev.solar.core.Engine;
 import karnickeldev.solar.ecs.ClientECS;
-import karnickeldev.solar.ecs.systems.HCSClientSystem;
-import karnickeldev.solar.physics.Vector2D;
-import karnickeldev.solar.render.PlanetoidRenderSystem;
 import karnickeldev.solar.render.background.BackgroundGridRenderer;
 import karnickeldev.solar.render.background.RingRenderer;
 import karnickeldev.solar.render.camera.CameraPlayerInput;
@@ -19,12 +16,13 @@ import karnickeldev.solar.ui.layers.escapemenu.EscapeMenuLayer;
  **/
 public class GameplayInputManager implements InputHandler {
 
+    private enum PointerInteraction { CAMERA_PAN }
+
     private static final float ROTATION_SPEED = (float) Math.toRadians(90);
     private static final float ZOOM_KEY_SPEED = 14f;
     private static final float ZOOM_SCROLL_SPEED = 0.6f;
 
-    private int lastMouseX = 0, lastMouseY = 0;
-    private boolean dragging = false;
+    private final PointerCapture<PointerInteraction> pointerCapture = new PointerCapture<>();
 
     private FloatingOriginCamera camera;
     private ClientECS ecs;
@@ -42,7 +40,7 @@ public class GameplayInputManager implements InputHandler {
     public void handleInput() {
         refreshContext();
 
-        if(!dragging) {
+        if(!pointerCapture.isActive()) {
             CameraPlayerInput signal = camera.getPlayerInput();
 
             if (Engine.input().isKeyDown(Keys.W)) signal.dirY = 1;
@@ -146,10 +144,7 @@ public class GameplayInputManager implements InputHandler {
 //        }
 
         if (button == Buttons.RIGHT) {
-            dragging = true;
-            lastMouseX = screenX;
-            lastMouseY = screenY;
-            processed = true;
+            processed = pointerCapture.begin(PointerInteraction.CAMERA_PAN, screenX, screenY, pointer, button);
         }
 
         return processed;
@@ -157,33 +152,39 @@ public class GameplayInputManager implements InputHandler {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        if (button == Buttons.RIGHT) {
-            dragging = false;
-            return true;
-        }
-        return false;
+        return pointerCapture.release(screenX, screenY, pointer, button) != null;
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer, int button) {
-        if (!dragging || button != Buttons.RIGHT) return false;
+        PointerCapture.PointerState<PointerInteraction> moved = pointerCapture.move(screenX, screenY, pointer, button);
+        if(moved == null) return false;
 
         refreshContext();
         CameraPlayerInput signal = camera.getPlayerInput();
         signal.clear();
-        signal.dirX = -(screenX - lastMouseX);
-        signal.dirY = screenY - lastMouseY;
+        signal.dirX = -moved.dx();
+        signal.dirY = moved.dy();
         signal.panning = true;
-
-        lastMouseX = screenX;
-        lastMouseY = screenY;
 
         return true;
     }
 
     @Override
     public void inputCancelled() {
-        dragging = false;
+        pointerCapture.cancel();
+    }
+
+    public boolean hasPointerCapture(int pointer, int button) {
+        return pointerCapture.matches(pointer, button);
+    }
+
+    public boolean hasPointerCapture() {
+        return pointerCapture.isActive();
+    }
+
+    public void cancelPointerCapture() {
+        pointerCapture.cancel();
     }
 
     @Override

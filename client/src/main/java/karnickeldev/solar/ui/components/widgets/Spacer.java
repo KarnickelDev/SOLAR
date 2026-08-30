@@ -26,7 +26,7 @@ public class Spacer extends UIElement {
     }
 
     @Override
-    public void act(float dt) {
+    public void onAct(float dt) {
         // nop
     }
 

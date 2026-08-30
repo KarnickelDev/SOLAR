@@ -23,8 +23,8 @@ public class HorizontalGroup extends UIContainer {
             w += child.getMeasuredWidth();
         }
 
-        prefWidth = w;
-        prefHeight = h;
+        prefWidth = w + (padLeft + padRight + 2*borderThickness) * ctx.uiScaleY();
+        prefHeight = h + (padTop + padBottom + 2*borderThickness) * ctx.uiScaleY();
     }
 
     @Override

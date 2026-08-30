@@ -12,4 +12,6 @@ public interface Draggable {
 
     void onDragEnd(float x, float y);
 
+    void onDragCancel(float x, float y);
+
 }

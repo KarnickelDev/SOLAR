@@ -118,7 +118,7 @@ public class MessageRenderer extends UIElement implements Scrollable {
     }
 
     @Override
-    public void act(float delta) {
+    public void onAct(float delta) {
         recomputeTotalHeight();
 
         scrollVelocity = MathUtil.clamp(scrollVelocity, -MAX_SCROLL_SPEED, MAX_SCROLL_SPEED);

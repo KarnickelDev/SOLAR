@@ -7,7 +7,6 @@ import karnickeldev.solar.core.gamestates.GameStateManager;
 import karnickeldev.solar.logging.LogTag;
 import karnickeldev.solar.logging.Logger;
 import karnickeldev.solar.ui.components.*;
-import karnickeldev.solar.ui.components.container.HorizontalGroup;
 import karnickeldev.solar.ui.components.container.VerticalGroup;
 import karnickeldev.solar.ui.components.styles.SliderStyle;
 import karnickeldev.solar.ui.components.styles.TextWidgetStyle;
@@ -82,7 +81,7 @@ public class EscapeMenu extends UIContainer {
         textStyle.setBorderColor(0, UIState.all());
 
         textStyle.setBackgroundColor(0x101214FF, UIState.all());
-        textStyle.setBackgroundColor(0x1E2124FF, UIState.HOVERED, UIState.ARMED);
+        textStyle.setBackgroundColor(0x1E2124FF, UIState.HOVERED, UIState.PRESSED);
 
         textStyle.setFontColor(colors.textPrimary(), UIState.all());
         textStyle.fontSize = 22;

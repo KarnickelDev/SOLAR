@@ -18,20 +18,31 @@ public abstract class UIContainer extends UIElement {
 
     public UIContainer() {}
 
-    public void add(UIElement child) {
+    public final boolean contains(UIElement element) {
+        for(Slot slot : children) {
+            if(slot.child.equals(element)) return true;
+        }
+        return false;
+    }
+
+    public final void add(UIElement child) {
         add(child, new UILayout());
     }
 
-    public void add(UIElement child, UILayout layout) {
+    public final void add(UIElement child, UILayout layout) {
         Objects.requireNonNull(child, "child");
         Objects.requireNonNull(layout, "layout");
+        if(child.getParent() != null) throw new IllegalArgumentException("element already has parent");
+        if(contains(child)) throw new IllegalArgumentException("element is already a child of this container");
+        if(child == this) throw new IllegalArgumentException("cannot add element as its own child");
 
         child.setParent(this);
         children.add(new Slot(child, layout));
         child.invalidateLayout();
+        invalidateLayout();
     }
 
-    public void remove(UIElement child) {
+    public final void remove(UIElement child) {
         int index = indexOf(child);
         if(index < 0) return;
         if(child.getParent() != this) {
@@ -40,9 +51,10 @@ public abstract class UIContainer extends UIElement {
 
         children.remove(index);
         child.setParent(null);
+        invalidateLayout();
     }
 
-    private int indexOf(UIElement child) {
+    protected final int indexOf(UIElement child) {
         for(int i = 0; i < children.size(); i++) {
             if(children.get(i).child() == child) return i;
         }
@@ -62,19 +74,15 @@ public abstract class UIContainer extends UIElement {
             h = Math.max(h, s.child.getMeasuredHeight());
         }
 
-        prefWidth = w;
-        prefHeight = h;
+        prefWidth = w + (padLeft + padRight + 2*borderThickness) * ctx.uiScaleY();
+        prefHeight = h + (padTop + padBottom + 2*borderThickness) * ctx.uiScaleY();
     }
 
     @Override
-    public void arrange(UILayoutEngine.UILayoutContext ctx, float x, float y, float w, float h) {
-        setBounds(x, y, w, h, ctx.uiScaleY());
-
+    public void onLayout(UILayoutEngine.UILayoutContext ctx) {
         for (Slot s : children) {
             s.child.arrange(ctx, getContentX(), getContentY(), getContentWidth(), getContentHeight());
         }
-
-        onLayout(ctx);
     }
 
     public static float computeAnchorX(Canvas.Anchor anchor, float baseW, float w) {
@@ -107,7 +115,7 @@ public abstract class UIContainer extends UIElement {
 
 
     @Override
-    public void act(float dt) {
+    protected void onAct(float dt) {
         for(Slot child : children) {
             child.child.act(dt);
         }

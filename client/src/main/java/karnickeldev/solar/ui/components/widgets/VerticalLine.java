@@ -24,7 +24,7 @@ public class VerticalLine extends UIElement {
     }
 
     @Override
-    public void act(float dt) {}
+    public void onAct(float dt) {}
 
     @Override
     public void onLayout(UILayoutEngine.UILayoutContext ctx) {

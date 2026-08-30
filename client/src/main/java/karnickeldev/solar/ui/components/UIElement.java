@@ -42,10 +42,12 @@ public abstract class UIElement {
     protected float cBorderThickness;
 
     private boolean visible = true;
-    private boolean debug = false;
-
-    /** Whether this element itself occupies pointer space. Children are hit-tested independently. */
+    private boolean enabled = true;
+    private boolean active = true;
     private boolean touchable = false;
+    private boolean disposed = false;
+
+    private boolean debug = false;
 
     protected boolean layoutDirty = true;
 
@@ -53,9 +55,13 @@ public abstract class UIElement {
         this.id = ID++;
     }
 
-    public abstract void act(float dt);
+    public final void act(float dt) {
+        if(isEffectivelyActive()) onAct(dt);
+    }
 
-    public abstract void render(RendererContext ctx);
+    protected abstract void onAct(float dt);
+
+    protected abstract void render(RendererContext ctx);
 
     public final void renderTree(RendererContext ctx) {
         if(!visible) return;
@@ -66,7 +72,7 @@ public abstract class UIElement {
 
     protected void renderChildren(RendererContext ctx) {}
 
-    public void renderDebug(RendererContext ctx) {
+    protected void renderDebug(RendererContext ctx) {
         if(!debug) return;
 
         ctx.debug().setColor(DEBUG_COLORS[id % DEBUG_COLORS.length]);
@@ -90,11 +96,11 @@ public abstract class UIElement {
 
     public abstract void measure(UILayoutEngine.UILayoutContext ctx);
 
-    public float getMeasuredWidth() {
+    public final float getMeasuredWidth() {
         return prefWidth;
     }
 
-    public float getMeasuredHeight() {
+    public final float getMeasuredHeight() {
         return prefHeight;
     }
 
@@ -104,7 +110,7 @@ public abstract class UIElement {
     }
 
     public final UIElement hit(float mx, float my) {
-        if(!visible || !contains(mx, my)) return null;
+        if(!visible || !isEffectivelyEnabled() || !contains(mx, my)) return null;
 
         UIElement child = hitChildren(mx, my);
         if(child != null) return child;
@@ -149,7 +155,7 @@ public abstract class UIElement {
         invalidateLayout();
     }
 
-    public UIElement getParent() {
+    public final UIElement getParent() {
         return parent;
     }
 
@@ -157,88 +163,131 @@ public abstract class UIElement {
         this.debug = debug;
     }
 
-    public void setVisible(boolean visible) {
+    public final void setEnabled(boolean enabled) {
+        if(this.enabled == enabled) return;
+
+        this.enabled = enabled;
+        if(!enabled) UIManager.get().clearInteraction(this, true);
+    }
+
+    public final void setVisible(boolean visible) {
         if(this.visible == visible) return;
 
         this.visible = visible;
         if(!visible) UIManager.get().clearInteraction(this, true);
     }
 
-    public boolean isVisible() {
-        return visible;
-    }
-
-    public void setTouchable(boolean touchable) {
+    public final void setTouchable(boolean touchable) {
         if(this.touchable == touchable) return;
 
         this.touchable = touchable;
         if(!touchable) UIManager.get().clearInteraction(this, false);
     }
 
-    public boolean isTouchable() {
+    public final void setActive(boolean active) {
+        if(this.active == active) return;
+
+        this.active = active;
+        if(!active) UIManager.get().clearInteraction(this, true);
+    }
+
+    public final boolean isEnabled() {
+        return enabled;
+    }
+
+    final boolean isEffectivelyEnabled() {
+        return enabled && (parent == null || parent.isEffectivelyEnabled());
+    }
+
+    public final boolean isVisible() {
+        return visible;
+    }
+
+    public final boolean isTouchable() {
         return touchable;
     }
 
-    public float getX() {
+    public final boolean isActive() {
+        return active;
+    }
+
+    final boolean isEffectivelyActive() {
+        return active && (parent == null || parent.isEffectivelyActive());
+    }
+
+    public final boolean isDisposed() {
+        return disposed;
+    }
+
+    public final boolean isDebug() {
+        return debug;
+    }
+
+    public final float getX() {
         return x;
     }
 
-    public float getY() {
+    public final float getY() {
         return y;
     }
 
-    public float getWidth() {
+    public final float getWidth() {
         return width;
     }
 
-    public float getHeight() {
+    public final float getHeight() {
         return height;
     }
 
-    public float getTop() {
+    public final float getTop() {
         return y + height;
     }
 
-    public float getRight() {
+    public final float getRight() {
         return x + width;
     }
 
-    public float getContentX() {
-        return x + borderThickness + cpLeft;
+    public final float getContentX() {
+        return x + cBorderThickness + cpLeft;
     }
 
-    public float getContentY() {
-        return y + borderThickness + cpBottom;
+    public final float getContentY() {
+        return y + cBorderThickness + cpBottom;
     }
 
-    public float getContentRight() {
+    public final float getContentRight() {
         return getContentX() + getContentWidth();
     }
 
-    public float getContentTop() {
+    public final float getContentTop() {
         return getContentY() + getContentHeight();
     }
 
-    public float getContentWidth() {
-        return width - 2*cBorderThickness - cpLeft - cpRight;
+    public final float getContentWidth() {
+        return Math.max(0, width - 2*cBorderThickness - cpLeft - cpRight);
     }
 
-    public float getContentHeight() {
-        return height - 2*cBorderThickness - cpTop - cpBottom;
+    public final float getContentHeight() {
+        return Math.max(0, height - 2*cBorderThickness - cpTop - cpBottom);
     }
 
-    public float getBorderThickness() {
+    public final float getBorderThickness() {
         return cBorderThickness;
     }
 
-    public void setBorderThickness(float borderThickness) {
+    public final void setBorderThickness(float borderThickness) {
+        if(borderThickness < 0) throw new IllegalArgumentException("borderThickness cannot be negative");
         if(this.borderThickness == borderThickness) return;
 
         this.borderThickness = borderThickness;
         invalidateLayout();
     }
 
-    public void setPadding(float padLeft, float padRight, float padTop, float padBottom) {
+    public final void setPadding(float padLeft, float padRight, float padTop, float padBottom) {
+        if(padLeft < 0) throw new IllegalArgumentException("padLeft cannot be negative");
+        if(padRight < 0) throw new IllegalArgumentException("padRight cannot be negative");
+        if(padTop < 0) throw new IllegalArgumentException("padTop cannot be negative");
+        if(padBottom < 0) throw new IllegalArgumentException("padBottom cannot be negative");
         if(this.padLeft == padLeft && this.padRight == padRight && this.padTop == padTop && this.padBottom == padBottom) {
             return;
         }
@@ -251,7 +300,7 @@ public abstract class UIElement {
         invalidateLayout();
     }
 
-    public void setPadding(float pad) {
+    public final void setPadding(float pad) {
         setPadding(pad, pad, pad, pad);
     }
 

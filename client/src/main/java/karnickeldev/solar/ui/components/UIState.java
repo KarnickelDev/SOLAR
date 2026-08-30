@@ -7,7 +7,7 @@ package karnickeldev.solar.ui.components;
 public enum UIState {
     NORMAL,
     HOVERED,
-    ARMED,
+    PRESSED,
     DISABLED,
     ;
 

@@ -11,5 +11,7 @@ public interface Clickable {
 
     void onMouseUp(int x, int y, int button);
 
-    void onPressed(int x, int y, int button);
+    void onClicked(int x, int y, int button);
+
+    void onClickCancel(int x, int y, int button);
 }

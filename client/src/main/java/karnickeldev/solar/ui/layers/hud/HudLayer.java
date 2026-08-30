@@ -31,7 +31,7 @@ public class HudLayer extends UILayer {
             super(text, textStyle);
         }
         @Override
-        public void act(float delta) {
+        public void onAct(float delta) {
             setText("FPS: " + Gdx.graphics.getFramesPerSecond());
         }
     }
